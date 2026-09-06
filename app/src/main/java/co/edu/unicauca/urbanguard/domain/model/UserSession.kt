@@ -7,4 +7,4 @@ data class UserSession(
     val role: UserRole
 )
 
-enum class UserRole { RESIDENTE, VIGILANTE, ADMINISTRADOR }
+enum class UserRole { RESIDENT, GUARD, ADMIN }

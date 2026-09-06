@@ -25,24 +25,31 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.theme.*
-import androidx.compose.runtime.LaunchedEffect
 
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: (role: UserRole) -> Unit,
     onNavigateToOnboarding: () -> Unit,
+    onNavigateToRegister: () -> Unit = onNavigateToOnboarding,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
     LaunchedEffect(uiState.loginSuccess) {
         if (uiState.loginSuccess) {
-            onLoginSuccess(UserRole.ADMINISTRADOR)
-            // TODO: usar el rol real del uiState cuando el backend esté listo
+            Toast.makeText(
+                context,
+                "Inicio de sesión exitoso",
+                Toast.LENGTH_SHORT
+            ).show()
+            val role = uiState.userRole ?: UserRole.RESIDENT
+            onLoginSuccess(role)
         }
     }
-    // TODO: cuando loginSuccess sea true, leer el rol desde SessionManager
-    // (inyectado aparte) y llamar onLoginSuccess(rol) para navegar al Home correcto
 
     Column(
         modifier = Modifier
@@ -156,7 +163,7 @@ fun LoginScreen(
                 color = UgEmerald,
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.5.sp,
-                modifier = Modifier.clickable { onNavigateToOnboarding() }
+                modifier = Modifier.clickable { onNavigateToRegister() }
             )
         }
     }

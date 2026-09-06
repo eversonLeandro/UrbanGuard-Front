@@ -37,8 +37,12 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             loginUseCase(state.email, state.password).fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(isLoading = false, loginSuccess = true)
+                onSuccess = { userSession ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        loginSuccess = true,
+                        userRole = userSession.role
+                    )
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
