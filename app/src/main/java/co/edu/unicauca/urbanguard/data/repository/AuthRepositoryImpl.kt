@@ -1,5 +1,6 @@
 package co.edu.unicauca.urbanguard.data.repository
 
+import co.edu.unicauca.urbanguard.core.network.NetworkErrorMapper
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.data.remote.auth0.Auth0Manager
 import co.edu.unicauca.urbanguard.domain.model.UserSession
@@ -17,7 +18,9 @@ class AuthRepositoryImpl @Inject constructor(
             sessionManager.saveSession(session)
             Result.success(session)
         } catch (e: Exception) {
-            Result.failure(e)
+            // Limpiamos la sesión anterior por si el nuevo intento falla
+            sessionManager.clearSession()
+            Result.failure(Exception(NetworkErrorMapper.map(e)))
         }
     }
 
@@ -34,4 +37,4 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun logout() {
         sessionManager.clearSession()
     }
-}
+}

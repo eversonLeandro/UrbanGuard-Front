@@ -48,6 +48,7 @@ fun LoginScreen(
             ).show()
             val role = uiState.userRole ?: UserRole.RESIDENT
             onLoginSuccess(role)
+            viewModel.onLoginHandled()
         }
     }
 
