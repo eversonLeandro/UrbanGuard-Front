@@ -31,7 +31,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onLoginClick() {
-        val state = _uiState.value
+       /* val state = _uiState.value
         if (state.isLoading) return
         _uiState.value = state.copy(isLoading = true, errorMessage = null)
 
@@ -47,6 +47,8 @@ class LoginViewModel @Inject constructor(
                     )
                 }
             )
-        }
+        }*/ //DESCOMENTAR CUENDO ESTE EL BACKEND
+        // Login simulado para probar navegación sin backend:
+        _uiState.value = _uiState.value.copy(loginSuccess = true)
     }
 }
