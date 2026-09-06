@@ -50,6 +50,7 @@ fun AppNavGraph(
             ConjuntoCodeScreen(
                 onNavigateBack = {
                     navController.popBackStack()
+
                 }
             )
         }
