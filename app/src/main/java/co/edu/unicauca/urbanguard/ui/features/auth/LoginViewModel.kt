@@ -26,12 +26,16 @@ class LoginViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(password = value, errorMessage = null)
     }
 
+    fun onLoginHandled() {
+        _uiState.value = _uiState.value.copy(loginSuccess = false, userRole = null)
+    }
+
     fun togglePasswordVisibility() {
         _uiState.value = _uiState.value.copy(isPasswordVisible = !_uiState.value.isPasswordVisible)
     }
 
     fun onLoginClick() {
-       /* val state = _uiState.value
+        val state = _uiState.value
         if (state.isLoading) return
         _uiState.value = state.copy(isLoading = true, errorMessage = null)
 
@@ -44,15 +48,18 @@ class LoginViewModel @Inject constructor(
                         userRole = userSession.role
                     )
                 },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = error.message ?: "Ocurrió un error. Intenta de nuevo"
-                    )
-                }
+onFailure = { error ->
+                // Se reinician los flags de sesión para evitar estados "fantasma" si el login falla después de haber estado logueado
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    loginSuccess = false,
+                    userRole = null,
+                    errorMessage = error.message ?: "Ocurrió un error. Intenta de nuevo"
+                )
+            }
             )
-        }*/ //DESCOMENTAR CUENDO ESTE EL BACKEND
+        } //DESCOMENTAR CUENDO ESTE EL BACKEND
         // Login simulado para probar navegación sin backend:
-        _uiState.value = _uiState.value.copy(loginSuccess = true)
+        //_uiState.value = _uiState.value.copy(loginSuccess = true)
     }
 }

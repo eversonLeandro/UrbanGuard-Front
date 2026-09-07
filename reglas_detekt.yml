@@ -1,0 +1,38 @@
+complexity:
+  LongMethod:
+    active: true
+    threshold: 60 #  metodos de maximo n líneas
+  LongParameterList:
+    active: true
+    functionThreshold: 6 # parámetros de una funcion
+    constructorThreshold: 5 # inyección  de dependencias
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 11      # Máximo de funciones permitidas en un archivo
+    thresholdInClasses: 11    # Máximo de funciones permitidas dentro de una clase
+    thresholdInInterfaces: 11 # Máximo de métodos permitidos en una interfaz
+
+exceptions:
+  SwallowedException:
+    active: true  # procesar excepciones en bloques catch
+  TooGenericExceptionCaught:
+    active: true  # capturar errores específicos
+
+style:
+  MagicNumber:
+    active: true # extraer valores a un archivo de constantes   
+  WildcardImport:
+    active: true # prohibe importaciones del tipo `import *`
+  ReturnCount:
+    active: false # Evita tener múltiples puntos de salida (`return`)
+
+naming:
+  FunctionNaming:
+    active: true  # convención de escritura camelcase de funciones
+    ignoreAnnotated: ['Composable']
+  VariableNaming:
+    active: false # convención de escritura camelcase de variables
+
+empty-blocks:
+  EmptyFunctionBlock:
+    active: true # Evita callbacks de eventos que se queden vacíos y sin implementar

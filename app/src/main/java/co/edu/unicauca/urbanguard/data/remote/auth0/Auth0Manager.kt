@@ -16,6 +16,7 @@ import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+
 @Singleton
 class Auth0Manager @Inject constructor(
     private val apiClient: AuthenticationAPIClient
@@ -114,6 +115,21 @@ class Auth0Manager @Inject constructor(
                     ?: jwt.getClaim("https://urbanguard.co/roles").asList(String::class.java)?.firstOrNull()
                     ?: jwt.getClaim("role").asString()
                     ?: jwt.getClaim("roles").asList(String::class.java)?.firstOrNull()
+
+                // --- LOG DE DIAGNÓSTICO (quitar cuando se confirme el claim correcto) ---
+                val logRole1 = jwt.getClaim("role").asString()
+                val logRoles2 = jwt.getClaim("roles").asList(String::class.java)
+                val logRole3 = jwt.getClaim("https://urbanguard.co/role").asString()
+                val logRoles4 = jwt.getClaim("https://urbanguard.co/roles").asList(String::class.java)
+                Log.d(TAG, "=== CLAIMS DEL JWT ===")
+                Log.d(TAG, "  subject: ${jwt.subject}")
+                Log.d(TAG, "  role (simple): $logRole1")
+                Log.d(TAG, "  roles (lista): $logRoles2")
+                Log.d(TAG, "  https://urbanguard.co/role: $logRole3")
+                Log.d(TAG, "  https://urbanguard.co/roles: $logRoles4")
+                Log.d(TAG, "  rawRole resuelto: $rawRole")
+                Log.d(TAG, "  role mapeado: ${parseUserRole(rawRole)}")
+                // -------------------------------------------------------------------------
 
                 role = parseUserRole(rawRole)
             } catch (_: Exception) {
