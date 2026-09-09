@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import co.edu.unicauca.urbanguard.ui.features.auth.LoginScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoCodeScreen
+import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkByCodeScreen
 
 // Rutas de navegación — una constante por pantalla
 object Routes {
@@ -13,8 +14,8 @@ object Routes {
     const val CONJUNTO_CODE = "conjunto_code"
     // TODO: agregar el resto de rutas aquí a medida que se implementen:
     // const val ACTIVATE_CONJUNTO = "activate_conjunto"
-    // const val LINK_BY_CODE = "link_by_code"
     // const val PENDING_REQUESTS = "pending_requests"
+    const val LINK_BY_CODE = "link_by_code"
 }
 
 @Composable
@@ -51,6 +52,17 @@ fun AppNavGraph(
                 onNavigateBack = {
                     navController.popBackStack()
 
+                }
+            )
+        }
+        composable(Routes.LINK_BY_CODE) {
+            LinkByCodeScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onLinkSuccess = {
+                    // TODO: navegar al home del residente cuando esté listo
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
