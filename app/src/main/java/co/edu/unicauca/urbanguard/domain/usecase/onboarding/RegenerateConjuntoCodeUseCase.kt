@@ -7,10 +7,10 @@ import javax.inject.Inject
 class RegenerateConjuntoCodeUseCase @Inject constructor(
     private val repository: ConjuntoCodeRepository
 ) {
-    suspend operator fun invoke(): Result<ConjuntoCode> {
+    suspend operator fun invoke(conjuntoId: String? = null): Result<ConjuntoCode> {
         // Misma lógica que generate, pero el backend invalida el código anterior.
         // Se separa en un UseCase propio para que la UI pueda distinguir
         // semánticamente "primera generación" de "regeneración con consecuencias".
-        return repository.regenerateCode()
+        return repository.regenerateCode(conjuntoId)
     }
 }

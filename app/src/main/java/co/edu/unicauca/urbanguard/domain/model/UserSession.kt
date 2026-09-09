@@ -4,7 +4,8 @@ data class UserSession(
     val token: String,
     val userId: String,
     val name: String,
-    val role: UserRole
+    val role: UserRole,
+    val hasConjunto: Boolean = false
 )
 
 enum class UserRole { RESIDENT, GUARD, ADMIN }

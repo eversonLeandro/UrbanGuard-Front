@@ -1,7 +1,9 @@
 package co.edu.unicauca.urbanguard.core.di
 import co.edu.unicauca.urbanguard.data.remote.api.service.OnboardingApi
 import co.edu.unicauca.urbanguard.data.repository.ConjuntoCodeRepositoryImpl
+import co.edu.unicauca.urbanguard.data.repository.OnboardingRepositoryImpl
 import co.edu.unicauca.urbanguard.domain.repository.ConjuntoCodeRepository
+import co.edu.unicauca.urbanguard.domain.repository.OnboardingRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -33,4 +35,10 @@ abstract class OnboardingBindModule {
     abstract fun bindConjuntoCodeRepository(
         impl: ConjuntoCodeRepositoryImpl
     ): ConjuntoCodeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindOnboardingRepository(
+        impl: OnboardingRepositoryImpl
+    ): OnboardingRepository
 }
