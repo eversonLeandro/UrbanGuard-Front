@@ -26,5 +26,9 @@ class SessionManager @Inject constructor() {
         _session.value = null
     }
 
+    fun updateSession(hasConjunto: Boolean) {
+        _session.value = _session.value?.copy(hasConjunto = hasConjunto)
+    }
+
     fun currentRole(): UserRole? = _session.value?.role
 }
