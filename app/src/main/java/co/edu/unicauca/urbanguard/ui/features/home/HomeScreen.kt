@@ -4,12 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,14 +20,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.theme.*
 
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit = {},
+    onOpenConjuntoCode: () -> Unit = {},
+    onOpenPendingRequests: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var menuExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -54,18 +61,53 @@ fun HomeScreen(
                 Spacer(Modifier.width(10.dp))
                 Text("UrbanGuard", color = Color.White, fontWeight = FontWeight.Medium, fontSize = 16.sp)
             }
-            IconButton(
-                onClick = {
-                    onLogout()              // Navigate to login first
-                    viewModel.onLogout()    // Then clear session
-                },
-                modifier = Modifier.align(Alignment.CenterEnd)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ExitToApp,
-                    contentDescription = "Cerrar sesión",
-                    tint = UgEmerald
-                )
+            // Menú hamburguesa — solo visible para ADMIN
+            if (uiState.role == UserRole.ADMIN) {
+                Box(modifier = Modifier.align(Alignment.CenterEnd)) {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Menú",
+                            tint = UgEmerald
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Configurar datos del conjunto") },
+                            onClick = {
+                                menuExpanded = false
+                                // TODO: definir si reutiliza RegisterConjuntoScreen
+                                // en modo edición o se crea EditConjuntoScreen
+                                // — pendiente de decisión
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Generar / compartir código") },
+                            onClick = {
+                                menuExpanded = false
+                                onOpenConjuntoCode()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Aprobar solicitudes de vinculación") },
+                            onClick = {
+                                menuExpanded = false
+                                onOpenPendingRequests()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Cerrar sesión") },
+                            onClick = {
+                                menuExpanded = false
+                                onLogout()
+                                viewModel.onLogout()
+                            }
+                        )
+                    }
+                }
             }
         }
 

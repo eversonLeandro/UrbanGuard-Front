@@ -4,7 +4,7 @@ import co.edu.unicauca.urbanguard.domain.model.ConjuntoCode
 import co.edu.unicauca.urbanguard.domain.repository.ConjuntoCodeRepository
 import javax.inject.Inject
 class GetConjuntoCodeUseCase @Inject constructor ( private val repository: ConjuntoCodeRepository){
-    suspend operator fun invoke(): Result<ConjuntoCode> {
-        return repository.getCode()
+    suspend operator fun invoke(conjuntoId: String? = null): Result<ConjuntoCode> {
+        return repository.getCode(conjuntoId)
     }
 }
