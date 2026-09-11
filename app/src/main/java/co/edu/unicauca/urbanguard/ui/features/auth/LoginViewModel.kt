@@ -93,7 +93,7 @@ class LoginViewModel @Inject constructor(
         }*/
 
         // CASO 2 — Residente CON conjunto → debe ir a HOME
-          /*viewModelScope.launch {
+          viewModelScope.launch {
                sessionManager.saveSession(
                    UserSession(
                        token = "fake-token",
@@ -108,7 +108,7 @@ class LoginViewModel @Inject constructor(
                    loginSuccess = true,
                   userRole = UserRole.RESIDENT
                )
-           }*/
+           }
 
         // CASO 3 — Admin SIN conjunto → debe ir a ACTIVATE_CONJUNTO
         /* viewModelScope.launch {
@@ -129,7 +129,7 @@ class LoginViewModel @Inject constructor(
            }*/
 
         // CASO 4 — Admin CON conjunto → debe ir a HOME
-           viewModelScope.launch {
+          /* viewModelScope.launch {
                sessionManager.saveSession(
                    UserSession(
                        token = "fake-token",
@@ -144,7 +144,7 @@ class LoginViewModel @Inject constructor(
                    loginSuccess = true,
                    userRole = UserRole.ADMIN
                )
-           }
+           }*/
         // ────────────────────────────────────────────────────────────────
     }
 }

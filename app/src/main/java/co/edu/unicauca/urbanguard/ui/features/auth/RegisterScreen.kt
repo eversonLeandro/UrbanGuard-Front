@@ -1,5 +1,6 @@
 package co.edu.unicauca.urbanguard.ui.features.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,7 +19,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,6 +30,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import co.edu.unicauca.urbanguard.R
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.theme.*
 
@@ -65,16 +69,15 @@ fun RegisterScreen(
     ) {
         Spacer(Modifier.height(48.dp))
 
-        Box(
+        Image(
+            painter = painterResource(R.drawable.logo_u),
+            contentDescription = "Logo UrbanGuard",
             modifier = Modifier
-                .size(44.dp)
-                .background(UgNavy, RoundedCornerShape(12.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("UG", color = UgEmerald, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        }
+                .size(88.dp)
+                .clip(RoundedCornerShape(20.dp))
+        )
         Spacer(Modifier.height(8.dp))
-        Text("UrbanGuard", color = UgNavy, fontWeight = FontWeight.Medium, fontSize = 16.sp)
+        Text("UrbanGuard", color = UgNavy, fontWeight = FontWeight.Medium, fontSize = 20.sp)
 
         Spacer(Modifier.height(24.dp))
 

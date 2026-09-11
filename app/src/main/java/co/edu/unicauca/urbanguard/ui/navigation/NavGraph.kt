@@ -302,16 +302,7 @@ fun AppNavGraph(
         }
 
         composable(Routes.PROFILE) {
-            ProfileScreen(
-                navController = navController,
-                onLogout = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
-                        }
-                    }
-                }
-            )
+            ProfileScreen()
         }
     }
 }
