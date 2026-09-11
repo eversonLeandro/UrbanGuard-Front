@@ -20,7 +20,9 @@ private val bottomBarRoutes = setOf(
     Routes.CENSUS,
     Routes.SECURITY,
     Routes.NEWS,
-    Routes.PROFILE
+    Routes.PROFILE,
+    Routes.VISITORS,
+    Routes.SUPPORT
 )
 
 @Composable

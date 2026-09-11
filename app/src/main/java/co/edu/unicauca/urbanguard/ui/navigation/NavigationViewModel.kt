@@ -18,4 +18,10 @@ class NavigationViewModel @Inject constructor(
         sessionManager.updateSession(hasConjunto)
         return hasConjunto
     }
+    // Para el Residente: lee directamente desde la sesión activa
+    // el campo hasConjunto que vino en la respuesta del login.
+    // No necesita llamada extra al backend — el login ya lo resolvió.
+    fun resolveResidentPostLogin(): Boolean {
+        return sessionManager.session.value?.hasConjunto ?: false
+    }
 }

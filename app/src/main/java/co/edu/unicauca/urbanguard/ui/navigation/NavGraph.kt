@@ -3,6 +3,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -10,7 +11,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import co.edu.unicauca.urbanguard.domain.model.UserRole
+import co.edu.unicauca.urbanguard.ui.components.PlaceholderScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.LoginScreen
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apartment
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.SupportAgent
 import co.edu.unicauca.urbanguard.ui.features.home.HomeScreen
 import co.edu.unicauca.urbanguard.ui.features.news.NewsFeedScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ActivateConjuntoScreen
@@ -21,6 +30,7 @@ import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolHistoryScreen
 import co.edu.unicauca.urbanguard.ui.features.profile.ProfileScreen
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
 import kotlinx.coroutines.launch
+import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkByCodeScreen
 
 // Rutas de navegación — una constante por pantalla
 object Routes {
@@ -34,8 +44,14 @@ object Routes {
     const val SECURITY = "security"
     const val NEWS = "news"
     const val PROFILE = "profile"
+    const val VISITORS = "visitors"
+    const val SUPPORT = "support"
+    const val CONJUNTO_INFO = "conjunto_info"
+    const val RESERVATIONS = "reservations"
+    const val PACKAGES = "packages"
+    const val NOTIFICATIONS = "notifications"
     // TODO: agregar el resto de rutas aquí a medida que se implementen:
-    // const val LINK_BY_CODE = "link_by_code"
+    const val LINK_BY_CODE = "link_by_code"
 }
 
 @Composable
@@ -71,8 +87,14 @@ fun AppNavGraph(
                         }
                         // Residente: gestión de códigos para solicitar vinculación.
                         // El Vigilante NO accede a esta pantalla (regla de negocio).
-                        UserRole.RESIDENT -> navController.navigate(Routes.CONJUNTO_CODE) {
-                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        UserRole.RESIDENT -> {
+                            // No necesita corrutina — resolveResidentPostLogin() es síncrono
+                            val hasConjunto = navigationViewModel.resolveResidentPostLogin()
+                            navController.navigate(
+                                if (hasConjunto) Routes.HOME else Routes.LINK_BY_CODE
+                            ) {
+                                popUpTo(Routes.LOGIN) { inclusive = true }
+                            }
                         }
                         // TODO: definir destino inicial del Vigilante tras login
                         // (pendiente de decisión — no inventar).
@@ -158,8 +180,78 @@ fun AppNavGraph(
             NewsFeedScreen()
         }
 
+        composable(Routes.VISITORS) {
+            PlaceholderScreen(
+                title = "Visitantes",
+                icon = Icons.Default.People
+            )
+        }
+        composable(Routes.LINK_BY_CODE) {
+            LinkByCodeScreen(
+                onNavigateBack = {
+                    // La flecha superior regresa al login limpiando el backstack
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                        }
+                    }
+                },
+                onLinkSuccess = {
+                    // Por ahora vuelve al login — cuando exista
+                    // el Home del residente, navegar ahí
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Routes.SUPPORT) {
+            PlaceholderScreen(
+                title = "Soporte",
+                icon = Icons.Default.SupportAgent
+            )
+        }
+
+        composable(Routes.CONJUNTO_INFO) {
+            PlaceholderScreen(
+                title = "Información del conjunto",
+                icon = Icons.Default.Apartment
+            )
+        }
+
+        composable(Routes.RESERVATIONS) {
+            PlaceholderScreen(
+                title = "Reservar espacios comunes",
+                icon = Icons.Default.CalendarMonth
+            )
+        }
+
+        composable(Routes.PACKAGES) {
+            PlaceholderScreen(
+                title = "Mis paquetes",
+                icon = Icons.Default.Inventory2
+            )
+        }
+
+        composable(Routes.NOTIFICATIONS) {
+            PlaceholderScreen(
+                title = "Notificaciones",
+                icon = Icons.Default.Notifications
+            )
+        }
+
         composable(Routes.PROFILE) {
-            ProfileScreen()
+            ProfileScreen(
+                navController = navController,
+                onLogout = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
         }
     }
 }

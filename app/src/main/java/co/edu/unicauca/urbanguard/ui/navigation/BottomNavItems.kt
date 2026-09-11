@@ -4,7 +4,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SupportAgent
 
 val adminNavItems: List<NavItem> = listOf(
     NavItem(route = Routes.HOME, label = "Inicio", icon = Icons.Default.Home),
@@ -14,8 +16,12 @@ val adminNavItems: List<NavItem> = listOf(
     NavItem(route = Routes.PROFILE, label = "Perfil", icon = Icons.Default.Person)
 )
 
-// TODO: definir los ítems del menú de Residente cuando se implemente
-val residentNavItems: List<NavItem> = emptyList()
+val residentNavItems: List<NavItem> = listOf(
+    NavItem(route = Routes.HOME, label = "Inicio", icon = Icons.Default.Home),
+    NavItem(route = Routes.VISITORS, label = "Visitantes", icon = Icons.Default.People),
+    NavItem(route = Routes.SUPPORT, label = "Soporte", icon = Icons.Default.SupportAgent),
+    NavItem(route = Routes.PROFILE, label = "Perfil", icon = Icons.Default.Person)
+)
 
 // TODO: definir los ítems del menú de Vigilante cuando se implemente
 val vigilanteNavItems: List<NavItem> = emptyList()
