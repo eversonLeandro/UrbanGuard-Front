@@ -14,7 +14,7 @@ class NavigationViewModel @Inject constructor(
 
     suspend fun resolveAdminPostLogin(): Boolean {
         val status = getOnboardingStatusUseCase().getOrNull()
-        val hasConjunto = status?.hasConjunto ?: false
+        val hasConjunto = status?.hasConjunto ?: sessionManager.session.value?.hasConjunto ?: false
         sessionManager.updateSession(hasConjunto)
         return hasConjunto
     }

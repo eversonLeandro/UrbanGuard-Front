@@ -32,6 +32,7 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var menuExpanded by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -102,8 +103,7 @@ fun HomeScreen(
                             text = { Text("Cerrar sesión") },
                             onClick = {
                                 menuExpanded = false
-                                onLogout()
-                                viewModel.onLogout()
+                                showLogoutDialog = true
                             }
                         )
                     }
@@ -202,4 +202,38 @@ fun HomeScreen(
             }
         }
     }
+
+    if (showLogoutDialog) {
+        LogoutDialog(
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
+                viewModel.onLogout()
+            },
+            onDismiss = { showLogoutDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun LogoutDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Cerrar sesión", fontWeight = FontWeight.Bold, color = UgNavy) },
+        text = { Text("¿Seguro que deseas cerrar sesión?", color = UgTextSecondary) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Sí, cerrar sesión", color = UgErrorText, fontWeight = FontWeight.Medium)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = UgTextSecondary)
+            }
+        },
+        containerColor = Color.White
+    )
 }

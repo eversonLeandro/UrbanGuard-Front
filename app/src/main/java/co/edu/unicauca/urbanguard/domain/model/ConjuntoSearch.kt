@@ -7,9 +7,3 @@ data class ConjuntoSearch(
     val ciudad: String,
     val totalMiembros: Int
 )
-
-data class LinkRequest(
-    val conjuntoId: String,
-    val fechaSolicitud: String,
-    val estado: String = "PENDIENTE"
-)
