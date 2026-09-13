@@ -103,6 +103,13 @@ fun AppNavGraph(
                         // TODO: definir destino inicial del Vigilante tras login
                         // (pendiente de decisión — no inventar).
                         UserRole.GUARD -> Unit
+                        // Usuario provisional (JIT provisioning, aún sin conjunto):
+                        // flujo de vinculación mediante código.
+                        UserRole.USER -> {
+                            navController.navigate(Routes.LINK_BY_CODE) {
+                                popUpTo(Routes.LOGIN) { inclusive = true }
+                            }
+                        }
                     }
                 },
                 onNavigateToOnboarding = {
@@ -144,6 +151,13 @@ fun AppNavGraph(
                             }
                         }
                         UserRole.GUARD -> Unit
+                        // Usuario provisional (JIT provisioning, aún sin conjunto):
+                        // flujo de vinculación mediante código.
+                        UserRole.USER -> {
+                            navController.navigate(Routes.LINK_BY_CODE) {
+                                popUpTo(Routes.LOGIN) { inclusive = true }
+                            }
+                        }
                     }
                 },
                 onNavigateToLogin = {
