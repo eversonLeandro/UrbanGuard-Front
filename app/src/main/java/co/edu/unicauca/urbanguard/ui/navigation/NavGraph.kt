@@ -13,6 +13,7 @@ import androidx.navigation.navArgument
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.components.PlaceholderScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.LoginScreen
+import co.edu.unicauca.urbanguard.ui.features.auth.RegisterScreen
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apartment
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -24,6 +25,7 @@ import co.edu.unicauca.urbanguard.ui.features.home.HomeScreen
 import co.edu.unicauca.urbanguard.ui.features.news.NewsFeedScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ActivateConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoCodeScreen
+import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkRequestDetailScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.PendingRequestsScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.RegisterConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolHistoryScreen
@@ -39,6 +41,7 @@ object Routes {
     const val ACTIVATE_CONJUNTO = "activate_conjunto"
     const val REGISTER_CONJUNTO = "register_conjunto/{conjuntoId}"
     const val PENDING_REQUESTS = "pending_requests"
+    const val REQUEST_DETAIL = "link_request_detail/{requestId}"
     const val HOME = "home"
     const val CENSUS = "census"
     const val SECURITY = "security"
@@ -52,6 +55,7 @@ object Routes {
     const val NOTIFICATIONS = "notifications"
     // TODO: agregar el resto de rutas aquí a medida que se implementen:
     const val LINK_BY_CODE = "link_by_code"
+    const val REGISTER = "register"
 }
 
 @Composable
@@ -99,11 +103,65 @@ fun AppNavGraph(
                         // TODO: definir destino inicial del Vigilante tras login
                         // (pendiente de decisión — no inventar).
                         UserRole.GUARD -> Unit
+                        // Usuario provisional (JIT provisioning, aún sin conjunto):
+                        // flujo de vinculación mediante código.
+                        UserRole.USER -> {
+                            navController.navigate(Routes.LINK_BY_CODE) {
+                                popUpTo(Routes.LOGIN) { inclusive = true }
+                            }
+                        }
                     }
                 },
                 onNavigateToOnboarding = {
                     // TODO: navegar a RegisterConjuntoScreen (UG-45)
                     navController.navigate(Routes.ACTIVATE_CONJUNTO)
+                },
+                onNavigateToRegister = {
+                    // "¿Nuevo en UrbanGuard? Empezar aquí" → formulario de registro
+                    navController.navigate(Routes.REGISTER)
+                }
+            )
+        }
+
+        // Registro de nuevo usuario ("Empezar aquí" desde el Login)
+        composable(Routes.REGISTER) {
+            val registerNavigationViewModel: NavigationViewModel = hiltViewModel()
+            val registerScope = rememberCoroutineScope()
+            RegisterScreen(
+                onRegisterSuccess = { role ->
+                    when (role) {
+                        UserRole.ADMIN -> {
+                            registerScope.launch {
+                                val hasConjunto = registerNavigationViewModel.resolveAdminPostLogin()
+                                navController.navigate(
+                                    if (hasConjunto) Routes.HOME else Routes.ACTIVATE_CONJUNTO
+                                ) {
+                                    // Elimina Login y Register del backstack
+                                    popUpTo(Routes.LOGIN) { inclusive = true }
+                                }
+                            }
+                        }
+                        // Por defecto los nuevos usuarios son Residente
+                        UserRole.RESIDENT -> {
+                            val hasConjunto = registerNavigationViewModel.resolveResidentPostLogin()
+                            navController.navigate(
+                                if (hasConjunto) Routes.HOME else Routes.LINK_BY_CODE
+                            ) {
+                                popUpTo(Routes.LOGIN) { inclusive = true }
+                            }
+                        }
+                        UserRole.GUARD -> Unit
+                        // Usuario provisional (JIT provisioning, aún sin conjunto):
+                        // flujo de vinculación mediante código.
+                        UserRole.USER -> {
+                            navController.navigate(Routes.LINK_BY_CODE) {
+                                popUpTo(Routes.LOGIN) { inclusive = true }
+                            }
+                        }
+                    }
+                },
+                onNavigateToLogin = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -162,6 +220,22 @@ fun AppNavGraph(
 
         composable(Routes.PENDING_REQUESTS) {
             PendingRequestsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onOpenDetail = { requestId ->
+                    navController.navigate("link_request_detail/$requestId")
+                }
+            )
+        }
+
+        composable(
+            route = Routes.REQUEST_DETAIL,
+            arguments = listOf(
+                navArgument("requestId") { type = NavType.StringType }
+            )
+        ) {
+            LinkRequestDetailScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }
@@ -242,16 +316,7 @@ fun AppNavGraph(
         }
 
         composable(Routes.PROFILE) {
-            ProfileScreen(
-                navController = navController,
-                onLogout = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
-                        }
-                    }
-                }
-            )
+            ProfileScreen()
         }
     }
 }

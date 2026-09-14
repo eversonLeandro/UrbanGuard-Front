@@ -150,6 +150,7 @@ class Auth0Manager @Inject constructor(
             "ADMIN", "ADMINISTRADOR" -> UserRole.ADMIN
             "GUARD", "VIGILANTE", "PORTERO", "SEGURIDAD" -> UserRole.GUARD
             "RESIDENT", "RESIDENTE", "PROPIETARIO", "INQUILINO" -> UserRole.RESIDENT
+            "USER", "USUARIO" -> UserRole.USER
             else -> UserRole.RESIDENT
         }
     }

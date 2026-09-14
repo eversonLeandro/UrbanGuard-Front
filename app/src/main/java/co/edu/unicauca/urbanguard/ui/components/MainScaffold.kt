@@ -40,6 +40,7 @@ fun MainScaffold(
                 val items = when (role) {
                     UserRole.ADMIN -> adminNavItems
                     UserRole.RESIDENT -> residentNavItems
+                    UserRole.USER -> residentNavItems
                     UserRole.GUARD -> vigilanteNavItems
                     null -> emptyList()
                 }

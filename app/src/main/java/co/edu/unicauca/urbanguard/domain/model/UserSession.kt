@@ -8,4 +8,4 @@ data class UserSession(
     val hasConjunto: Boolean = false
 )
 
-enum class UserRole { RESIDENT, GUARD, ADMIN }
+enum class UserRole { USER, RESIDENT, GUARD, ADMIN }

@@ -49,7 +49,7 @@ class LoginViewModel @Inject constructor(
         // TODO: descomentar cuando el backend esté listo y comentar
         // el bloque de simulación de abajo.
         //
-        /*   viewModelScope.launch {
+           /*viewModelScope.launch {
                loginUseCase(state.email, state.password).fold(
                    onSuccess = { userSession ->
                        _uiState.value = _uiState.value.copy(
@@ -93,25 +93,25 @@ class LoginViewModel @Inject constructor(
         }*/
 
         // CASO 2 — Residente CON conjunto → debe ir a HOME
-          viewModelScope.launch {
-               sessionManager.saveSession(
-                   UserSession(
-                       token = "fake-token",
-                       userId = "fake-id",
-                       name = "Residente Prueba",
-                       role = UserRole.RESIDENT,
-                       hasConjunto = true
-                   )
-               )
-               _uiState.value = _uiState.value.copy(
-                   isLoading = false,
-                   loginSuccess = true,
-                  userRole = UserRole.RESIDENT
-               )
-           }
+//          viewModelScope.launch {
+//               sessionManager.saveSession(
+//                   UserSession(
+//                       token = "fake-token",
+//                       userId = "fake-id",
+//                       name = "Residente Prueba",
+//                       role = UserRole.ADMIN,
+//                       hasConjunto = true
+//                   )
+//               )
+//               _uiState.value = _uiState.value.copy(
+//                   isLoading = false,
+//                   loginSuccess = true,
+//                  userRole = UserRole.ADMIN
+//               )
+//           }
 
         // CASO 3 — Admin SIN conjunto → debe ir a ACTIVATE_CONJUNTO
-        /* viewModelScope.launch {
+        viewModelScope.launch {
                sessionManager.saveSession(
                    UserSession(
                        token = "fake-token",
@@ -126,10 +126,10 @@ class LoginViewModel @Inject constructor(
                    loginSuccess = true,
                    userRole = UserRole.ADMIN
                )
-           }*/
+           }
 
         // CASO 4 — Admin CON conjunto → debe ir a HOME
-        /* viewModelScope.launch {
+          /* viewModelScope.launch {
                sessionManager.saveSession(
                    UserSession(
                        token = "fake-token",
