@@ -1,5 +1,6 @@
 package co.edu.unicauca.urbanguard.core.session
 
+import co.edu.unicauca.urbanguard.domain.model.ConjuntoUserAssociation
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,8 +27,40 @@ class SessionManager @Inject constructor() {
         _session.value = null
     }
 
-    fun updateSession(hasConjunto: Boolean) {
-        _session.value = _session.value?.copy(hasConjunto = hasConjunto)
+    // TODO: reemplazar por llamada real al backend que retorna las asociaciones
+    fun loadMockAssociations() {
+        val current = _session.value ?: return
+        val mocks = listOf(
+            ConjuntoUserAssociation("mock-1", "Torres del Prado", UserRole.ADMIN),
+            ConjuntoUserAssociation("mock-2", "Conjunto El Pinar", UserRole.RESIDENT)
+        )
+        _session.value = current.copy(
+            conjuntosAsociados = mocks,
+            conjuntoActivoId = null,
+            role = UserRole.USER
+        )
+    }
+
+    fun addConjunto(association: ConjuntoUserAssociation) {
+        val current = _session.value ?: return
+        _session.value = current.copy(
+            conjuntosAsociados = current.conjuntosAsociados + association
+        )
+    }
+
+    fun setActiveConjunto(conjuntoId: String) {
+        val current = _session.value ?: return
+        val assoc = current.conjuntosAsociados.find { it.conjuntoId == conjuntoId } ?: return
+        _session.value = current.copy(
+            conjuntoActivoId = conjuntoId,
+            role = assoc.roleEnConjunto
+        )
+    }
+
+    fun getActiveConjunto(): ConjuntoUserAssociation? {
+        val s = _session.value ?: return null
+        val id = s.conjuntoActivoId ?: return null
+        return s.conjuntosAsociados.find { it.conjuntoId == id }
     }
 
     fun currentRole(): UserRole? = _session.value?.role

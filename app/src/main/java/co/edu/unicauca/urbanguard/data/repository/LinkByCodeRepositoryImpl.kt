@@ -34,10 +34,10 @@ class LinkByCodeRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun requestLink(conjuntoId: String): Result<LinkRequest> {
+    override suspend fun requestLink(conjuntoId: String, unidad: String): Result<LinkRequest> {
         // TODO: reemplazar por llamada real cuando el backend esté listo:
         // return try {
-        //     Result.success(api.requestLink(conjuntoId).toDomain())
+        //     Result.success(api.requestLink(conjuntoId, unidad).toDomain())
         // } catch (e: Exception) {
         //     Result.failure(Exception(NetworkErrorMapper.map(e)))
         // }
@@ -45,6 +45,7 @@ class LinkByCodeRepositoryImpl @Inject constructor(
             LinkRequest(
                 conjuntoId = conjuntoId,
                 fechaSolicitud = "28 Ene 2024, 10:32 am",
+                unidad = unidad,
                 estado = "PENDIENTE"
             )
         )

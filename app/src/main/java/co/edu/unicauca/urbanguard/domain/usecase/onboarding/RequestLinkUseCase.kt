@@ -7,7 +7,7 @@ import javax.inject.Inject
 class RequestLinkUseCase @Inject constructor(
     private val repository: LinkByCodeRepository
 ) {
-    suspend operator fun invoke(conjuntoId: String): Result<LinkRequest> {
-        return repository.requestLink(conjuntoId)
+    suspend operator fun invoke(conjuntoId: String, unidad: String): Result<LinkRequest> {
+        return repository.requestLink(conjuntoId, unidad)
     }
 }

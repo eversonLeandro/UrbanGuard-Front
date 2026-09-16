@@ -9,5 +9,5 @@ fun LoginResponseDto.toDomain(): UserSession = UserSession(
     userId = userId,
     name = name,
     role = UserRole.valueOf(role.uppercase()),
-    hasConjunto = hasConjunto
+    conjuntosAsociados = conjuntosAsociados?.map { it.toDomain() } ?: emptyList()
 )

@@ -16,5 +16,6 @@ fun ConjuntoSearchResponseDto.toDomain(): ConjuntoSearch = ConjuntoSearch(
 fun LinkRequestResponseDto.toDomain(): LinkRequest = LinkRequest(
     conjuntoId = conjuntoId,
     fechaSolicitud = fechaSolicitud,
+    unidad = unidad,
     estado = estado
 )
