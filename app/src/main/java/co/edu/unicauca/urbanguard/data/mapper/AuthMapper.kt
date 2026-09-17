@@ -8,5 +8,6 @@ fun LoginResponseDto.toDomain(): UserSession = UserSession(
     token = token,
     userId = userId,
     name = name,
-    role = UserRole.valueOf(role.uppercase())
+    role = UserRole.valueOf(role.uppercase()),
+    conjuntosAsociados = conjuntosAsociados?.map { it.toDomain() } ?: emptyList()
 )

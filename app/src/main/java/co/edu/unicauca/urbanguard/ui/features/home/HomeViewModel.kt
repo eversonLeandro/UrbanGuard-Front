@@ -27,6 +27,7 @@ class HomeViewModel @Inject constructor(
                     UserRole.ADMIN -> "ADMIN"
                     UserRole.GUARD -> "GUARD"
                     UserRole.RESIDENT -> "RESIDENT"
+                    UserRole.USER -> "USER"
                     null -> ""
                 },
                 role = session?.role

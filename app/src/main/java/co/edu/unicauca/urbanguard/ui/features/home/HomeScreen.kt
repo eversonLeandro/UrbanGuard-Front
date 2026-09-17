@@ -1,5 +1,6 @@
 package co.edu.unicauca.urbanguard.ui.features.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,11 +16,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import co.edu.unicauca.urbanguard.R
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.theme.*
 
@@ -32,6 +36,7 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var menuExpanded by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -50,19 +55,19 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.align(Alignment.CenterStart)
             ) {
-                Box(
+                Image(
+                    painter = painterResource(R.drawable.logo_u),
+                    contentDescription = "Logo UrbanGuard",
                     modifier = Modifier
                         .size(32.dp)
-                        .background(UgEmerald, RoundedCornerShape(8.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("UG", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                }
+                        .clip(RoundedCornerShape(8.dp))
+                )
                 Spacer(Modifier.width(10.dp))
                 Text("UrbanGuard", color = Color.White, fontWeight = FontWeight.Medium, fontSize = 16.sp)
             }
-            // Menú hamburguesa — solo visible para ADMIN
-            if (uiState.role == UserRole.ADMIN) {
+            // Menú hamburguesa — visible para ADMIN y RESIDENTE,
+            // con opciones según el rol
+            if (uiState.role == UserRole.ADMIN || uiState.role == UserRole.RESIDENT) {
                 Box(modifier = Modifier.align(Alignment.CenterEnd)) {
                     IconButton(onClick = { menuExpanded = true }) {
                         Icon(
@@ -75,35 +80,36 @@ fun HomeScreen(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false }
                     ) {
-                        DropdownMenuItem(
-                            text = { Text("Configurar datos del conjunto") },
-                            onClick = {
-                                menuExpanded = false
-                                // TODO: definir si reutiliza RegisterConjuntoScreen
-                                // en modo edición o se crea EditConjuntoScreen
-                                // — pendiente de decisión
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Generar / compartir código") },
-                            onClick = {
-                                menuExpanded = false
-                                onOpenConjuntoCode()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Aprobar solicitudes de vinculación") },
-                            onClick = {
-                                menuExpanded = false
-                                onOpenPendingRequests()
-                            }
-                        )
+                        if (uiState.role == UserRole.ADMIN) {
+                            DropdownMenuItem(
+                                text = { Text("Configurar datos del conjunto") },
+                                onClick = {
+                                    menuExpanded = false
+                                    // TODO: definir si reutiliza RegisterConjuntoScreen
+                                    // en modo edición o se crea EditConjuntoScreen
+                                    // — pendiente de decisión
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Generar / compartir código") },
+                                onClick = {
+                                    menuExpanded = false
+                                    onOpenConjuntoCode()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Aprobar solicitudes de vinculación") },
+                                onClick = {
+                                    menuExpanded = false
+                                    onOpenPendingRequests()
+                                }
+                            )
+                        }
                         DropdownMenuItem(
                             text = { Text("Cerrar sesión") },
                             onClick = {
                                 menuExpanded = false
-                                onLogout()
-                                viewModel.onLogout()
+                                showLogoutDialog = true
                             }
                         )
                     }
@@ -202,4 +208,38 @@ fun HomeScreen(
             }
         }
     }
+
+    if (showLogoutDialog) {
+        LogoutDialog(
+            onConfirm = {
+                showLogoutDialog = false
+                onLogout()
+                viewModel.onLogout()
+            },
+            onDismiss = { showLogoutDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun LogoutDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Cerrar sesión", fontWeight = FontWeight.Bold, color = UgNavy) },
+        text = { Text("¿Seguro que deseas cerrar sesión?", color = UgTextSecondary) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Sí, cerrar sesión", color = UgErrorText, fontWeight = FontWeight.Medium)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = UgTextSecondary)
+            }
+        },
+        containerColor = Color.White
+    )
 }

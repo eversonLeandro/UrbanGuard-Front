@@ -20,7 +20,9 @@ private val bottomBarRoutes = setOf(
     Routes.CENSUS,
     Routes.SECURITY,
     Routes.NEWS,
-    Routes.PROFILE
+    Routes.PROFILE,
+    Routes.VISITORS,
+    Routes.SUPPORT
 )
 
 @Composable
@@ -38,6 +40,7 @@ fun MainScaffold(
                 val items = when (role) {
                     UserRole.ADMIN -> adminNavItems
                     UserRole.RESIDENT -> residentNavItems
+                    UserRole.USER -> residentNavItems
                     UserRole.GUARD -> vigilanteNavItems
                     null -> emptyList()
                 }

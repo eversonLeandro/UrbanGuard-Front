@@ -1,5 +1,6 @@
 package co.edu.unicauca.urbanguard.ui.features.auth
 
+import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
 import co.edu.unicauca.urbanguard.domain.repository.AuthRepository
@@ -32,7 +33,7 @@ class LoginViewModelTest {
 
     @Test
     fun `onLoginHandled clears the success flag after a successful login`() = runTest {
-        val viewModel = LoginViewModel(LoginUseCase(FakeAuthRepository()))
+        val viewModel = LoginViewModel(LoginUseCase(FakeAuthRepository()), SessionManager())
 
         viewModel.onEmailChange("admin@urbanguard.co")
         viewModel.onPasswordChange("password123")

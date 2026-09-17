@@ -9,5 +9,6 @@ data class LoginResponseDto(
     val token: String,
     val userId: String,
     val name: String,
-    val role: String
+    val role: String,
+    val conjuntosAsociados: List<ConjuntoUserAssociationDto>? = null
 )

@@ -5,7 +5,8 @@ data class UserSession(
     val userId: String,
     val name: String,
     val role: UserRole,
-    val hasConjunto: Boolean = false
+    val conjuntosAsociados: List<ConjuntoUserAssociation> = emptyList(),
+    val conjuntoActivoId: String? = null
 )
 
-enum class UserRole { RESIDENT, GUARD, ADMIN }
+enum class UserRole { USER, RESIDENT, GUARD, ADMIN }
