@@ -40,6 +40,10 @@ class LoginViewModel @Inject constructor(
         )
     }
 
+    fun onLogout() {
+        sessionManager.clearSession()
+    }
+
     fun onLoginClick() {
         val state = _uiState.value
         if (state.isLoading) return
@@ -71,80 +75,22 @@ class LoginViewModel @Inject constructor(
         // ────────────────────────────────────────────────────────────────
 
         // ── SIMULACIÓN SIN BACKEND ───────────────────────────────────────
-        // Descomenta UNO solo de los bloques de abajo según lo que quieras probar.
-        // Vuelve a comentarlo cuando cambies de caso.
-
-        // CASO 1 — Residente SIN conjunto → debe ir a LinkByCodeScreen
-       /* viewModelScope.launch {
+        // CASO 5 — Usuario nuevo (USER) con 2 conjuntos → CONJUNTO_SELECTION
+        viewModelScope.launch {
             sessionManager.saveSession(
                 UserSession(
                     token = "fake-token",
                     userId = "fake-id",
-                    name = "Residente Prueba",
-                    role = UserRole.RESIDENT,
-                    hasConjunto = false
+                    name = "Usuario Prueba",
+                    role = UserRole.USER
                 )
             )
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 loginSuccess = true,
-                userRole = UserRole.RESIDENT
+                userRole = UserRole.USER
             )
-        }*/
-
-        // CASO 2 — Residente CON conjunto → debe ir a HOME
-//          viewModelScope.launch {
-//               sessionManager.saveSession(
-//                   UserSession(
-//                       token = "fake-token",
-//                       userId = "fake-id",
-//                       name = "Residente Prueba",
-//                       role = UserRole.ADMIN,
-//                       hasConjunto = true
-//                   )
-//               )
-//               _uiState.value = _uiState.value.copy(
-//                   isLoading = false,
-//                   loginSuccess = true,
-//                  userRole = UserRole.ADMIN
-//               )
-//           }
-
-        // CASO 3 — Admin SIN conjunto → debe ir a ACTIVATE_CONJUNTO
-        viewModelScope.launch {
-               sessionManager.saveSession(
-                   UserSession(
-                       token = "fake-token",
-                       userId = "fake-id",
-                       name = "Admin Prueba",
-                       role = UserRole.ADMIN,
-                       hasConjunto = false
-                   )
-               )
-               _uiState.value = _uiState.value.copy(
-                   isLoading = false,
-                   loginSuccess = true,
-                   userRole = UserRole.ADMIN
-               )
-           }
-
-        // CASO 4 — Admin CON conjunto → debe ir a HOME
-          /* viewModelScope.launch {
-               sessionManager.saveSession(
-                   UserSession(
-                       token = "fake-token",
-                       userId = "fake-id",
-                       name = "Admin Prueba",
-                       role = UserRole.ADMIN,
-                       hasConjunto = true
-                   )
-               )
-               _uiState.value = _uiState.value.copy(
-                   isLoading = false,
-                   loginSuccess = true,
-                   userRole = UserRole.ADMIN
-               )
-           }*/
+        }
         // ────────────────────────────────────────────────────────────────
     }
 }

@@ -32,6 +32,7 @@ import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolHistoryScreen
 import co.edu.unicauca.urbanguard.ui.features.profile.ProfileScreen
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
 import kotlinx.coroutines.launch
+import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoSelectionScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkByCodeScreen
 
 // Rutas de navegación — una constante por pantalla
@@ -56,6 +57,7 @@ object Routes {
     // TODO: agregar el resto de rutas aquí a medida que se implementen:
     const val LINK_BY_CODE = "link_by_code"
     const val REGISTER = "register"
+    const val CONJUNTO_SELECTION = "conjunto_selection"
 }
 
 @Composable
@@ -73,42 +75,21 @@ fun AppNavGraph(
             val scope = rememberCoroutineScope()
             LoginScreen(
                 onLoginSuccess = { role ->
-                    when (role) {
-                        UserRole.ADMIN -> {
-                            // Tras login, consulta una sola vez si el Admin tiene
-                            // conjunto vinculado y cachea el resultado en la sesión
-                            // para decidir la pantalla inicial (UG-45).
-                            scope.launch {
-                                val hasConjunto = navigationViewModel.resolveAdminPostLogin()
-                                navController.navigate(
-                                    if (hasConjunto) Routes.HOME else Routes.ACTIVATE_CONJUNTO
-                                ) {
-                                    // Elimina el Login del backstack — el usuario
-                                    // no puede volver atrás con el botón físico
-                                    popUpTo(Routes.LOGIN) { inclusive = true }
-                                }
-                            }
+                    // Tras login, se cargan las asociaciones del usuario (falsas por
+                    // ahora, TODO backend) y se decide la pantalla según el rol.
+                    // Nuevos registros llegan como USER hasta vincular/crear conjunto.
+                    scope.launch {
+                        navigationViewModel.resolvePostLogin()
+                        val destination = when (role) {
+                            // El rol viene del backend/Auth0: "USER" navega al selector;
+                            // ADMIN/RESIDENT/GUARD ya traen conjunto activo → Home.
+                            UserRole.USER -> Routes.CONJUNTO_SELECTION
+                            else -> Routes.HOME
                         }
-                        // Residente: gestión de códigos para solicitar vinculación.
-                        // El Vigilante NO accede a esta pantalla (regla de negocio).
-                        UserRole.RESIDENT -> {
-                            // No necesita corrutina — resolveResidentPostLogin() es síncrono
-                            val hasConjunto = navigationViewModel.resolveResidentPostLogin()
-                            navController.navigate(
-                                if (hasConjunto) Routes.HOME else Routes.LINK_BY_CODE
-                            ) {
-                                popUpTo(Routes.LOGIN) { inclusive = true }
-                            }
-                        }
-                        // TODO: definir destino inicial del Vigilante tras login
-                        // (pendiente de decisión — no inventar).
-                        UserRole.GUARD -> Unit
-                        // Usuario provisional (JIT provisioning, aún sin conjunto):
-                        // flujo de vinculación mediante código.
-                        UserRole.USER -> {
-                            navController.navigate(Routes.LINK_BY_CODE) {
-                                popUpTo(Routes.LOGIN) { inclusive = true }
-                            }
+                        navController.navigate(destination) {
+                            // Elimina el Login del backstack — el usuario
+                            // no puede volver atrás con el botón físico
+                            popUpTo(Routes.LOGIN) { inclusive = true }
                         }
                     }
                 },
@@ -128,40 +109,48 @@ fun AppNavGraph(
             val registerNavigationViewModel: NavigationViewModel = hiltViewModel()
             val registerScope = rememberCoroutineScope()
             RegisterScreen(
-                onRegisterSuccess = { role ->
-                    when (role) {
-                        UserRole.ADMIN -> {
-                            registerScope.launch {
-                                val hasConjunto = registerNavigationViewModel.resolveAdminPostLogin()
-                                navController.navigate(
-                                    if (hasConjunto) Routes.HOME else Routes.ACTIVATE_CONJUNTO
-                                ) {
-                                    // Elimina Login y Register del backstack
-                                    popUpTo(Routes.LOGIN) { inclusive = true }
-                                }
-                            }
-                        }
-                        // Por defecto los nuevos usuarios son Residente
-                        UserRole.RESIDENT -> {
-                            val hasConjunto = registerNavigationViewModel.resolveResidentPostLogin()
-                            navController.navigate(
-                                if (hasConjunto) Routes.HOME else Routes.LINK_BY_CODE
-                            ) {
-                                popUpTo(Routes.LOGIN) { inclusive = true }
-                            }
-                        }
-                        UserRole.GUARD -> Unit
-                        // Usuario provisional (JIT provisioning, aún sin conjunto):
-                        // flujo de vinculación mediante código.
-                        UserRole.USER -> {
-                            navController.navigate(Routes.LINK_BY_CODE) {
-                                popUpTo(Routes.LOGIN) { inclusive = true }
-                            }
+                onRegisterSuccess = { _ ->
+                    // Los nuevos registros llegan como USER en Auth0 (por defecto).
+                    // Se cargan las asociaciones (falsas por ahora, TODO backend) y se
+                    // navega al selector de conjuntos. Los roles específicos se asignan
+                    // después al vincularse o crear un conjunto.
+                    registerScope.launch {
+                        registerNavigationViewModel.resolvePostLogin()
+                        navController.navigate(Routes.CONJUNTO_SELECTION) {
+                            // Elimina Login y Register del backstack
+                            popUpTo(Routes.LOGIN) { inclusive = true }
                         }
                     }
                 },
                 onNavigateToLogin = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+        // Selector de conjuntos — pantalla intermedia tras login/registro
+        // cuando el usuario tiene rol USER (o quiere cambiar de conjunto activo).
+        composable(Routes.CONJUNTO_SELECTION) {
+            ConjuntoSelectionScreen(
+                onConjuntoSelected = { conjuntoId ->
+                    // setActiveConjunto ya lo hizo el ViewModel (llamado onConjuntoSelected),
+                    // aquí solo se navega al Home del rol correspondiente a ese conjunto.
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                },
+                onCreateConjunto = {
+                    navController.navigate(Routes.ACTIVATE_CONJUNTO)
+                },
+                onJoinByCode = {
+                    navController.navigate(Routes.LINK_BY_CODE)
+                },
+                onLogout = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                        }
+                    }
                 }
             )
         }
@@ -263,18 +252,18 @@ fun AppNavGraph(
         composable(Routes.LINK_BY_CODE) {
             LinkByCodeScreen(
                 onNavigateBack = {
-                    // La flecha superior regresa al login limpiando el backstack
-                    navController.navigate(Routes.LOGIN) {
+                    navController.navigate(Routes.CONJUNTO_SELECTION) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             inclusive = true
                         }
                     }
                 },
                 onLinkSuccess = {
-                    // Por ahora vuelve al login — cuando exista
-                    // el Home del residente, navegar ahí
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    // La solicitud está pendiente de aprobación — vuelve al selector
+                    navController.navigate(Routes.CONJUNTO_SELECTION) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                        }
                     }
                 }
             )

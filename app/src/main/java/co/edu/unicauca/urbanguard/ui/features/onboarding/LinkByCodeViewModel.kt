@@ -30,6 +30,27 @@ class LinkByCodeViewModel @Inject constructor(
         )
     }
 
+    // Máximo de dígitos permitidos para el número de apartamento
+    fun onApartamentoChange(value: String) {
+        // Solo dígitos (bloquea signos y negativos) + límite de longitud
+        val filtered = value.filter { it.isDigit() }.take(APARTAMENTO_MAX_LENGTH)
+        _uiState.value = _uiState.value.copy(
+            apartamento = filtered,
+            apartamentoError = null
+        )
+    }
+
+    private fun validateApartamento(): String? {
+        val apartamento = _uiState.value.apartamento
+        if (apartamento.isBlank()) {
+            return "Ingresa el número de apartamento"
+        }
+        if (apartamento.length < APARTAMENTO_MIN_LENGTH) {
+            return "El apartamento debe tener al menos $APARTAMENTO_MIN_LENGTH dígitos"
+        }
+        return null
+    }
+
     fun onSearchClick() {
         if (_uiState.value.isSearching) return
         val code = _uiState.value.code
@@ -68,12 +89,19 @@ class LinkByCodeViewModel @Inject constructor(
         val conjuntoId = _uiState.value.conjuntoFound?.id ?: return
         if (_uiState.value.isRequesting) return
 
+        val apartamentoError = validateApartamento()
+        if (apartamentoError != null) {
+            _uiState.value = _uiState.value.copy(apartamentoError = apartamentoError)
+            return
+        }
+        val apartamento = _uiState.value.apartamento
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isRequesting = true,
                 requestError = null
             )
-            requestLinkUseCase(conjuntoId).fold(
+            requestLinkUseCase(conjuntoId, apartamento).fold(
                 onSuccess = { request ->
                     _uiState.value = _uiState.value.copy(
                         isRequesting = false,
@@ -91,10 +119,8 @@ class LinkByCodeViewModel @Inject constructor(
         }
     }
 
-    fun onErrorDismissed() {
-        _uiState.value = _uiState.value.copy(
-            searchError = null,
-            requestError = null
-        )
+    companion object {
+        private const val APARTAMENTO_MIN_LENGTH = 1
+        private const val APARTAMENTO_MAX_LENGTH = 4
     }
 }

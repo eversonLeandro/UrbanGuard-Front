@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,12 +48,8 @@ fun LinkByCodeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
 
-    // Cuando la solicitud es exitosa navega al home del residente
-    LaunchedEffect(uiState.requestSuccess) {
-        if (uiState.requestSuccess) {
-            onLinkSuccess()
-        }
-    }
+    // El requestSuccess se muestra como pantalla de éxito y la navegación
+    // la dispara el botón "Volver al inicio" (no se auto-navega).
 
     // Si el requestSuccess está activo mostramos la pantalla de éxito
     if (uiState.requestSuccess && uiState.linkRequest != null) {
@@ -60,6 +57,7 @@ fun LinkByCodeScreen(
             conjuntoNombre = uiState.conjuntoFound?.nombre ?: "",
             direccion = uiState.conjuntoFound?.direccion ?: "",
             ciudad = uiState.conjuntoFound?.ciudad ?: "",
+            unidad = uiState.apartamento,
             fechaSolicitud = uiState.linkRequest!!.fechaSolicitud,
             onNavigateHome = onLinkSuccess
         )
@@ -326,6 +324,45 @@ fun LinkByCodeScreen(
                                 )
                             }
 
+                            // Número de apartamento del futuro residente
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                OutlinedTextField(
+                                    value = uiState.apartamento,
+                                    onValueChange = viewModel::onApartamentoChange,
+                                    label = { Text("Número de apartamento") },
+                                    placeholder = { Text("Ej: 302", color = UgEmerald, fontSize = 13.sp) },
+                                    singleLine = true,
+                                    isError = uiState.apartamentoError != null,
+                                    shape = RoundedCornerShape(8.dp),
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Number,
+                                        imeAction = ImeAction.Done
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onDone = {
+                                            focusManager.clearFocus()
+                                            viewModel.onRequestLinkClick()
+                                        }
+                                    ),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = UgNavy,
+                                        focusedLabelColor = UgNavy,
+                                        cursorColor = UgNavy,
+                                        errorBorderColor = Color(0xFFEF4444),
+                                        errorLabelColor = Color(0xFFEF4444)
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                if (uiState.apartamentoError != null) {
+                                    Text(
+                                        text = uiState.apartamentoError!!,
+                                        fontSize = 12.sp,
+                                        color = Color(0xFFEF4444)
+                                    )
+                                }
+                            }
+
                             // Botón solicitar vinculación
                             Button(
                                 onClick = viewModel::onRequestLinkClick,
@@ -405,6 +442,7 @@ private fun LinkSuccessScreen(
     conjuntoNombre: String,
     direccion: String,
     ciudad: String,
+    unidad: String,
     fechaSolicitud: String,
     onNavigateHome: () -> Unit
 ) {
@@ -465,6 +503,8 @@ private fun LinkSuccessScreen(
             SolicitudInfoRow(label = "Conjunto", value = conjuntoNombre)
             Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)
             SolicitudInfoRow(label = "Dirección", value = "$direccion, $ciudad")
+            Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+            SolicitudInfoRow(label = "Apartamento", value = "N.º $unidad")
             Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)
             SolicitudInfoRow(label = "Fecha de solicitud", value = fechaSolicitud)
             Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)

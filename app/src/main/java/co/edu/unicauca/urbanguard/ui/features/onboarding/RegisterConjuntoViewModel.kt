@@ -3,6 +3,9 @@ package co.edu.unicauca.urbanguard.ui.features.onboarding
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.model.ConjuntoUserAssociation
+import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.ConfigureConjuntoUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GenerateConjuntoCodeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +19,7 @@ import javax.inject.Inject
 class RegisterConjuntoViewModel @Inject constructor(
     private val generateConjuntoCodeUseCase: GenerateConjuntoCodeUseCase,
     private val configureConjuntoUseCase: ConfigureConjuntoUseCase,
+    private val sessionManager: SessionManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -88,6 +92,16 @@ class RegisterConjuntoViewModel @Inject constructor(
                 totalUnidades = totalUnidades
             ).fold(
                 onSuccess = {
+                    // El usuario pasa a ser ADMIN del conjunto recién creado.
+                    // Se agrega a su lista de conjuntos y se marca como activo.
+                    sessionManager.addConjunto(
+                        ConjuntoUserAssociation(
+                            conjuntoId = currentConjuntoId,
+                            nombre = nombre,
+                            roleEnConjunto = UserRole.ADMIN
+                        )
+                    )
+                    sessionManager.setActiveConjunto(currentConjuntoId)
                     _uiState.value = _uiState.value.copy(
                         isLoadingAction = false,
                         isUpdateSuccess = true

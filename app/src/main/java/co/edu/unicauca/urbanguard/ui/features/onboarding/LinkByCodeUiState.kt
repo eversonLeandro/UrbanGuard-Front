@@ -7,6 +7,10 @@ data class LinkByCodeUiState(
     val code: String = "",
     val codeError: String? = null,
 
+    // Apartamento del futuro residente (solo dígitos, sin negativos)
+    val apartamento: String = "",
+    val apartamentoError: String? = null,
+
     // Estado de búsqueda
     val isSearching: Boolean = false,
     val conjuntoFound: ConjuntoSearch? = null,
