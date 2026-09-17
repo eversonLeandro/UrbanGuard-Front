@@ -57,17 +57,17 @@ class RegisterConjuntoViewModel @Inject constructor(
                 direccion = direccion,
                 ciudad = ciudad
             ).fold(
-                onSuccess = {
+                onSuccess = { createdComplex ->
                     // El usuario pasa a ser ADMIN del conjunto recién creado.
                     // Se agrega a su lista de conjuntos y se marca como activo.
                     sessionManager.addConjunto(
                         ConjuntoUserAssociation(
-                            conjuntoId = currentConjuntoId,
+                            conjuntoId = createdComplex.complexId,
                             nombre = nombre,
                             roleEnConjunto = UserRole.ADMIN
                         )
                     )
-                    sessionManager.setActiveConjunto(currentConjuntoId)
+                    sessionManager.setActiveConjunto(createdComplex.complexId)
                     _uiState.value = _uiState.value.copy(
                         isLoadingAction = false,
                         isUpdateSuccess = true
