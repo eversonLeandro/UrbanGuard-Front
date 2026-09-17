@@ -1,7 +1,5 @@
 package co.edu.unicauca.urbanguard.ui.features.onboarding
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,19 +15,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.GppGood
 import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -38,9 +31,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,15 +44,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -80,7 +65,7 @@ fun RegisterConjuntoScreen(
 
     var complejoNombre by remember { mutableStateOf("") }
     var direccion by remember { mutableStateOf("") }
-    var ciudad by remember { mutableStateOf("Bogotá D.C.") }
+    var ciudad by remember { mutableStateOf("Popayan") }
     var totalUnidades by remember { mutableStateOf("") }
 
     val totalUnidadesNum = totalUnidades.toIntOrNull()
@@ -108,8 +93,7 @@ fun RegisterConjuntoScreen(
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 8.dp)
-        ) {
-            HeroImage()
+        ) {            
             Spacer(Modifier.height(20.dp))
             GeneralFormSection(
                 complejoNombre = complejoNombre,
@@ -121,26 +105,8 @@ fun RegisterConjuntoScreen(
                 totalUnidades = totalUnidades,
                 onTotalUnidadesChange = { totalUnidades = it }
             )
-            Spacer(Modifier.height(24.dp))
-            ActivationCodeCard(
-                activationCode = uiState.code,
-                isLoading = uiState.isLoadingInitial,
-                copySuccess = uiState.copySuccess,
-                onCopyClick = {
-                    uiState.code?.let { code ->
-                        val clipboard = context.getSystemService(
-                            Context.CLIPBOARD_SERVICE
-                        ) as ClipboardManager
-                        clipboard.setPrimaryClip(
-                            ClipData.newPlainText("Código condominio", code)
-                        )
-                        viewModel.onCopyClick()
-                    }
-                }
-            )
-            Spacer(Modifier.height(8.dp))
-        }
-
+            Spacer(Modifier.height(24.dp)) 
+        }                     
         Footer(
             enabled = isFormValid,
             errorMessage = uiState.errorMessage,
@@ -218,20 +184,36 @@ private fun GeneralFormSection(
     val ciudades = remember { loadColombiaCities(context) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .width(4.dp)
-                    .height(18.dp)
-                    .background(UgViolet, RoundedCornerShape(2.dp))
+       Row(
+            verticalAlignment = Alignment.Top,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Default.Business,
+                contentDescription = null,
+                tint = UgViolet,
+                modifier = Modifier.size(28.dp)
             )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = "Información general",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = UgTextPrimary
-            )
+
+            Spacer(Modifier.width(12.dp))
+
+            Column {
+                Text(
+                    text = "Información general",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UgTextPrimary
+                )
+
+                Spacer(Modifier.height(2.dp))
+
+                Text(
+                    text = "Diligencia los datos del condominio para registrarlo en la plataforma.",
+                    fontSize = 12.sp,
+                    color = UgTextSecondary,
+                    lineHeight = 16.sp
+                )
+            }
         }
 
         Spacer(Modifier.height(16.dp))
@@ -275,108 +257,6 @@ private fun GeneralFormSection(
     }
 }
 
-@Composable
-private fun ActivationCodeCard(
-    activationCode: String?,
-    isLoading: Boolean,
-    copySuccess: Boolean,
-    onCopyClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(UgCardBgViolet, RoundedCornerShape(12.dp))
-            .drawBehind {
-                val stroke = Stroke(
-                    width = 1.5.dp.toPx(),
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f))
-                )
-                drawRoundRect(
-                    color = UgCardBorder,
-                    topLeft = Offset.Zero,
-                    size = size,
-                    cornerRadius = CornerRadius(12.dp.toPx()),
-                    style = stroke
-                )
-            }
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(Color(0xFFE0E7FF), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = null,
-                tint = Color(0xFF4F46E5),
-                modifier = Modifier.size(20.dp)
-            )
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Text(
-            text = "Este es el código único de identificación para su condominio residencial.",
-            fontSize = 13.sp,
-            color = UgTextPrimary,
-            lineHeight = 18.sp,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .background(Color.White, RoundedCornerShape(10.dp))
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        color = UgViolet,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(20.dp)
-                    )
-                } else {
-                    Text(
-                        text = activationCode ?: "—",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace,
-                        letterSpacing = 2.sp,
-                        color = UgViolet
-                    )
-                }
-            }
-            IconButton(
-                onClick = onCopyClick
-            ) {
-                Icon(
-                    imageVector = if (copySuccess) Icons.Default.Check else Icons.Default.ContentCopy,
-                    contentDescription = if (copySuccess) "Código copiado" else "Copiar código",
-                    tint = if (copySuccess) Color(0xFF16A34A) else UgViolet
-                )
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Text(
-            text = "GUARDE ESTE CÓDIGO PARA FUTURAS INTEGRACIONES",
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Medium,
-            letterSpacing = 0.6.sp,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            color = UgTextSecondary
-        )
-    }
-}
 
 @Composable
 private fun FieldLabel(icon: ImageVector, text: String) {
@@ -540,24 +420,6 @@ private fun loadColombiaCities(context: Context): List<String> {
         }
     } catch (_: Exception) {
         emptyList()
-    }
-}
-
-@Composable
-private fun HeroImage(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(140.dp)
-            .background(UgCardBgViolet, RoundedCornerShape(16.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Imagen del condominio",
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
-            color = UgTextSecondary
-        )
     }
 }
 

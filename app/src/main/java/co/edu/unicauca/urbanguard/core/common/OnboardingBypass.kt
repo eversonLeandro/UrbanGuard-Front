@@ -5,8 +5,8 @@ package co.edu.unicauca.urbanguard.core.common
  *
  * Activa respuestas quemadas (hardcoded) para los endpoints que el backend real
  * todavía no expone:
- *   - Validar código de activación y crear conjunto (retorna conjuntoId).
- *   - Actualizar conjunto por ID (PUT onboarding/conjunto/{conjuntoId}).
+ *   - Verificar código de activación y crear conjunto (POST activations/verifications → 204).
+ *   - Crear conjunto / complex con datos del formulario (POST complexes → 201).
  *
  * El resto del flujo que ya es real (generación de código de vinculación,
  * POST onboarding/code/generate) NO pasa por este flag.
@@ -14,12 +14,9 @@ package co.edu.unicauca.urbanguard.core.common
  * Para quitar el bypass:
  *   1. Poner ENABLED = false.
  *   2. Descomentar la lógica real marcada con "// DESCOMENTAR CUANDO ESTÉ EL BACKEND"
- *      en ActivateConjuntoUseCase y ConfigureConjuntoUseCase.
+ *      en ActivateConjuntoUseCase, ConfigureConjuntoUseCase, OnboardingRepositoryImpl
+ *      y ConjuntoCodeRepositoryImpl.
  */
 object OnboardingBypass {
     const val ENABLED: Boolean = true
-
-    // Valor quemado que actúa como PK del conjunto mientras no exista
-    // el endpoint real de validación de activación.
-    const val BYPASS_CONJUNTO_ID: String = "999-DEV-BYPASS"
 }

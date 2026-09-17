@@ -1,40 +1,46 @@
 package co.edu.unicauca.urbanguard.domain.usecase.onboarding
 
 import co.edu.unicauca.urbanguard.core.common.OnboardingBypass
+import co.edu.unicauca.urbanguard.domain.model.CreatedComplex
+import co.edu.unicauca.urbanguard.domain.model.MembershipRole
 import co.edu.unicauca.urbanguard.domain.repository.ConjuntoCodeRepository
 import javax.inject.Inject
 
 /**
- * Actualiza los datos de un conjunto YA existente por su ID (PUT).
+ * Crea el conjunto (complex) con los datos del formulario de registro.
  *
- * El conjunto se crea al validar el código de activación (paso ActivateConjunto),
- * por lo que aquí solo se envían los datos (nombre, dirección, ciudad, unidades)
- * y NO codigoActivacion (ese código murió en el paso de Activate).
+ * POST /api/complexes → 201 Created con { complexId, membershipId, roles }.
+ * El activationCode ya fue validado en el paso ActivateConjunto y viaja
+ * por navegación hasta esta pantalla (argumento de ruta).
+ *
+ * El conjunto se CREA aquí (no se actualiza por ID): reemplaza al antiguo
+ * ConfigureConjuntoUseCase (PUT onboarding/conjunto/{conjuntoId}).
  */
 class ConfigureConjuntoUseCase @Inject constructor(
     private val repository: ConjuntoCodeRepository
 ) {
     suspend operator fun invoke(
-        conjuntoId: String,
+        activationCode: String,
         nombre: String,
         direccion: String,
-        ciudad: String,
-        totalUnidades: Int
-    ): Result<Unit> {
+        ciudad: String
+    ): Result<CreatedComplex> {
         if (OnboardingBypass.ENABLED) {
-            // Valor quemado: el conjunto "ya existe" tras el bypass de Activate,
-            // por lo que el update se considera exitoso para habilitar la
-            // navegación a Home sin backend.
-            return Result.success(Unit)
+            // Valor simulado del 201 Created de POST /api/complexes.
+            return Result.success(
+                CreatedComplex(
+                    complexId = "bypass-complex-001",
+                    membershipId = "bypass-membership-001",
+                    roles = listOf(MembershipRole.ADMIN)
+                )
+            )
         } else {
             // DESCOMENTAR CUANDO ESTÉ EL BACKEND
-            // Llama al endpoint real `PUT onboarding/conjunto/{conjuntoId}`.
-            // return repository.updateConjunto(
-            //     conjuntoId = conjuntoId,
+            // return repository.createConjunto(
+            //     activationCode = activationCode,
             //     nombre = nombre,
             //     direccion = direccion,
-            //     ciudad = ciudad,
-            //     totalUnidades = totalUnidades
+            //     ciudad = ciudad
             // )
             return Result.failure(Exception("Bypass desactivado y endpoint real no implementado todavía"))
         }

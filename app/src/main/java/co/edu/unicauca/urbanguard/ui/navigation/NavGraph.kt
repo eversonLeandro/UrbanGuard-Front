@@ -27,7 +27,7 @@ object Routes {
     const val LOGIN = "login"
     const val CONJUNTO_CODE = "conjunto_code"
     const val ACTIVATE_CONJUNTO = "activate_conjunto"
-    const val REGISTER_CONJUNTO = "register_conjunto/{conjuntoId}"
+    const val REGISTER_CONJUNTO = "register_conjunto/{activationCode}"
     const val PENDING_REQUESTS = "pending_requests"
     const val HOME = "home"
     const val CENSUS = "census"
@@ -97,8 +97,8 @@ fun AppNavGraph(
 
         composable(Routes.ACTIVATE_CONJUNTO) {
             ActivateConjuntoScreen(
-                onValidated = { conjuntoId ->
-                    navController.navigate("register_conjunto/$conjuntoId") {
+                onValidated = { activationCode ->
+                    navController.navigate("register_conjunto/$activationCode") {
                         // No se puede volver de Register a Activate:
                         // se elimina Activate del backstack
                         popUpTo(Routes.ACTIVATE_CONJUNTO) { inclusive = true }
@@ -110,7 +110,7 @@ fun AppNavGraph(
         composable(
             route = Routes.REGISTER_CONJUNTO,
             arguments = listOf(
-                navArgument("conjuntoId") { type = NavType.StringType }
+                navArgument("activationCode") { type = NavType.StringType }
             )
         ) {
             RegisterConjuntoScreen(

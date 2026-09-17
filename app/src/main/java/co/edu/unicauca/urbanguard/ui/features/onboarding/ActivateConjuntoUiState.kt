@@ -5,5 +5,7 @@ data class ActivateConjuntoUiState(
     val code: String = "",
     val errorMessage: String? = null,
     val isValidated: Boolean = false,
-    val conjuntoId: String? = null
+    // Código ACT-XXXX-YYYY ingresado por el usuario, propagado a la
+    // siguiente pantalla por navegación. No viene del backend (204 sin body).
+    val activationCode: String? = null
 )
