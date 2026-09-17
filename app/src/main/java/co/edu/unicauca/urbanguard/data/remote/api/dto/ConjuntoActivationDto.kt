@@ -1,34 +1,36 @@
 package co.edu.unicauca.urbanguard.data.remote.api.dto
 
 /**
- * Payload de actualización de un conjunto YA existente (PUT onboarding/conjunto/{conjuntoId}).
+ * Request del endpoint de verificación de código de activación.
+ * POST /api/activations/verifications
+ * Body: { "code": "ACT-XXXX-YYYY" }
+ * Éxito: 204 No Content (sin body de respuesta).
+ */
+data class ActivationRequestDto(
+    val code: String
+)
+
+/**
+ * Request del endpoint de creación de conjunto (complex).
+ * POST /api/complexes
+ * Body: { activationCode, name, address, city }
  *
- * El conjunto se crea al validar el código de activación (paso ActivateConjunto),
- * por lo que aquí NO se envía codigoActivacion. El conjuntoId va en la URL del
- * endpoint, no en el body.
+ * NOTA: totalUnidades NO se incluye aquí porque el backend lo rechaza
+ * con 400 ante campo desconocido. Se mantiene en el formulario local.
  */
 data class RegisterConjuntoRequestDto(
-    val nombre: String,
-    val direccion: String,
-    val ciudad: String,
-    val totalUnidades: Int
+    val activationCode: String,
+    val name: String,
+    val address: String,
+    val city: String
 )
 
 /**
- * Request del endpoint de validación de activación.
- * Recibe el código de activación ACT-XXXX-YYYY.
+ * Respuesta del endpoint de creación de conjunto.
+ * POST /api/complexes → 201 Created
  */
-data class ActivationValidationRequestDto(
-    val codigoActivacion: String
-)
-
-/**
- * Respuesta del endpoint de validación de activación
- * (POST onboarding/activation-code/validate).
- *
- * El backend, al validar ACT-XXXX-YYYY, crea el conjunto y retorna su PK
- * autogenerada. NO retorna el código de activación de vuelta.
- */
-data class ActivationValidationResponseDto(
-    val conjuntoId: String
+data class CreateComplexResponseDto(
+    val complexId: String,
+    val membershipId: String,
+    val roles: List<String>
 )

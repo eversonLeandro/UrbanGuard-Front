@@ -20,14 +20,18 @@ class OnboardingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun validateActivationCode(codigoActivacion: String): Result<String> {
+    override suspend fun validateActivationCode(code: String): Result<Unit> {
         // DESCOMENTAR CUANDO ESTÉ EL BACKEND
-        // Endpoint real: POST onboarding/activation-code/validate
+        // Endpoint real: POST activations/verifications → 204 No Content.
         // return try {
-        //     val response = onboardingApi.validateActivationCode(
-        //         ActivationValidationRequestDto(codigoActivacion = codigoActivacion)
+        //     val response = onboardingApi.verifyActivation(
+        //         ActivationRequestDto(code = code)
         //     )
-        //     Result.success(response.conjuntoId)
+        //     if (response.isSuccessful) {
+        //         Result.success(Unit)
+        //     } else {
+        //         Result.failure(Exception(NetworkErrorMapper.map(retrofit2.HttpException(response))))
+        //     }
         // } catch (e: Exception) {
         //     Result.failure(Exception(NetworkErrorMapper.map(e)))
         // }

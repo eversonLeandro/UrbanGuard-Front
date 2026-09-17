@@ -1,6 +1,7 @@
 package co.edu.unicauca.urbanguard.data.remote.api.service
-import co.edu.unicauca.urbanguard.data.remote.api.dto.ActivationValidationRequestDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.ActivationRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.ConjuntoCodeResponseDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.CreateComplexResponseDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.OnboardingStatusDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.RegisterConjuntoRequestDto
 import retrofit2.http.Body
@@ -29,25 +30,27 @@ interface OnboardingApi {
 
     // =========================================================================
     // ENDPOINT NUEVO SOLICITADO AL BACKEND (NO EXISTE AÚN):
-    //   POST onboarding/activation-code/validate
-    //   Body:  { "codigoActivacion": "ACT-XXXX-YYYY" }
-    //   Resp:  { "conjuntoId": "<PK autogenerada del conjunto>" }
-    // El backend, al validar el código, crea el registro del Conjunto con PK
-    // autogenerada y la retorna. NO retorna el código de activación de vuelta.
+    //   POST /api/activations/verifications
+    //   Body:  { "code": "ACT-XXXX-YYYY" }
+    //   Éxito: 204 No Content (sin body de respuesta)
+    //   Errores: 400/401/403/422/500 con DTO ApiError.
+    // El backend, al validar el código, CREA el conjunto. NO retorna ningún
+    // cuerpo: se usa Response<Unit> para no intentar deserializar el 204.
     // =========================================================================
     // DESCOMENTAR CUANDO ESTÉ EL BACKEND
-    // @POST("onboarding/activation-code/validate")
-    // suspend fun validateActivationCode(
-    //     @Body request: ActivationValidationRequestDto
-    // ): ActivationValidationResponseDto
+    // @POST("activations/verifications")
+    // suspend fun verifyActivation(@Body request: ActivationRequestDto): retrofit2.Response<Unit>
 
-    // Actualiza los datos de un conjunto YA existente por su ID.
-    // El conjunto se crea en el paso de ActivateConjunto (validar código);
-    // aquí solo se completan los datos (nombre, dirección, ciudad, unidades).
-    // Ya NO se envía codigoActivacion: ese código murió en el paso de Activate.
-    @PUT("onboarding/conjunto/{conjuntoId}")
-    suspend fun updateConjunto(
-        @Path("conjuntoId") conjuntoId: String,
-        @Body request: RegisterConjuntoRequestDto
-    ): Unit
+    // Crea un conjunto (complex) tras validar el código de activación.
+    // POST /api/complexes
+    //   Body:  { activationCode, name, address, city }
+    //   Éxito: 201 Created con { complexId, membershipId, roles }
+    //   Errores: 400/401/403/422/405/502/503/504 con DTO ApiError.
+    // Ya NO se usa PUT por ID ni el path conjuntoId; totalUnidades queda fuera
+    // del body (el backend lo rechaza con 400 por campo desconocido).
+    // DESCOMENTAR CUANDO ESTÉ EL BACKEND
+    // @POST("complexes")
+    // suspend fun createConjunto(
+    //     @Body request: RegisterConjuntoRequestDto
+    // ): CreateComplexResponseDto
 }

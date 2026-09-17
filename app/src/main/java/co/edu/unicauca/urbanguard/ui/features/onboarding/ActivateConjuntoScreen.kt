@@ -19,7 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.GppGood
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
@@ -42,10 +41,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.unicauca.urbanguard.ui.theme.*
+import co.edu.unicauca.urbanguard.R
+import androidx.compose.foundation.Image
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 
 @Composable
 fun ActivateConjuntoScreen(
-    onValidated: (conjuntoId: String?) -> Unit = {},
+    onValidated: (activationCode: String) -> Unit = {},
     viewModel: ActivateConjuntoViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -53,7 +57,7 @@ fun ActivateConjuntoScreen(
 
     LaunchedEffect(uiState.isValidated) {
         if (uiState.isValidated) {
-            onValidated(uiState.conjuntoId)
+            uiState.activationCode?.let { onValidated(it) }
         }
     }
 
@@ -286,15 +290,16 @@ private fun HeroImage() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp)
-            .background(UgHeroTeal, RoundedCornerShape(16.dp)),
+            .height(180.dp),            
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = Icons.Filled.Home,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(56.dp)
+        Image(
+            painter = painterResource(id = R.drawable.logourbanguard), // Nombre de tu archivo sin extensión
+            contentDescription = "Logo UrbanGuard",
+            contentScale = ContentScale.Fit, 
+            modifier = Modifier
+                .height(180.dp)
+                .clip(RoundedCornerShape(16.dp)) 
         )
     }
 }

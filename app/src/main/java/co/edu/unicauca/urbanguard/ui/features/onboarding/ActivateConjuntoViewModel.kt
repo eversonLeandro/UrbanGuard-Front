@@ -33,18 +33,20 @@ class ActivateConjuntoViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
             activateConjuntoUseCase(code).fold(
-                onSuccess = { conjuntoId ->
+                onSuccess = {
+                    // Éxito (204): guardamos el código ingresado para llevarlo
+                    // a la siguiente pantalla. No hay valor de retorno del backend.
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isValidated = true,
-                        conjuntoId = conjuntoId
+                        activationCode = code
                     )
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isValidated = false,
-                        conjuntoId = null,
+                        activationCode = null,
                         errorMessage = error.message ?: "Ocurrió un error al validar el código."
                     )
                 }
