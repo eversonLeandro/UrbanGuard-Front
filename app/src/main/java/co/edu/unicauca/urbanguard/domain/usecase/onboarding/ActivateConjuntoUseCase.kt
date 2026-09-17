@@ -5,24 +5,23 @@ import co.edu.unicauca.urbanguard.domain.repository.OnboardingRepository
 import javax.inject.Inject
 
 /**
- * Valida el código de activación ACT-XXXX-YYYY del conjunto.
+ * Verifica el código de activación ACT-XXXX-YYYY del conjunto.
  *
- * El backend, al validar, crea el registro del Conjunto con PK autogenerada
- * y la retorna (NO retorna el código de activación de vuelta). La firma
- * esperada: sin parámetros implícitos, recibe el código y retorna el conjuntoId.
+ * El backend, al validar, CREA el conjunto y responde 204 No Content:
+ * no hay body que devolver, por eso la firma es Result<Unit>.
  */
 class ActivateConjuntoUseCase @Inject constructor(
     private val repository: OnboardingRepository
 ) {
-    suspend operator fun invoke(codigoActivacion: String): Result<String> {
+    suspend operator fun invoke(activationCode: String): Result<Unit> {
         if (OnboardingBypass.ENABLED) {
-            // Valor quemado mientras no exista el endpoint real.
-            return Result.success(OnboardingBypass.BYPASS_CONJUNTO_ID)
+            // Éxito simulado: el código se acepta sin backend.
+            return Result.success(Unit)
         } else {
             // DESCOMENTAR CUANDO ESTÉ EL BACKEND
-            // Llama al endpoint real `POST onboarding/activation-code/validate`
-            // que recibe el código ACT-XXXX-YYYY y retorna el conjuntoId.
-            // return repository.validateActivationCode(codigoActivacion)
+            // Llama al endpoint real `POST activations/verifications`
+            // que valida el código ACT-XXXX-YYYY y responde 204 No Content.
+            // return repository.validateActivationCode(activationCode)
             return Result.failure(Exception("Bypass desactivado y endpoint real no implementado todavía"))
         }
     }

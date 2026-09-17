@@ -2,9 +2,10 @@ package co.edu.unicauca.urbanguard.data.repository
 
 import co.edu.unicauca.urbanguard.core.network.NetworkErrorMapper
 import co.edu.unicauca.urbanguard.data.mapper.toDomain
-import co.edu.unicauca.urbanguard.data.remote.api.dto.RegisterConjuntoRequestDto
+import co.edu.unicauca.urbanguard.data.mapper.toRegisterConjuntoRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.service.OnboardingApi
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoCode
+import co.edu.unicauca.urbanguard.domain.model.CreatedComplex
 import co.edu.unicauca.urbanguard.domain.repository.ConjuntoCodeRepository
 import javax.inject.Inject
 
@@ -39,26 +40,27 @@ class ConjuntoCodeRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateConjunto(
-        conjuntoId: String,
+    override suspend fun createConjunto(
+        activationCode: String,
         nombre: String,
         direccion: String,
-        ciudad: String,
-        totalUnidades: Int
-    ): Result<Unit> {
-        return try {
-            onboardingApi.updateConjunto(
-                conjuntoId = conjuntoId,
-                request = RegisterConjuntoRequestDto(
-                    nombre = nombre,
-                    direccion = direccion,
-                    ciudad = ciudad,
-                    totalUnidades = totalUnidades
-                )
-            )
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(Exception(NetworkErrorMapper.map(e)))
-        }
+        ciudad: String
+    ): Result<CreatedComplex> {
+        // DESCOMENTAR CUANDO ESTÉ EL BACKEND
+        // Endpoint real: POST /api/complexes → 201 Created.
+        // return try {
+        //     val response = onboardingApi.createConjunto(
+        //         request = toRegisterConjuntoRequestDto(
+        //             activationCode = activationCode,
+        //             name = nombre,
+        //             address = direccion,
+        //             city = ciudad
+        //         )
+        //     )
+        //     Result.success(response.toDomain())
+        // } catch (e: Exception) {
+        //     Result.failure(Exception(NetworkErrorMapper.map(e)))
+        // }
+        return Result.failure(Exception("Endpoint de creación de conjunto no implementado todavía"))
     }
 }
