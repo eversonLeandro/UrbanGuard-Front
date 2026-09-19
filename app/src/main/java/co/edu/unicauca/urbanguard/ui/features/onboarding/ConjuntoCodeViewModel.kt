@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.ui.features.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GenerateConjuntoCodeUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GetConjuntoCodeUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.RegenerateConjuntoCodeUseCase
@@ -14,6 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ConjuntoCodeViewModel @Inject constructor(
+    private val sessionManager: SessionManager,
     private val getConjuntoCodeUseCase: GetConjuntoCodeUseCase,
     private val generateConjuntoCodeUseCase: GenerateConjuntoCodeUseCase,
     private val regenerateConjuntoCodeUseCase: RegenerateConjuntoCodeUseCase
@@ -28,17 +30,23 @@ class ConjuntoCodeViewModel @Inject constructor(
     }
 
     private fun loadExistingCode() {
+        val complexId = sessionManager.getActiveConjunto()?.conjuntoId
+        if (complexId == null) {
+            _uiState.value = _uiState.value.copy(
+                isLoadingInitial = false,
+                errorMessage = "No hay conjunto activo seleccionado."
+            )
+            return
+        }
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoadingInitial = true, errorMessage = null)
-            getConjuntoCodeUseCase().fold(
+            getConjuntoCodeUseCase(complexId).fold(
                 onSuccess = { conjuntoCode ->
                     _uiState.value = _uiState.value.copy(
                         isLoadingInitial = false,
                         code = conjuntoCode.code,
-                        isCodeActive = conjuntoCode.isActive,
-                        // TODO: reemplazar por conjuntoCode.conjuntoName cuando
-                        // venga del ConjuntoConfig real (UG-45/UG-46)
-                        conjuntoName = conjuntoCode.conjuntoName
+                        expiresAt = conjuntoCode.expiresAt,
+                        conjuntoName = "" // Se cargará del ConjuntoConfig en UG-45/UG-46
                     )
                 },
                 onFailure = { error ->
@@ -57,16 +65,23 @@ class ConjuntoCodeViewModel @Inject constructor(
     }
 
     fun onGenerateClick() {
+        val complexId = sessionManager.getActiveConjunto()?.conjuntoId
+        if (complexId == null) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "No hay conjunto activo seleccionado."
+            )
+            return
+        }
         if (_uiState.value.isLoadingAction) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoadingAction = true, errorMessage = null)
-            generateConjuntoCodeUseCase().fold(
+            generateConjuntoCodeUseCase(complexId).fold(
                 onSuccess = { conjuntoCode ->
                     _uiState.value = _uiState.value.copy(
                         isLoadingAction = false,
                         code = conjuntoCode.code,
-                        isCodeActive = conjuntoCode.isActive,
-                        conjuntoName = conjuntoCode.conjuntoName
+                        expiresAt = conjuntoCode.expiresAt,
+                        conjuntoName = "" // Se cargará del ConjuntoConfig en UG-45/UG-46
                     )
                 },
                 onFailure = { error ->
@@ -85,6 +100,14 @@ class ConjuntoCodeViewModel @Inject constructor(
     }
 
     fun onRegenerateConfirmed() {
+        val complexId = sessionManager.getActiveConjunto()?.conjuntoId
+        if (complexId == null) {
+            _uiState.value = _uiState.value.copy(
+                showRegenerateConfirm = false,
+                errorMessage = "No hay conjunto activo seleccionado."
+            )
+            return
+        }
         if (_uiState.value.isLoadingAction) return
         _uiState.value = _uiState.value.copy(
             showRegenerateConfirm = false,
@@ -92,13 +115,13 @@ class ConjuntoCodeViewModel @Inject constructor(
             errorMessage = null
         )
         viewModelScope.launch {
-            regenerateConjuntoCodeUseCase().fold(
+            regenerateConjuntoCodeUseCase(complexId).fold(
                 onSuccess = { conjuntoCode ->
                     _uiState.value = _uiState.value.copy(
                         isLoadingAction = false,
                         code = conjuntoCode.code,
-                        isCodeActive = conjuntoCode.isActive,
-                        conjuntoName = conjuntoCode.conjuntoName
+                        expiresAt = conjuntoCode.expiresAt,
+                        conjuntoName = "" // Se cargará del ConjuntoConfig en UG-45/UG-46
                     )
                 },
                 onFailure = { error ->

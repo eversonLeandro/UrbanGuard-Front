@@ -53,44 +53,51 @@ class LoginViewModel @Inject constructor(
         // TODO: descomentar cuando el backend esté listo y comentar
         // el bloque de simulación de abajo.
         //
-           /*viewModelScope.launch {
+           viewModelScope.launch {
                loginUseCase(state.email, state.password).fold(
-                   onSuccess = { userSession ->
-                       _uiState.value = _uiState.value.copy(
-                           isLoading = false,
-                           loginSuccess = true,
-                           userRole = userSession.role
-                       )
-                   },
-                   onFailure = { error ->
-                       _uiState.value = _uiState.value.copy(
-                           isLoading = false,
-                           loginSuccess = false,
-                           userRole = null,
-                           errorMessage = error.message ?: "Ocurrió un error. Intenta de nuevo"
-                       )
-                   }
-               )
-         }*/
+                    onSuccess = { userSession ->
+                        android.util.Log.d("LoginViewModel", "=== [LOGIN SUCCESS] ===")
+                        android.util.Log.d("LoginViewModel", "  email: ${state.email}")
+                        android.util.Log.d("LoginViewModel", "  userId: ${userSession.userId}")
+                        android.util.Log.d("LoginViewModel", "  name: ${userSession.name}")
+                        android.util.Log.d("LoginViewModel", "  role: ${userSession.role}")
+                        android.util.Log.d("LoginViewModel", "========================")
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            loginSuccess = true,
+                            userRole = userSession.role
+                        )
+                    },
+                    onFailure = { error ->
+                        android.util.Log.e("LoginViewModel", "=== [LOGIN FAILED] === error: ${error.message}", error)
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            loginSuccess = false,
+                            userRole = null,
+                            errorMessage = error.message ?: "Ocurrió un error. Intenta de nuevo"
+                        )
+                    }
+                )
+          }
         // ────────────────────────────────────────────────────────────────
 
         // ── SIMULACIÓN SIN BACKEND ───────────────────────────────────────
         // CASO 5 — Usuario nuevo (USER) con 2 conjuntos → CONJUNTO_SELECTION
-        viewModelScope.launch {
-            sessionManager.saveSession(
-                UserSession(
-                    token = "fake-token",
-                    userId = "fake-id",
-                    name = "Usuario Prueba",
-                    role = UserRole.USER
-                )
-            )
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                loginSuccess = true,
-                userRole = UserRole.USER
-            )
-        }
+//        viewModelScope.launch {
+//            sessionManager.saveSession(
+//                UserSession(
+//                    token = "fake-token",
+//                    userId = "fake-id",
+//                    name = "Usuario Prueba",
+//                    role = UserRole.USER
+//                )
+//            )
+//            _uiState.value = _uiState.value.copy(
+//                isLoading = false,
+//                loginSuccess = true,
+//                userRole = UserRole.USER
+//            )
+//        }
         // ────────────────────────────────────────────────────────────────
     }
 }

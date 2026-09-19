@@ -55,7 +55,8 @@ class RegisterConjuntoViewModel @Inject constructor(
                 activationCode = currentActivationCode,
                 nombre = nombre,
                 direccion = direccion,
-                ciudad = ciudad
+                ciudad = ciudad,
+                totalUnidades = totalUnidades
             ).fold(
                 onSuccess = { createdComplex ->
                     // El usuario pasa a ser ADMIN del conjunto recién creado.

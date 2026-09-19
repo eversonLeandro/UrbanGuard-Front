@@ -50,7 +50,7 @@ fun LoginScreen(
                 "Inicio de sesión exitoso",
                 Toast.LENGTH_SHORT
             ).show()
-            val role = uiState.userRole ?: UserRole.RESIDENT
+            val role = uiState.userRole ?: UserRole.USER
             onLoginSuccess(role)
             viewModel.onLoginHandled()
         }

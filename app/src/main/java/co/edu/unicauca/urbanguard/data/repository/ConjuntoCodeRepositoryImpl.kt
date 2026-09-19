@@ -1,8 +1,8 @@
 package co.edu.unicauca.urbanguard.data.repository
 
 import co.edu.unicauca.urbanguard.core.network.NetworkErrorMapper
+import co.edu.unicauca.urbanguard.data.mapper.toCreateComplexRequestDto
 import co.edu.unicauca.urbanguard.data.mapper.toDomain
-import co.edu.unicauca.urbanguard.data.mapper.toRegisterConjuntoRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.service.OnboardingApi
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoCode
 import co.edu.unicauca.urbanguard.domain.model.CreatedComplex
@@ -22,7 +22,7 @@ class ConjuntoCodeRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun generateCode(conjuntoId: String?): Result<ConjuntoCode> {
+    override suspend fun generateCode(conjuntoId: String): Result<ConjuntoCode> {
         return try {
             val response = onboardingApi.generateCode(conjuntoId)
             Result.success(response.toDomain())
@@ -31,7 +31,7 @@ class ConjuntoCodeRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun regenerateCode(conjuntoId: String?): Result<ConjuntoCode> {
+    override suspend fun regenerateCode(conjuntoId: String): Result<ConjuntoCode> {
         return try {
             val response = onboardingApi.regenerateCode(conjuntoId)
             Result.success(response.toDomain())
@@ -44,23 +44,21 @@ class ConjuntoCodeRepositoryImpl @Inject constructor(
         activationCode: String,
         nombre: String,
         direccion: String,
-        ciudad: String
+        ciudad: String,
+        totalUnidades: Int
     ): Result<CreatedComplex> {
-        // DESCOMENTAR CUANDO ESTÉ EL BACKEND
-        // Endpoint real: POST /api/complexes → 201 Created.
-        // return try {
-        //     val response = onboardingApi.createConjunto(
-        //         request = toRegisterConjuntoRequestDto(
-        //             activationCode = activationCode,
-        //             name = nombre,
-        //             address = direccion,
-        //             city = ciudad
-        //         )
-        //     )
-        //     Result.success(response.toDomain())
-        // } catch (e: Exception) {
-        //     Result.failure(Exception(NetworkErrorMapper.map(e)))
-        // }
-        return Result.failure(Exception("Endpoint de creación de conjunto no implementado todavía"))
+        return try {
+            val request = toCreateComplexRequestDto(
+                activationCode = activationCode,
+                name = nombre,
+                address = direccion,
+                city = ciudad,
+                numberOfUnits = totalUnidades
+            )
+            val response = onboardingApi.createConjunto(request)
+            Result.success(response.toDomain())
+        } catch (e: Exception) {
+            Result.failure(Exception(NetworkErrorMapper.map(e)))
+        }
     }
 }

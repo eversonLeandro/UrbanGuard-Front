@@ -74,6 +74,7 @@ class Auth0Manager @Inject constructor(
     ): Credentials = suspendCancellableCoroutine { continuation ->
         apiClient.login(email, password, connection)
             .setScope("openid profile email")
+            .setAudience(BuildConfig.AUTH0_AUDIENCE)
             .validateClaims()
             .start(object : Callback<Credentials, AuthenticationException> {
                 override fun onSuccess(result: Credentials) {
@@ -97,7 +98,7 @@ class Auth0Manager @Inject constructor(
 
         var userId = fallbackEmail
         var userName = fallbackEmail.substringBefore("@")
-        var role = UserRole.RESIDENT
+        var role = UserRole.USER
 
         if (!idTokenStr.isNullOrBlank()) {
             try {
@@ -110,28 +111,25 @@ class Auth0Manager @Inject constructor(
                     userName = nameClaim
                 }
 
-                // Extraer rol de claims estándar o personalizados de Auth0
-                val rawRole = jwt.getClaim("https://urbanguard.co/role").asString()
-                    ?: jwt.getClaim("https://urbanguard.co/roles").asList(String::class.java)?.firstOrNull()
+                // Extraer rol de claims estándar o personalizados de Auth0 (alineado con la Action real)
+                val rawRole = jwt.getClaim("https://urbanguard.com/rol").asString()
+                    ?: jwt.getClaim("https://urbanguard.com/role").asString()
                     ?: jwt.getClaim("role").asString()
                     ?: jwt.getClaim("roles").asList(String::class.java)?.firstOrNull()
 
-                // --- LOG DE DIAGNÓSTICO (quitar cuando se confirme el claim correcto) ---
-                val logRole1 = jwt.getClaim("role").asString()
-                val logRoles2 = jwt.getClaim("roles").asList(String::class.java)
-                val logRole3 = jwt.getClaim("https://urbanguard.co/role").asString()
-                val logRoles4 = jwt.getClaim("https://urbanguard.co/roles").asList(String::class.java)
-                Log.d(TAG, "=== CLAIMS DEL JWT ===")
-                Log.d(TAG, "  subject: ${jwt.subject}")
-                Log.d(TAG, "  role (simple): $logRole1")
-                Log.d(TAG, "  roles (lista): $logRoles2")
-                Log.d(TAG, "  https://urbanguard.co/role: $logRole3")
-                Log.d(TAG, "  https://urbanguard.co/roles: $logRoles4")
-                Log.d(TAG, "  rawRole resuelto: $rawRole")
-                Log.d(TAG, "  role mapeado: ${parseUserRole(rawRole)}")
-                // -------------------------------------------------------------------------
+                // Claim de plataforma superadmin (capa 2.3)
+                val staff = jwt.getClaim("https://urbanguard.com/staff").asBoolean() ?: false
 
-                role = parseUserRole(rawRole)
+                role = if (staff) UserRole.SUPERADMIN else parseUserRole(rawRole)
+
+                Log.d(TAG, "=== [LOGIN AUTH0] DATOS DE SESION ===")
+                Log.d(TAG, "  userId (sub): $userId")
+                Log.d(TAG, "  userName: $userName")
+                Log.d(TAG, "  staff (claim): $staff")
+                Log.d(TAG, "  rawRole (claim): $rawRole")
+                Log.d(TAG, "  role resuelto: $role")
+                Log.d(TAG, "  token (prefijo): ${accessToken.take(25)}...")
+                Log.d(TAG, "====================================")
             } catch (_: Exception) {
                 // Si el ID token no puede decodificarse, mantener valores seguros
             }
@@ -145,13 +143,23 @@ class Auth0Manager @Inject constructor(
         )
     }
 
+    /**
+     * Mapea el raw-claim `https://urbanguard.com/rol` a [UserRole].
+     *
+     * "USER" ya no es un rol de negocio en Auth0; Auth0 retorna [rawRole]=null cuando el
+     * usuario no tiene rol asignado (no ha vinculado ningún conjunto). El centinela
+     * [UserRole.USER] se produce solo por el `else`, y el NavGraph lo redirige a
+     * [ConjuntoSelectionScreen].
+     */
     private fun parseUserRole(rawRole: String?): UserRole {
         return when (rawRole?.trim()?.uppercase()) {
+            "SUPERADMIN", "SUPER ADMINISTRADOR" -> UserRole.SUPERADMIN
             "ADMIN", "ADMINISTRADOR" -> UserRole.ADMIN
             "GUARD", "VIGILANTE", "PORTERO", "SEGURIDAD" -> UserRole.GUARD
             "RESIDENT", "RESIDENTE", "PROPIETARIO", "INQUILINO" -> UserRole.RESIDENT
-            "USER", "USUARIO" -> UserRole.USER
-            else -> UserRole.RESIDENT
+            // Auth0 ya NO emite "USER" como rol de negocio.
+            // Cualquier claim desconocido o null → centinela USER → ConjuntoSelection.
+            else -> UserRole.USER
         }
     }
 

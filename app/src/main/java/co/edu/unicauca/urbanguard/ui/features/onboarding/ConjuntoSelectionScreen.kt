@@ -239,6 +239,7 @@ private fun RoleBadge(role: UserRole) {
         UserRole.GUARD -> "Vigilante" to UgViolet
         UserRole.RESIDENT -> "Residente" to UgEmerald
         UserRole.USER -> "Usuario" to UgTextSecondary
+        UserRole.SUPERADMIN -> "Superadmin" to UgAmber
     }
     Box(
         modifier = Modifier

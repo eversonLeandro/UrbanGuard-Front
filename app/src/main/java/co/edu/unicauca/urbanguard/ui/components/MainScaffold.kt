@@ -42,6 +42,7 @@ fun MainScaffold(
                     UserRole.RESIDENT -> residentNavItems
                     UserRole.USER -> residentNavItems
                     UserRole.GUARD -> vigilanteNavItems
+                    UserRole.SUPERADMIN -> emptyList()
                     null -> emptyList()
                 }
                 if (items.isNotEmpty()) {
