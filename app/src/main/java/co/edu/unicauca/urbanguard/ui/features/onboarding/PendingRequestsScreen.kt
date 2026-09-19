@@ -106,6 +106,13 @@ fun PendingRequestsScreen(
                 }
             }
 
+            uiState.errorMessage != null -> {
+                ErrorRequestsState(
+                    message = uiState.errorMessage!!,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
             uiState.filteredRequests.isEmpty() -> {
                 EmptyRequestsState(
                     filter = uiState.activeFilter,
@@ -225,7 +232,14 @@ private fun LinkRequestCard(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = request.fechaSolicitud,
+                text = "${request.conjuntoNombre.ifBlank { "Conjunto" }} · Apartamento ${request.unidad.ifBlank { "sin unidad" }}",
+                fontSize = 12.sp,
+                color = UgNavy,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = request.fechaSolicitud.ifBlank { "Solicitud pendiente" },
                 fontSize = 11.sp,
                 color = UgTextSecondary
             )
@@ -345,6 +359,47 @@ private fun EmptyRequestsState(
         Spacer(Modifier.height(6.dp))
         Text(
             text = "Cuando un residente use el código de vinculación, aparecerá aquí.",
+            fontSize = 12.sp,
+            color = UgTextSecondary,
+            lineHeight = 18.sp
+        )
+    }
+}
+
+@Composable
+private fun ErrorRequestsState(
+    message: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(UgErrorBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "!",
+                fontSize = 30.sp,
+                color = UgErrorText,
+                fontWeight = FontWeight.Medium
+            )
+        }
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = "No fue posible cargar las solicitudes",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = UgNavy
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = message,
             fontSize = 12.sp,
             color = UgTextSecondary,
             lineHeight = 18.sp

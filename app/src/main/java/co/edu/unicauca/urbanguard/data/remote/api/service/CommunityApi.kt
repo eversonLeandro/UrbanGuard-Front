@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.data.remote.api.service
 
 import co.edu.unicauca.urbanguard.data.remote.api.dto.ComplexSummaryDto
 import retrofit2.http.GET
+import retrofit2.Response
 
 /**
  * Interfaz Retrofit para el Community Service (vía API Gateway).
@@ -28,4 +29,8 @@ interface CommunityApi {
      */
     @GET("api/complexes")
     suspend fun getMyComplexes(): List<ComplexSummaryDto>
+
+    /** Also lets the service synchronize a newly approved resident's role. */
+    @GET("api/community/me")
+    suspend fun refreshCommunityContext(): Response<Unit>
 }
