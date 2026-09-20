@@ -11,16 +11,15 @@ import retrofit2.http.Query
 
 interface LinkByCodeApi {
     // Busca el conjunto por código de vinculación
-    @GET("onboarding/search")
+    @GET("api/community/conjuntos/codigo/{codigo}")
     suspend fun searchConjunto(
-        @Query("code") code: String
+        @Path("codigo") code: String
     ): ConjuntoSearchResponseDto
 
     // Envía la solicitud de vinculación al conjunto, indicando el número de
     // apartamento/unidad del solicitante
-    @POST("onboarding/link/{conjuntoId}")
+    @POST("api/community/solicitudes-vinculacion")
     suspend fun requestLink(
-        @Path("conjuntoId") conjuntoId: String,
         @Body body: CreateLinkRequestRequestDto
     ): LinkRequestResponseDto
 }

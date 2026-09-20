@@ -4,18 +4,24 @@ import co.edu.unicauca.urbanguard.data.remote.api.dto.ConjuntoSearchResponseDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.LinkRequestResponseDto
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoSearch
 import co.edu.unicauca.urbanguard.domain.model.LinkRequest
+import co.edu.unicauca.urbanguard.domain.model.UnitOption
 
 fun ConjuntoSearchResponseDto.toDomain(): ConjuntoSearch = ConjuntoSearch(
     id = id,
-    nombre = nombre,
-    direccion = direccion,
-    ciudad = ciudad,
-    totalMiembros = totalMiembros
+    nombre = name,
+    direccion = address,
+    ciudad = city,
+    totalMiembros = numberOfUnits,
+    unidades = units.map { UnitOption(it.id, it.identifier) }
 )
 
 fun LinkRequestResponseDto.toDomain(): LinkRequest = LinkRequest(
+    id = id,
     conjuntoId = conjuntoId,
-    fechaSolicitud = fechaSolicitud,
-    unidad = unidad,
-    estado = estado
+    conjuntoNombre = complexName.orEmpty(),
+    nombreSolicitante = applicantName.orEmpty(),
+    emailSolicitante = applicantEmail.orEmpty(),
+    fechaSolicitud = createdAt.orEmpty(),
+    unidad = unit,
+    estado = status
 )

@@ -3,6 +3,9 @@ package co.edu.unicauca.urbanguard.ui.features.onboarding
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.repository.ConjuntoAssociationRepository
+import co.edu.unicauca.urbanguard.data.remote.api.service.CommunityApi
 import co.edu.unicauca.urbanguard.domain.model.LinkRequest
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GetLinkRequestDetailUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.ReviewLinkRequestUseCase
@@ -17,6 +20,9 @@ import javax.inject.Inject
 class LinkRequestDetailViewModel @Inject constructor(
     private val getLinkRequestDetailUseCase: GetLinkRequestDetailUseCase,
     private val reviewLinkRequestUseCase: ReviewLinkRequestUseCase,
+    private val conjuntoAssociationRepository: ConjuntoAssociationRepository,
+    private val sessionManager: SessionManager,
+    private val communityApi: CommunityApi,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -101,10 +107,24 @@ class LinkRequestDetailViewModel @Inject constructor(
             }
             reviewLinkRequestUseCase(id, approve).fold(
                 onSuccess = { reviewed: LinkRequest ->
+                    if (approve) {
+                        communityApi.refreshCommunityContext()
+                        conjuntoAssociationRepository.getMyConjuntos()
+                            .onSuccess(sessionManager::setAssociations)
+                    }
                     _uiState.value = _uiState.value.copy(
                         isLoadingAction = false,
                         request = reviewed,
-                        errorMessage = null
+                        errorMessage = null,
+                        successMessage = if (approve) {
+                            if (reviewed.roleSyncPending || reviewed.organizationSyncPending) {
+                                "Solicitud aprobada localmente, pero la sincronización con Auth0 quedó pendiente."
+                            } else {
+                                "Solicitud aceptada correctamente. El usuario fue agregado como residente."
+                            }
+                        } else {
+                            "Solicitud rechazada correctamente."
+                        }
                     )
                 },
                 onFailure = { error ->
@@ -115,5 +135,9 @@ class LinkRequestDetailViewModel @Inject constructor(
                 }
             )
         }
+    }
+
+    fun onSuccessDismissed() {
+        _uiState.value = _uiState.value.copy(successMessage = null)
     }
 }
