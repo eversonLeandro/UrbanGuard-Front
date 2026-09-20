@@ -43,6 +43,7 @@ android {
         val auth0ClientId = getPropertyOrEnv("AUTH0_CLIENT_ID", "F2geNd4CiKZTlsjjwWIz0JqqcX8FqnDo")
         val auth0Scheme = getPropertyOrEnv("AUTH0_SCHEME", "co.edu.unicauca.urbanguard")
         val auth0DbConnection = getPropertyOrEnv("AUTH0_DB_CONNECTION", "Username-Password-Authentication")
+        val auth0Audience = getPropertyOrEnv("AUTH0_AUDIENCE", "https://urbanguard.com")
 
         manifestPlaceholders["auth0Domain"] = auth0Domain
         manifestPlaceholders["auth0Scheme"] = auth0Scheme
@@ -50,11 +51,12 @@ android {
         buildConfigField("String", "AUTH0_DOMAIN", "\"$auth0Domain\"")
         buildConfigField("String", "AUTH0_CLIENT_ID", "\"$auth0ClientId\"")
         buildConfigField("String", "AUTH0_DB_CONNECTION", "\"$auth0DbConnection\"")
+        buildConfigField("String", "AUTH0_AUDIENCE", "\"$auth0Audience\"")
     }
 
     buildTypes {
         debug {
-            val devBaseUrl = getPropertyOrEnv("BASE_URL_DEV", "https://api-dev.urbanguard.co/")
+            val devBaseUrl = getPropertyOrEnv("BASE_URL_DEV", "http://10.0.2.2:8080/")
             buildConfigField("String", "BASE_URL", "\"$devBaseUrl\"")
         }
         release {
@@ -68,6 +70,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
     buildFeatures {
         compose = true

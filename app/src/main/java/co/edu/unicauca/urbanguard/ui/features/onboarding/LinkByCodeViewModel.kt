@@ -95,13 +95,21 @@ class LinkByCodeViewModel @Inject constructor(
             return
         }
         val apartamento = _uiState.value.apartamento
+        val unidad = _uiState.value.conjuntoFound?.unidades
+            ?.firstOrNull { it.identifier.equals(apartamento, ignoreCase = true) }
+        if (unidad == null) {
+            _uiState.value = _uiState.value.copy(
+                apartamentoError = "La unidad no pertenece al conjunto"
+            )
+            return
+        }
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isRequesting = true,
                 requestError = null
             )
-            requestLinkUseCase(conjuntoId, apartamento).fold(
+            requestLinkUseCase(conjuntoId, unidad.id).fold(
                 onSuccess = { request ->
                     _uiState.value = _uiState.value.copy(
                         isRequesting = false,

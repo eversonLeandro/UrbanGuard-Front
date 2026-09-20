@@ -5,5 +5,8 @@ data class ConjuntoSearch(
     val nombre: String,
     val direccion: String,
     val ciudad: String,
-    val totalMiembros: Int
+    val totalMiembros: Int,
+    val unidades: List<UnitOption> = emptyList()
 )
+
+data class UnitOption(val id: String, val identifier: String)

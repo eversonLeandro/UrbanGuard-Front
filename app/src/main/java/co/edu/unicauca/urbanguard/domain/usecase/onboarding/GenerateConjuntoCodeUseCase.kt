@@ -7,7 +7,7 @@ import javax.inject.Inject
 class GenerateConjuntoCodeUseCase @Inject constructor(
     private val repository: ConjuntoCodeRepository
 ) {
-    suspend operator fun invoke(conjuntoId: String? = null): Result<ConjuntoCode> {
+    suspend operator fun invoke(conjuntoId: String): Result<ConjuntoCode> {
         return repository.generateCode(conjuntoId)
     }
 }

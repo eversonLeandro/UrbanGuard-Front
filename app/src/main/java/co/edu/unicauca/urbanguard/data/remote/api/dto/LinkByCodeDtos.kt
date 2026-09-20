@@ -1,24 +1,38 @@
 package co.edu.unicauca.urbanguard.data.remote.api.dto
 
+import com.google.gson.annotations.SerializedName
+
 data class ConjuntoSearchResponseDto(
     val id: String,
-    val nombre: String,
-    val direccion: String,
-    val ciudad: String,
-    val totalMiembros: Int
+    val name: String,
+    val address: String,
+    val city: String,
+    val numberOfUnits: Int,
+    val units: List<UnitLookupDto> = emptyList()
 )
 
+data class UnitLookupDto(
+    val id: String,
+    val identifier: String
+)
 data class LinkRequestResponseDto(
+    val id: String,
+    val userId: String,
+    @SerializedName("complexId")
     val conjuntoId: String,
-    val fechaSolicitud: String,
-    val estado: String,
-    // TODO: cuando el backend incluya la unidad en la respuesta, quitar el default.
-    // Por ahora el frontend conserva el apartamento ingresado por el residente.
-    val unidad: String = ""
+    val unitId: String,
+    val unit: String,
+    val complexName: String? = null,
+    val applicantName: String? = null,
+    val applicantEmail: String? = null,
+    val createdAt: String? = null,
+    val status: String,
+    val roleSyncPending: Boolean
 )
 
 // Cuerpo para crear la solicitud de vinculación: incluye el número de
 // apartamento/unidad del residente que solicita.
 data class CreateLinkRequestRequestDto(
-    val unidad: String
+    val complexId: String,
+    val unitId: String
 )

@@ -1,8 +1,7 @@
 package co.edu.unicauca.urbanguard.ui.navigation
+import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -12,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.components.PlaceholderScreen
+import co.edu.unicauca.urbanguard.ui.features.admin.SuperAdminScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.LoginScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.RegisterScreen
 import androidx.compose.material.icons.Icons
@@ -58,6 +58,7 @@ object Routes {
     const val LINK_BY_CODE = "link_by_code"
     const val REGISTER = "register"
     const val CONJUNTO_SELECTION = "conjunto_selection"
+    const val ADMIN = "admin"
 }
 
 @Composable
@@ -71,26 +72,23 @@ fun AppNavGraph(
         startDestination = Routes.LOGIN
     ) {
         composable(Routes.LOGIN) {
-            val navigationViewModel: NavigationViewModel = hiltViewModel()
-            val scope = rememberCoroutineScope()
             LoginScreen(
                 onLoginSuccess = { role ->
-                    // Tras login, se cargan las asociaciones del usuario (falsas por
-                    // ahora, TODO backend) y se decide la pantalla según el rol.
-                    // Nuevos registros llegan como USER hasta vincular/crear conjunto.
-                    scope.launch {
-                        navigationViewModel.resolvePostLogin()
-                        val destination = when (role) {
-                            // El rol viene del backend/Auth0: "USER" navega al selector;
-                            // ADMIN/RESIDENT/GUARD ya traen conjunto activo → Home.
-                            UserRole.USER -> Routes.CONJUNTO_SELECTION
-                            else -> Routes.HOME
-                        }
-                        navController.navigate(destination) {
-                            // Elimina el Login del backstack — el usuario
-                            // no puede volver atrás con el botón físico
-                            popUpTo(Routes.LOGIN) { inclusive = true }
-                        }
+                    // El rol de Auth0 determina el destino directamente.
+                    // USER (centinela) → el usuario debe seleccionar o crear un conjunto.
+                    // SUPERADMIN → panel global de plataforma (Capa 2.3, D3).
+                    // ADMIN / RESIDENT / GUARD ya tienen conjunto activo en Auth0 → Home.
+                    // La carga real de conjuntos ocurre en ConjuntoSelectionViewModel.
+                    val destination = when (role) {
+                        UserRole.USER -> Routes.CONJUNTO_SELECTION
+                        UserRole.SUPERADMIN -> Routes.ADMIN
+                        else -> Routes.HOME
+                    }
+                    Log.d("NavGraph", "=== [LOGIN NAVIGATION] role: $role -> destino: $destination ===")
+                    navController.navigate(destination) {
+                        // Elimina el Login del backstack — el usuario
+                        // no puede volver atrás con el botón físico
+                        popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },
                 onNavigateToOnboarding = {
@@ -106,20 +104,14 @@ fun AppNavGraph(
 
         // Registro de nuevo usuario ("Empezar aquí" desde el Login)
         composable(Routes.REGISTER) {
-            val registerNavigationViewModel: NavigationViewModel = hiltViewModel()
-            val registerScope = rememberCoroutineScope()
             RegisterScreen(
                 onRegisterSuccess = { _ ->
-                    // Los nuevos registros llegan como USER en Auth0 (por defecto).
-                    // Se cargan las asociaciones (falsas por ahora, TODO backend) y se
-                    // navega al selector de conjuntos. Los roles específicos se asignan
-                    // después al vincularse o crear un conjunto.
-                    registerScope.launch {
-                        registerNavigationViewModel.resolvePostLogin()
-                        navController.navigate(Routes.CONJUNTO_SELECTION) {
-                            // Elimina Login y Register del backstack
-                            popUpTo(Routes.LOGIN) { inclusive = true }
-                        }
+                    // Los nuevos registros llegan como USER en Auth0 (sin conjunto asignado).
+                    // Se navega directo al selector; ConjuntoSelectionViewModel cargará
+                    // la lista real de conjuntos desde el backend al entrar a la pantalla.
+                    navController.navigate(Routes.CONJUNTO_SELECTION) {
+                        // Elimina Login y Register del backstack
+                        popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },
                 onNavigateToLogin = {
@@ -306,6 +298,18 @@ fun AppNavGraph(
 
         composable(Routes.PROFILE) {
             ProfileScreen()
+        }
+
+        composable(Routes.ADMIN) {
+            SuperAdminScreen(
+                onLogout = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
         }
     }
 }

@@ -5,6 +5,5 @@ import co.edu.unicauca.urbanguard.domain.model.ConjuntoCode
 
 fun ConjuntoCodeResponseDto.toDomain(): ConjuntoCode = ConjuntoCode(
     code = code,
-    isActive = isActive,
-    conjuntoName = conjuntoName // TODO: remover cuando venga del ConjuntoConfig
+    expiresAt = toInstant()
 )

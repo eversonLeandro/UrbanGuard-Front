@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -47,14 +48,47 @@ class LoginViewModelTest {
         assertFalse(viewModel.uiState.value.loginSuccess)
     }
 
-    private class FakeAuthRepository : AuthRepository {
+    @Test
+    fun `login with superadmin returns SUPERADMIN userRole in uiState`() = runTest {
+        val superadminRepo = FakeAuthRepository(role = UserRole.SUPERADMIN)
+        val viewModel = LoginViewModel(LoginUseCase(superadminRepo), SessionManager())
+
+        viewModel.onEmailChange("superadmin@urbanguard.com")
+        viewModel.onPasswordChange("password123")
+        viewModel.onLoginClick()
+
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.loginSuccess)
+        assertEquals(UserRole.SUPERADMIN, viewModel.uiState.value.userRole)
+    }
+
+    /**
+     * Cuando Auth0 retorna staff=false y sin claim rol (usuario nuevo sin conjunto),
+     * el sistema asigna el centinela [UserRole.USER] — el NavGraph lo dirige a
+     * ConjuntoSelectionScreen. USER no es un rol de negocio.
+     */
+    @Test
+    fun `login with no business role returns USER sentinel in uiState`() = runTest {
+        val noRoleRepo = FakeAuthRepository(role = UserRole.USER)
+        val viewModel = LoginViewModel(LoginUseCase(noRoleRepo), SessionManager())
+
+        viewModel.onEmailChange("nuevo@urbanguard.com")
+        viewModel.onPasswordChange("password123")
+        viewModel.onLoginClick()
+
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.loginSuccess)
+        assertEquals(UserRole.USER, viewModel.uiState.value.userRole)
+    }
+
+    private class FakeAuthRepository(private val role: UserRole = UserRole.ADMIN) : AuthRepository {
         override suspend fun login(email: String, password: String): Result<UserSession> {
             return Result.success(
                 UserSession(
                     token = "token-123",
                     userId = "user-123",
-                    name = "Admin",
-                    role = UserRole.ADMIN
+                    name = "User",
+                    role = role
                 )
             )
         }
@@ -64,8 +98,8 @@ class LoginViewModelTest {
                 UserSession(
                     token = "token-123",
                     userId = "user-123",
-                    name = "Admin",
-                    role = UserRole.ADMIN
+                    name = "User",
+                    role = role
                 )
             )
         }

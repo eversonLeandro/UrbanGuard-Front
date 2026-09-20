@@ -15,3 +15,5 @@
 local.properties
 .idea/
 echo ".vscode/" >> .gitignore
+decisiones.txt
+prompts/

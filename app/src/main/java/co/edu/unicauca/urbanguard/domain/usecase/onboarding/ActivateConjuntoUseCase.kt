@@ -21,8 +21,8 @@ class ActivateConjuntoUseCase @Inject constructor(
             // DESCOMENTAR CUANDO ESTÉ EL BACKEND
             // Llama al endpoint real `POST activations/verifications`
             // que valida el código ACT-XXXX-YYYY y responde 204 No Content.
-            // return repository.validateActivationCode(activationCode)
-            return Result.failure(Exception("Bypass desactivado y endpoint real no implementado todavía"))
+            return repository.validateActivationCode(activationCode)
+            //return Result.failure(Exception("Bypass desactivado y endpoint real no implementado todavía"))
         }
     }
 }

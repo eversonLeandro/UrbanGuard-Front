@@ -9,7 +9,7 @@ import javax.inject.Inject
 /**
  * Crea el conjunto (complex) con los datos del formulario de registro.
  *
- * POST /api/complexes → 201 Created con { complexId, membershipId, roles }.
+ * POST /api/complexes → 201 Created con { complexId, membershipId, role }.
  * El activationCode ya fue validado en el paso ActivateConjunto y viaja
  * por navegación hasta esta pantalla (argumento de ruta).
  *
@@ -23,7 +23,8 @@ class ConfigureConjuntoUseCase @Inject constructor(
         activationCode: String,
         nombre: String,
         direccion: String,
-        ciudad: String
+        ciudad: String,
+        totalUnidades: Int
     ): Result<CreatedComplex> {
         if (OnboardingBypass.ENABLED) {
             // Valor simulado del 201 Created de POST /api/complexes.
@@ -35,14 +36,13 @@ class ConfigureConjuntoUseCase @Inject constructor(
                 )
             )
         } else {
-            // DESCOMENTAR CUANDO ESTÉ EL BACKEND
-            // return repository.createConjunto(
-            //     activationCode = activationCode,
-            //     nombre = nombre,
-            //     direccion = direccion,
-            //     ciudad = ciudad
-            // )
-            return Result.failure(Exception("Bypass desactivado y endpoint real no implementado todavía"))
+            return repository.createConjunto(
+                activationCode = activationCode,
+                nombre = nombre,
+                direccion = direccion,
+                ciudad = ciudad,
+                totalUnidades = totalUnidades
+            )
         }
     }
 }

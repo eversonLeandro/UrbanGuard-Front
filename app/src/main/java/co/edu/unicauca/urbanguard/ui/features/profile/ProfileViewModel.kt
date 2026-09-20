@@ -28,6 +28,7 @@ class ProfileViewModel @Inject constructor(
                     UserRole.GUARD -> "GUARD"
                     UserRole.RESIDENT -> "RESIDENT"
                     UserRole.USER -> "USER"
+                    UserRole.SUPERADMIN -> "SUPERADMIN"
                     null -> ""
                 },
                 role = session?.role

@@ -9,4 +9,13 @@ data class UserSession(
     val conjuntoActivoId: String? = null
 )
 
-enum class UserRole { USER, RESIDENT, GUARD, ADMIN }
+/**
+ * Roles de la plataforma UrbanGuard.
+ *
+ * [USER] NO es un rol de negocio en Auth0; es un **centinela de enrutamiento** que indica
+ * que el usuario autenticado no tiene rol asignado aún (staff=false y claim rol=null).
+ * En ese estado el NavGraph lo dirige a ConjuntoSelectionScreen.
+ *
+ * [SUPERADMIN] se asigna cuando el claim https://urbanguard.com/staff = true (app_metadata.platform="superadmin").
+ */
+enum class UserRole { USER, RESIDENT, GUARD, ADMIN, SUPERADMIN }

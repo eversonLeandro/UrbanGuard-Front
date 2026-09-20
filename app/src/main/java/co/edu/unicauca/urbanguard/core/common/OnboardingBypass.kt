@@ -18,5 +18,5 @@ package co.edu.unicauca.urbanguard.core.common
  *      y ConjuntoCodeRepositoryImpl.
  */
 object OnboardingBypass {
-    const val ENABLED: Boolean = true
+    const val ENABLED: Boolean = false
 }
