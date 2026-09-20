@@ -15,7 +15,8 @@ data class LinkRequestDto(
     val applicantEmail: String? = null,
     val createdAt: String? = null,
     val status: String,
-    val roleSyncPending: Boolean
+    val roleSyncPending: Boolean = false,
+    val organizationSyncPending: Boolean = false
 )
 
 // Cuerpo para aprobar (approve=true) o rechazar (approve=false) una solicitud.

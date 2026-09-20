@@ -11,7 +11,8 @@ data class LinkRequestDetailUiState(
     // Diálogos de confirmación
     val showApproveDialog: Boolean = false,
     val showRejectDialog: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val successMessage: String? = null
 ) {
     // Tras aprobar/rechazar, la solicitud deja de estar pendiente y se bloquean los botones
     val isActionEnabled: Boolean

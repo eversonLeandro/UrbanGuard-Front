@@ -11,5 +11,7 @@ fun LinkRequestDto.toDomain(): LinkRequest = LinkRequest(
     conjuntoNombre = complexName.orEmpty(),
     fechaSolicitud = createdAt.orEmpty(),
     unidad = unit,
-    estado = status
+    estado = status,
+    roleSyncPending = roleSyncPending,
+    organizationSyncPending = organizationSyncPending
 )

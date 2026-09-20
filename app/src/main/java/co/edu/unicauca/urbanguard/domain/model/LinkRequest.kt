@@ -12,7 +12,9 @@ data class LinkRequest(
     val unidad: String = "",
     // Se mantiene como String para no romper el flujo LinkByCode del residente
     // (que aún no tiene estado tipado). En la UI se parsea a LinkRequestState.
-    val estado: String = "PENDIENTE"
+    val estado: String = "PENDIENTE",
+    val roleSyncPending: Boolean = false,
+    val organizationSyncPending: Boolean = false
 )
 
 enum class LinkRequestState {

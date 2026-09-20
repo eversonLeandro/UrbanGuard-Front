@@ -115,7 +115,16 @@ class LinkRequestDetailViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         isLoadingAction = false,
                         request = reviewed,
-                        errorMessage = null
+                        errorMessage = null,
+                        successMessage = if (approve) {
+                            if (reviewed.roleSyncPending || reviewed.organizationSyncPending) {
+                                "Solicitud aprobada localmente, pero la sincronización con Auth0 quedó pendiente."
+                            } else {
+                                "Solicitud aceptada correctamente. El usuario fue agregado como residente."
+                            }
+                        } else {
+                            "Solicitud rechazada correctamente."
+                        }
                     )
                 },
                 onFailure = { error ->
@@ -126,5 +135,9 @@ class LinkRequestDetailViewModel @Inject constructor(
                 }
             )
         }
+    }
+
+    fun onSuccessDismissed() {
+        _uiState.value = _uiState.value.copy(successMessage = null)
     }
 }

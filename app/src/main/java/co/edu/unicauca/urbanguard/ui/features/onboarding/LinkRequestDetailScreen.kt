@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.ui.features.onboarding
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -110,6 +111,22 @@ fun LinkRequestDetailScreen(
                     ) {
                         RequestHeaderCard(request)
                         InfoCard(request)
+
+                        uiState.successMessage?.let { message ->
+                            val isWarning = message.contains("pendiente", ignoreCase = true)
+                            val textColor = if (isWarning) UgAmber else UgEmerald
+                            val bgColor = if (isWarning) UgAmberSoft else Color(0xFFECFDF5)
+                            Text(
+                                text = message,
+                                color = textColor,
+                                fontSize = 13.sp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(bgColor, RoundedCornerShape(10.dp))
+                                    .padding(14.dp)
+                                    .clickable { viewModel.onSuccessDismissed() }
+                            )
+                        }
 
                         Spacer(Modifier.weight(1f))
 
