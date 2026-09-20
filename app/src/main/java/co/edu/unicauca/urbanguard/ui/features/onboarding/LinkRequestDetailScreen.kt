@@ -29,6 +29,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.domain.model.LinkRequest
 import co.edu.unicauca.urbanguard.domain.model.LinkRequestState
+import kotlinx.coroutines.delay
 import co.edu.unicauca.urbanguard.ui.theme.UgAmber
 import co.edu.unicauca.urbanguard.ui.theme.UgAmberSoft
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
@@ -55,9 +57,21 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 @Composable
 fun LinkRequestDetailScreen(
     onNavigateBack: () -> Unit,
+    onReviewFinished: (String) -> Unit,
     viewModel: LinkRequestDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Cuando la acción (aprobar/rechazar) termina, se muestra el mensaje de
+    // confirmación un instante y se regresa automáticamente a la lista.
+    LaunchedEffect(uiState.successMessage, uiState.reviewResult) {
+        val result = uiState.reviewResult
+        if (result != null) {
+            delay(1500)
+            viewModel.consumeReviewResult()
+            onReviewFinished(result)
+        }
+    }
 
     Column(
         modifier = Modifier

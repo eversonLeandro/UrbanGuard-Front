@@ -126,7 +126,7 @@ fun ActivateConjuntoScreen(
                 onValueChange = { viewModel.onCodeChange(formatActivationCode(it)) },
                 placeholder = {
                     Text(
-                        "ACT-XXXX-YYYY",
+                        "Ingresa tu código de licencia",
                         fontSize = 16.sp,
                         color = UgTextSecondary,
                         textAlign = TextAlign.Center,
@@ -166,19 +166,12 @@ fun ActivateConjuntoScreen(
                 )
                 Spacer(Modifier.height(8.dp))
             } else {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "FORMATO OBLIGATORIO: ",
-                        fontSize = 11.sp,
-                        color = UgTextSecondary
-                    )
-                    Text(
-                        text = "ACT-XXXX-YYYY",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = UgViolet
-                    )
-                }
+                Text(
+                    text = "EL CÓDIGO ES ALFANUMÉRICO: usa letras y números.",
+                    fontSize = 11.sp,
+                    color = UgTextSecondary,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             Spacer(Modifier.height(20.dp))
@@ -338,11 +331,5 @@ private fun WhyNecessaryCard() {
 }
 
 private fun formatActivationCode(input: String): String {
-    val cleaned = input.uppercase().filter { it.isLetterOrDigit() }.take(11)
-    val builder = StringBuilder()
-    cleaned.forEachIndexed { index, char ->
-        if (index == 3 || index == 8) builder.append('-')
-        builder.append(char)
-    }
-    return builder.toString().take(13)
+    return input.uppercase().filter { it.isLetterOrDigit() || it == '-' }.take(20)
 }

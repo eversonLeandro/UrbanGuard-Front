@@ -1,7 +1,11 @@
 package co.edu.unicauca.urbanguard.ui.navigation
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -60,6 +64,10 @@ object Routes {
     const val CONJUNTO_SELECTION = "conjunto_selection"
     const val ADMIN = "admin"
 }
+
+// Clave en el savedStateHandle de PENDING_REQUESTS para recibir el
+// resultado de la decisión (APROBADA/RECHAZADA) tomada en el detalle.
+private const val KEY_REVIEW_RESULT = "review_result"
 
 @Composable
 fun AppNavGraph(
@@ -200,7 +208,19 @@ fun AppNavGraph(
         }
 
         composable(Routes.PENDING_REQUESTS) {
+            // Resultado devuelto por el detalle tras aprobar/rechazar.
+            // Si no es null se muestra el mensaje de confirmación y se recarga la lista.
+            val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+            val reviewResult by savedStateHandle
+                ?.getStateFlow<String?>(KEY_REVIEW_RESULT, null)
+                ?.collectAsStateWithLifecycle()
+                ?: remember { mutableStateOf<String?>(null) }
+
             PendingRequestsScreen(
+                reviewResult = reviewResult,
+                onReviewResultHandled = {
+                    savedStateHandle?.set(KEY_REVIEW_RESULT, null)
+                },
                 onNavigateBack = {
                     navController.popBackStack()
                 },
@@ -218,6 +238,14 @@ fun AppNavGraph(
         ) {
             LinkRequestDetailScreen(
                 onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onReviewFinished = { result ->
+                    // Se deja el resultado en el savedStateHandle de la lista
+                    // para que al volver muestre la confirmación y actualice el estado.
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(KEY_REVIEW_RESULT, result)
                     navController.popBackStack()
                 }
             )

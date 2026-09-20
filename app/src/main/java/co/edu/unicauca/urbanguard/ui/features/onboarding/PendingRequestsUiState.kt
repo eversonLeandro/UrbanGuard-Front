@@ -9,7 +9,9 @@ data class PendingRequestsUiState(
     val requests: List<LinkRequest> = emptyList(),
     // Filtro activo (chips superiores): Pendientes, Aprobadas o Rechazadas
     val activeFilter: LinkRequestState = LinkRequestState.PENDIENTE,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    // Confirmación mostrada al volver del detalle tras aprobar/rechazar
+    val message: String? = null
 ) {
     // Solo las solicitudes del filtro activo
     val filteredRequests: List<LinkRequest>

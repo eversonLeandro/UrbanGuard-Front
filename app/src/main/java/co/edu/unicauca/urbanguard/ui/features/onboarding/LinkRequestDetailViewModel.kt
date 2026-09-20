@@ -124,7 +124,8 @@ class LinkRequestDetailViewModel @Inject constructor(
                             }
                         } else {
                             "Solicitud rechazada correctamente."
-                        }
+                        },
+                        reviewResult = if (approve) "APROBADA" else "RECHAZADA"
                     )
                 },
                 onFailure = { error ->
@@ -139,5 +140,9 @@ class LinkRequestDetailViewModel @Inject constructor(
 
     fun onSuccessDismissed() {
         _uiState.value = _uiState.value.copy(successMessage = null)
+    }
+
+    fun consumeReviewResult() {
+        _uiState.value = _uiState.value.copy(reviewResult = null)
     }
 }

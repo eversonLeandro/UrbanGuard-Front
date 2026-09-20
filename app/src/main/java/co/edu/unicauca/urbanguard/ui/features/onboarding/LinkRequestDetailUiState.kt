@@ -12,7 +12,10 @@ data class LinkRequestDetailUiState(
     val showApproveDialog: Boolean = false,
     val showRejectDialog: Boolean = false,
     val errorMessage: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    // Resultado de la acción (APROBADA/RECHAZADA) cuando el review finaliza,
+    // para disparar el auto-retorno a la lista de la que se llegó.
+    val reviewResult: String? = null
 ) {
     // Tras aprobar/rechazar, la solicitud deja de estar pendiente y se bloquean los botones
     val isActionEnabled: Boolean
