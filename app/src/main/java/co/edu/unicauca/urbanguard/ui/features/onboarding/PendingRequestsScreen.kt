@@ -46,11 +46,15 @@ import co.edu.unicauca.urbanguard.domain.model.LinkRequestState
 import co.edu.unicauca.urbanguard.ui.theme.UgAmber
 import co.edu.unicauca.urbanguard.ui.theme.UgAmberSoft
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgBorder
 import co.edu.unicauca.urbanguard.ui.theme.UgDivider
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorBg
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
+import co.edu.unicauca.urbanguard.ui.theme.UgIconFaint
+import co.edu.unicauca.urbanguard.ui.theme.UgIconMuted
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgSuccessBg
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 // Vista 1 de UG-49: lista de solicitudes de vinculación con filtros y estado.
@@ -122,7 +126,7 @@ fun PendingRequestsScreen(
         uiState.message?.let { message ->
             val isApproved = message.contains("aceptada", ignoreCase = true)
             val textColor = if (isApproved) UgEmerald else UgErrorText
-            val bgColor = if (isApproved) Color(0xFFECFDF5) else UgErrorBg
+            val bgColor = if (isApproved) UgSuccessBg else UgErrorBg
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -224,7 +228,7 @@ private fun FilterChips(
                     .background(color = if (isActive) UgNavy else Color.White)
                     .border(
                         width = 1.dp,
-                        color = if (isActive) UgNavy else Color(0xFFE2E8F0),
+                        color = if (isActive) UgNavy else UgBorder,
                         shape = RoundedCornerShape(20.dp)
                     )
                     .clickable { onFilterSelected(filter) }
@@ -309,7 +313,7 @@ private fun LinkRequestCard(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = "Ver detalle",
-                tint = Color(0xFFCBD5E1)
+                tint = UgIconFaint
             )
         }
     }
@@ -347,7 +351,7 @@ private fun RequestAvatar(name: String) {
 private fun RequestStatusBadge(status: LinkRequestState) {
     val (bg, content) = when (status) {
         LinkRequestState.PENDIENTE -> UgAmberSoft to UgAmber
-        LinkRequestState.APROBADA -> Color(0xFFECFDF5) to UgEmerald
+        LinkRequestState.APROBADA -> UgSuccessBg to UgEmerald
         LinkRequestState.RECHAZADA -> UgErrorBg to UgErrorText
     }
     Box(
@@ -387,13 +391,13 @@ private fun EmptyRequestsState(
             modifier = Modifier
                 .size(72.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFE2E8F0)),
+                .background(UgBorder),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = if (filter == LinkRequestState.PENDIENTE) "✓" else "!",
                 fontSize = 30.sp,
-                color = Color(0xFF94A3B8),
+                color = UgIconMuted,
                 fontWeight = FontWeight.Medium
             )
         }

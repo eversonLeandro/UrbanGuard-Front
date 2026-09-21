@@ -64,7 +64,7 @@ fun ActivateConjuntoScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(UgSurfaceLight)
+            .background(UgBackground)
     ) {
         TopBar()
 
@@ -146,10 +146,10 @@ fun ActivateConjuntoScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    focusedBorderColor = UgViolet,
-                    unfocusedBorderColor = UgViolet.copy(alpha = 0.5f),
-                    errorBorderColor = Color(0xFFDC2626),
-                    cursorColor = UgViolet
+                    focusedBorderColor = UgNavy,
+                    unfocusedBorderColor = UgBorder,
+                    errorBorderColor = UgErrorBright,
+                    cursorColor = UgNavy
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -160,7 +160,7 @@ fun ActivateConjuntoScreen(
                 Text(
                     text = errorMessage,
                     fontSize = 12.sp,
-                    color = Color(0xFFDC2626),
+                    color = UgErrorText,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -186,9 +186,9 @@ fun ActivateConjuntoScreen(
                 onClick = { viewModel.validateCode() },
                 enabled = isEnabled,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = UgViolet,
+                    containerColor = UgEmerald,
                     contentColor = Color.White,
-                    disabledContainerColor = UgDisabled,
+                    disabledContainerColor = UgDivider,
                     disabledContentColor = UgDisabledText
                 ),
                 shape = RoundedCornerShape(10.dp),
@@ -229,7 +229,7 @@ fun ActivateConjuntoScreen(
                     text = "Contactar soporte",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = UgViolet
+                    color = UgNavy
                 )
             }
 
@@ -252,7 +252,7 @@ private fun TopBar() {
         Box(
             modifier = Modifier
                 .size(28.dp)
-                .background(UgViolet, RoundedCornerShape(8.dp)),
+                .background(UgEmerald, RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -302,14 +302,14 @@ private fun WhyNecessaryCard() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(UgCardBg, RoundedCornerShape(12.dp))
+            .background(UgInputBg, RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = Icons.Filled.Info,
                 contentDescription = null,
-                tint = UgViolet,
+                tint = UgEmerald,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(Modifier.width(8.dp))

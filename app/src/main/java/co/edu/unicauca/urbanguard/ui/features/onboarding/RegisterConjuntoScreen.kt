@@ -83,7 +83,7 @@ fun RegisterConjuntoScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(UgSurfaceNeutral)
+            .background(UgBackground)
     ) {
         Header()
 
@@ -140,7 +140,7 @@ private fun Footer(
             Text(
                 text = errorMessage,
                 fontSize = 12.sp,
-                color = Color(0xFFDC2626),
+                color = UgErrorText,
                 lineHeight = 18.sp,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -151,7 +151,7 @@ private fun Footer(
         Button(
             onClick = onCreateClick,
             enabled = enabled,
-            colors = ButtonDefaults.buttonColors(containerColor = UgViolet),
+            colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
             shape = RoundedCornerShape(10.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -191,7 +191,7 @@ private fun GeneralFormSection(
             Icon(
                 imageVector = Icons.Default.Business,
                 contentDescription = null,
-                tint = UgViolet,
+                tint = UgEmerald,
                 modifier = Modifier.size(28.dp)
             )
 
@@ -264,7 +264,7 @@ private fun FieldLabel(icon: ImageVector, text: String) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = UgViolet,
+            tint = UgTextSecondary,
             modifier = Modifier.size(16.dp)
         )
         Spacer(Modifier.width(6.dp))
@@ -297,7 +297,7 @@ private fun InputField(
                 Text(
                     text = placeholder,
                     fontSize = 13.sp,
-                    color = Color(0xFF9CA3AF)
+                    color = UgDisabledText
                 )
             },
             singleLine = true,
@@ -306,9 +306,9 @@ private fun InputField(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = UgInputBg,
                 unfocusedContainerColor = UgInputBg,
-                focusedBorderColor = UgViolet.copy(alpha = 0.4f),
+                focusedBorderColor = UgNavy,
                 unfocusedBorderColor = Color.Transparent,
-                cursorColor = UgViolet
+                cursorColor = UgNavy
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -352,7 +352,7 @@ private fun CityDropdown(
                     Text(
                         text = "Ciudad",
                         fontSize = 13.sp,
-                        color = Color(0xFF9CA3AF)
+                        color = UgDisabledText
                     )
                 },
                 trailingIcon = {
@@ -361,9 +361,9 @@ private fun CityDropdown(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = UgInputBg,
                     unfocusedContainerColor = UgInputBg,
-                    focusedBorderColor = UgViolet.copy(alpha = 0.4f),
+                    focusedBorderColor = UgNavy,
                     unfocusedBorderColor = Color.Transparent,
-                    cursorColor = UgViolet
+                    cursorColor = UgNavy
                 ),
                 modifier = Modifier
                     .menuAnchor()
@@ -437,7 +437,7 @@ private fun Header() {
         Box(
             modifier = Modifier
                 .size(28.dp)
-                .background(UgViolet, RoundedCornerShape(8.dp)),
+                .background(UgEmerald, RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {
             Icon(

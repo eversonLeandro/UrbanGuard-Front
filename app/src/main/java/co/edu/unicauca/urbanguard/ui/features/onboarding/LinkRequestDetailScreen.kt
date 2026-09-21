@@ -46,10 +46,14 @@ import kotlinx.coroutines.delay
 import co.edu.unicauca.urbanguard.ui.theme.UgAmber
 import co.edu.unicauca.urbanguard.ui.theme.UgAmberSoft
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgBorderSoft
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorBg
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBorder
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgSuccessBg
 import co.edu.unicauca.urbanguard.ui.theme.UgTextPrimary
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
@@ -129,7 +133,7 @@ fun LinkRequestDetailScreen(
                         uiState.successMessage?.let { message ->
                             val isWarning = message.contains("pendiente", ignoreCase = true)
                             val textColor = if (isWarning) UgAmber else UgEmerald
-                            val bgColor = if (isWarning) UgAmberSoft else Color(0xFFECFDF5)
+                            val bgColor = if (isWarning) UgAmberSoft else UgSuccessBg
                             Text(
                                 text = message,
                                 color = textColor,
@@ -158,7 +162,7 @@ fun LinkRequestDetailScreen(
                                 enabled = uiState.isActionEnabled,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = UgEmerald,
-                                    disabledContainerColor = Color(0xFFD1FAE5)
+                                    disabledContainerColor = UgSuccessBg
                                 ),
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier
@@ -172,9 +176,9 @@ fun LinkRequestDetailScreen(
                                 enabled = uiState.isActionEnabled,
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     contentColor = UgErrorText,
-                                    disabledContentColor = Color(0xFFFECACA)
+                                    disabledContentColor = UgErrorBorder
                                 ),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, if (uiState.isActionEnabled) UgErrorText else Color(0xFFFECACA)),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, if (uiState.isActionEnabled) UgErrorText else UgErrorBorder),
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -274,7 +278,7 @@ private fun RequestHeaderCard(request: LinkRequest) {
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White, RoundedCornerShape(14.dp))
-            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(14.dp))
+            .border(1.dp, UgBorder, RoundedCornerShape(14.dp))
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -313,7 +317,7 @@ private fun RequestHeaderCard(request: LinkRequest) {
 private fun DetailStatusBadge(status: LinkRequestState) {
     val (bg, content) = when (status) {
         LinkRequestState.PENDIENTE -> UgAmberSoft to UgAmber
-        LinkRequestState.APROBADA -> Color(0xFFECFDF5) to UgEmerald
+        LinkRequestState.APROBADA -> UgSuccessBg to UgEmerald
         LinkRequestState.RECHAZADA -> UgErrorBg to UgErrorText
     }
     Box(
@@ -345,7 +349,7 @@ private fun InfoCard(request: LinkRequest) {
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White, RoundedCornerShape(14.dp))
-            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(14.dp))
+            .border(1.dp, UgBorder, RoundedCornerShape(14.dp))
             .padding(vertical = 4.dp)
     ) {
         InfoRow(label = "Conjunto", value = request.conjuntoNombre)
@@ -385,6 +389,6 @@ private fun InfoRow(label: String, value: String) {
 private fun CardDivider() {
     HorizontalDivider(
         modifier = Modifier.padding(horizontal = 16.dp),
-        color = Color(0xFFF1F5F9)
+        color = UgBorderSoft
     )
 }

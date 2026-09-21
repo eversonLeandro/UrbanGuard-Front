@@ -235,11 +235,11 @@ private fun ConjuntoCard(
 @Composable
 private fun RoleBadge(role: UserRole) {
     val (label, color) = when (role) {
-        UserRole.ADMIN -> "Administrador" to UgAmber
-        UserRole.GUARD -> "Vigilante" to UgViolet
+        UserRole.ADMIN -> "Administrador" to UgNavy
+        UserRole.GUARD -> "Vigilante" to UgAmber
         UserRole.RESIDENT -> "Residente" to UgEmerald
         UserRole.USER -> "Usuario" to UgTextSecondary
-        UserRole.SUPERADMIN -> "Superadmin" to UgAmber
+        UserRole.SUPERADMIN -> "Superadmin" to UgNavy
     }
     Box(
         modifier = Modifier

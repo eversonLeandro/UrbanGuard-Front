@@ -134,8 +134,8 @@ fun LinkByCodeScreen(
                         focusedBorderColor = UgNavy,
                         focusedLabelColor = UgNavy,
                         cursorColor = UgNavy,
-                        errorBorderColor = Color(0xFFEF4444),
-                        errorLabelColor = Color(0xFFEF4444)
+                        errorBorderColor = UgErrorBright,
+                        errorLabelColor = UgErrorBright
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -145,7 +145,7 @@ fun LinkByCodeScreen(
                     Text(
                         text = uiState.codeError!!,
                         fontSize = 12.sp,
-                        color = Color(0xFFEF4444)
+                        color = UgErrorBright
                     )
                 }
             }
@@ -258,7 +258,7 @@ fun LinkByCodeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(Color.White, RoundedCornerShape(12.dp))
-                                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+.border(1.dp, UgBorder, RoundedCornerShape(12.dp))
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
@@ -271,7 +271,7 @@ fun LinkByCodeScreen(
                                     modifier = Modifier
                                         .size(48.dp)
                                         .background(
-                                            Color(0xFFE8F5E9),
+                                            UgSuccessBg.copy(alpha = 0.3f),
                                             RoundedCornerShape(12.dp)
                                         ),
                                     contentAlignment = Alignment.Center
@@ -304,7 +304,7 @@ fun LinkByCodeScreen(
                             }
 
                             // Divider
-                            Divider(color = Color(0xFFE2E8F0))
+                            Divider(color = UgBorder)
 
                             // Total miembros
                             Row(
@@ -348,8 +348,8 @@ fun LinkByCodeScreen(
                                         focusedBorderColor = UgNavy,
                                         focusedLabelColor = UgNavy,
                                         cursorColor = UgNavy,
-                                        errorBorderColor = Color(0xFFEF4444),
-                                        errorLabelColor = Color(0xFFEF4444)
+                                        errorBorderColor = UgErrorBright,
+                                        errorLabelColor = UgErrorBright
                                     ),
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -358,7 +358,7 @@ fun LinkByCodeScreen(
                                     Text(
                                         text = uiState.apartamentoError!!,
                                         fontSize = 12.sp,
-                                        color = Color(0xFFEF4444)
+                                        color = UgErrorBright
                                     )
                                 }
                             }
@@ -459,13 +459,13 @@ private fun LinkSuccessScreen(
         Box(
             modifier = Modifier
                 .size(80.dp)
-                .background(Color(0xFFFFF3E0), CircleShape),
+                .background(UgWarningBg, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Shield,
                 contentDescription = null,
-                tint = Color(0xFFF57C00),
+                tint = UgWarningText,
                 modifier = Modifier.size(40.dp)
             )
         }
@@ -496,18 +496,18 @@ private fun LinkSuccessScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.White, RoundedCornerShape(12.dp))
-                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+                .border(1.dp, UgBorder, RoundedCornerShape(12.dp))
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             SolicitudInfoRow(label = "Conjunto", value = conjuntoNombre)
-            Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+            Divider(color = UgBorderSoft, thickness = 1.dp)
             SolicitudInfoRow(label = "Dirección", value = "$direccion, $ciudad")
-            Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+            Divider(color = UgBorderSoft, thickness = 1.dp)
             SolicitudInfoRow(label = "Apartamento", value = "N.º $unidad")
-            Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+            Divider(color = UgBorderSoft, thickness = 1.dp)
             SolicitudInfoRow(label = "Fecha de solicitud", value = fechaSolicitud)
-            Divider(color = Color(0xFFF1F5F9), thickness = 1.dp)
+            Divider(color = UgBorderSoft, thickness = 1.dp)
             // Fila de estado con badge
             Row(
                 modifier = Modifier
@@ -523,14 +523,14 @@ private fun LinkSuccessScreen(
                 )
                 Box(
                     modifier = Modifier
-                        .background(Color(0xFFFFF3E0), RoundedCornerShape(6.dp))
+                        .background(UgWarningBg, RoundedCornerShape(6.dp))
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = "PENDIENTE",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFFF57C00),
+                        color = UgWarningText,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -543,8 +543,8 @@ private fun LinkSuccessScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFFFF8E1), RoundedCornerShape(8.dp))
-                .border(1.dp, Color(0xFFFFE082), RoundedCornerShape(8.dp))
+                .background(UgWarningBg, RoundedCornerShape(8.dp))
+                .border(1.dp, UgWarningBorder, RoundedCornerShape(8.dp))
                 .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.Top
@@ -552,13 +552,13 @@ private fun LinkSuccessScreen(
             Icon(
                 imageVector = Icons.Default.Shield,
                 contentDescription = null,
-                tint = Color(0xFFF57C00),
+                tint = UgWarningText,
                 modifier = Modifier.size(16.dp).padding(top = 1.dp)
             )
             Text(
                 text = "El administrador revisará tu solicitud. Recibirás una notificación con el resultado.",
                 fontSize = 13.sp,
-                color = Color(0xFFE65100),
+                color = UgWarningText,
                 lineHeight = 18.sp
             )
         }

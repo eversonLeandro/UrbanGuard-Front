@@ -175,7 +175,7 @@ private fun InitialLoadingContent() {
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White, RoundedCornerShape(12.dp))
-            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+            .border(1.dp, UgBorder, RoundedCornerShape(12.dp))
             .padding(40.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -196,7 +196,7 @@ private fun EmptyCodeContent(onGenerateClick: () -> Unit) {
             .background(Color.White, RoundedCornerShape(12.dp))
             .border(
                 width = 1.dp,
-                color = Color(0xFFCBD5E1),
+                color = UgIconFaint,
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(32.dp),
@@ -209,13 +209,13 @@ private fun EmptyCodeContent(onGenerateClick: () -> Unit) {
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .background(Color(0xFFF1F5F9), RoundedCornerShape(16.dp)),
+                    .background(UgBorderSoft, RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Key,
                     contentDescription = null,
-                    tint = Color(0xFF94A3B8),
+                    tint = UgIconMuted,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -262,7 +262,7 @@ private fun ActionLoadingContent() {
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White, RoundedCornerShape(12.dp))
-            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+            .border(1.dp, UgBorder, RoundedCornerShape(12.dp))
             .padding(40.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -301,7 +301,7 @@ private fun CodeAvailableContent(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White, RoundedCornerShape(12.dp))
-            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+            .border(1.dp, UgBorder, RoundedCornerShape(12.dp))
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -323,7 +323,7 @@ private fun CodeAvailableContent(
         // Badge estado activo
         Row(
             modifier = Modifier
-                .background(Color(0xFFF0FDF4), RoundedCornerShape(6.dp))
+                .background(UgSuccessBg, RoundedCornerShape(6.dp))
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -337,7 +337,7 @@ private fun CodeAvailableContent(
             Text(
                 text = if (isCodeActive) "Código activo" else "Código inactivo",
                 fontSize = 12.sp,
-                color = Color(0xFF065F46)
+color = UgSuccessText
             )
         }
     }
@@ -347,7 +347,7 @@ private fun CodeAvailableContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFF0FDF4), RoundedCornerShape(8.dp))
+                .background(UgSuccessBg, RoundedCornerShape(8.dp))
                 .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -361,7 +361,7 @@ private fun CodeAvailableContent(
             Text(
                 text = "Código copiado al portapapeles",
                 fontSize = 13.sp,
-                color = Color(0xFF065F46),
+                color = UgSuccessText,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -401,12 +401,12 @@ private fun CodeAvailableContent(
     }
 
     // Separador + botón regenerar
-    Divider(color = Color(0xFFE2E8F0))
+    Divider(color = UgBorder)
 
     OutlinedButton(
         onClick = onRegenerateClick,
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5)),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = UgErrorBright),
+        border = androidx.compose.foundation.BorderStroke(1.dp, UgErrorBorder),
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -423,7 +423,7 @@ private fun CodeAvailableContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.White, RoundedCornerShape(12.dp))
-                .border(1.dp, Color(0xFFFCA5A5), RoundedCornerShape(12.dp))
+                .border(1.dp, UgErrorBorder, RoundedCornerShape(12.dp))
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -434,13 +434,13 @@ private fun CodeAvailableContent(
                 Box(
                     modifier = Modifier
                         .size(32.dp)
-                        .background(Color(0xFFFEF2F2), RoundedCornerShape(8.dp)),
+                        .background(UgErrorBg, RoundedCornerShape(8.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Warning,
                         contentDescription = null,
-                        tint = Color(0xFFEF4444),
+                        tint = UgErrorBright,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -470,7 +470,7 @@ private fun CodeAvailableContent(
                 }
                 Button(
                     onClick = onRegenerateConfirmed,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
+                    colors = ButtonDefaults.buttonColors(containerColor = UgErrorBright),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.weight(1f).height(40.dp)
                 ) {
@@ -490,20 +490,20 @@ fun InfoBanner(text: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFEFF6FF), RoundedCornerShape(8.dp))
+            .background(UgInfoBg, RoundedCornerShape(8.dp))
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Icon(
             imageVector = Icons.Default.Info,
             contentDescription = null,
-            tint = Color(0xFF3B82F6),
+            tint = UgInfoIcon,
             modifier = Modifier.size(16.dp).padding(top = 1.dp)
         )
         Text(
             text = text,
             fontSize = 12.sp,
-            color = Color(0xFF1E40AF),
+            color = UgInfoText,
             lineHeight = 18.sp
         )
     }
