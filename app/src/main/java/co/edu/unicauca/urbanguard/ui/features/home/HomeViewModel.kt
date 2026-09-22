@@ -20,18 +20,20 @@ class HomeViewModel @Inject constructor(
 
     init {
         val session = sessionManager.session.value
+        val activeConjunto = sessionManager.getActiveConjunto()
         _uiState.update {
             it.copy(
                 userName = session?.name ?: "",
                 userRole = when (session?.role) {
-                    UserRole.ADMIN -> "ADMIN"
-                    UserRole.GUARD -> "GUARD"
-                    UserRole.RESIDENT -> "RESIDENT"
-                    UserRole.USER -> "USER"
+                    UserRole.ADMIN -> "ADMINISTRADOR"
+                    UserRole.GUARD -> "GUARDIA"
+                    UserRole.RESIDENT -> "RESIDENTE"
+                    UserRole.USER -> "USUARIO"
                     UserRole.SUPERADMIN -> "SUPERADMIN"
                     null -> ""
                 },
-                role = session?.role
+                role = session?.role,
+                conjuntoName = activeConjunto?.nombre ?: "Bosques del Refugio"
             )
         }
     }

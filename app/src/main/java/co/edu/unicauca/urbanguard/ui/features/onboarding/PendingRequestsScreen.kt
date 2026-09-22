@@ -56,6 +56,7 @@ import co.edu.unicauca.urbanguard.ui.theme.UgIconMuted
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 import co.edu.unicauca.urbanguard.ui.theme.UgSuccessBg
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 
 // Vista 1 de UG-49: lista de solicitudes de vinculación con filtros y estado.
 @Composable
@@ -90,31 +91,12 @@ fun PendingRequestsScreen(
             .fillMaxSize()
             .background(UgBackground)
     ) {
-        // Header navy (mismo patrón que el resto de onboarding)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(UgNavy)
-                .padding(horizontal = 16.dp, vertical = 18.dp)
-        ) {
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier.align(Alignment.CenterStart)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = UgEmerald
-                )
-            }
-            Text(
-                text = "Solicitudes de vinculación",
-                color = Color.White,
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
+        // Header unificado
+        UrbanGuardTopBar(
+            title = "Solicitudes de vinculación",
+            onNavigateBack = onNavigateBack,
+            showMenu = false
+        )
 
         // Filtros por estado
         FilterChips(

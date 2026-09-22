@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.*
 
 @Composable
@@ -70,30 +71,11 @@ fun LinkByCodeScreen(
             .background(UgBackground)
     ) {
         // Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(UgNavy)
-                .padding(horizontal = 4.dp, vertical = 4.dp)
-        ) {
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier.align(Alignment.CenterStart)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = UgEmerald
-                )
-            }
-            Text(
-                text = "Unirse a conjunto",
-                color = Color.White,
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
+        UrbanGuardTopBar(
+            title = "Unirse a conjunto",
+            onNavigateBack = onNavigateBack,
+            showMenu = false
+        )
 
         Column(
             modifier = Modifier

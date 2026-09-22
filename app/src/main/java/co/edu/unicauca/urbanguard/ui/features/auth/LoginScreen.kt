@@ -444,11 +444,14 @@ private fun LoginPrimaryButton(
     // Pulso sutil del fondo durante la carga
     val infinite = rememberInfiniteTransition(label = "pulse")
     val pulseAlpha by infinite.animateFloat(
-        initialValue = 0.85f,
+        initialValue = 0.82f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(animation = tween(700)),
         label = "buttonPulse"
     )
+
+    // Durante la carga el contenedor late en todo el botón (no solo el área interna)
+    val containerColor = if (isLoading) UgNavy.copy(alpha = pulseAlpha) else UgNavy
 
     Button(
         onClick = onClick,
@@ -456,10 +459,10 @@ private fun LoginPrimaryButton(
         interactionSource = interactionSource,
         shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = UgNavy,
+            containerColor = containerColor,
             contentColor = Color.White,
-            disabledContainerColor = UgNavy.copy(alpha = 0.9f),
-            disabledContentColor = Color.White.copy(alpha = 0.9f)
+            disabledContainerColor = containerColor,
+            disabledContentColor = Color.White
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -472,27 +475,19 @@ private fun LoginPrimaryButton(
             )
     ) {
         if (isLoading) {
-            // Fondo con pulso + spinner refinado
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(UgNavy.copy(alpha = pulseAlpha)),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                CircularProgressIndicator(
-                    color = UgEmerald,
-                    strokeWidth = 2.5.dp,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    "Ingresando...",
-                    color = Color.White.copy(alpha = 0.95f),
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 15.sp
-                )
-            }
+            // Spinner + texto en fila (el botón ya centra el contenido horizontalmente)
+            CircularProgressIndicator(
+                color = UgEmerald,
+                strokeWidth = 2.5.dp,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                "Ingresando...",
+                color = Color.White,
+                fontWeight = FontWeight.Medium,
+                fontSize = 15.sp
+            )
         } else {
             Text(
                 "Iniciar sesión",

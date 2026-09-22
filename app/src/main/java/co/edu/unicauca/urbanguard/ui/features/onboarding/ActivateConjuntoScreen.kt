@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.*
 import co.edu.unicauca.urbanguard.R
 import androidx.compose.foundation.Image
@@ -49,6 +50,7 @@ import androidx.compose.ui.res.painterResource
 
 @Composable
 fun ActivateConjuntoScreen(
+    onNavigateBack: () -> Unit = {},
     onValidated: (activationCode: String) -> Unit = {},
     viewModel: ActivateConjuntoViewModel = hiltViewModel()
 ) {
@@ -66,7 +68,11 @@ fun ActivateConjuntoScreen(
             .fillMaxSize()
             .background(UgBackground)
     ) {
-        TopBar()
+        UrbanGuardTopBar(
+            title = "Activar Condominio",
+            onNavigateBack = onNavigateBack,
+            showMenu = false
+        )
 
         Column(
             modifier = Modifier
@@ -238,39 +244,7 @@ fun ActivateConjuntoScreen(
     }
 }
 
-@Composable
-private fun TopBar() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .border(width = 1.dp, color = UgDivider)
-            .padding(vertical = 14.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .background(UgEmerald, RoundedCornerShape(8.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.GppGood,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(16.dp)
-            )
-        }
-        Spacer(Modifier.width(10.dp))
-        Text(
-            text = "Activar Condominio",
-            fontSize = 15.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = UgTextPrimary
-        )
-    }
-}
+
 
 /**
  * TODO: Reemplazar por el asset real de ilustración "manos sosteniendo casa"

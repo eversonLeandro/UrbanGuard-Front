@@ -23,5 +23,4 @@ val residentNavItems: List<NavItem> = listOf(
     NavItem(route = Routes.PROFILE, label = "Perfil", icon = Icons.Default.Person)
 )
 
-// TODO: definir los ítems del menú de Vigilante cuando se implemente
-val vigilanteNavItems: List<NavItem> = emptyList()
+// Los ítems del Vigilante viven en GuardNavItems.kt (guardNavItems).

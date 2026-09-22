@@ -8,8 +8,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,18 +26,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.unicauca.urbanguard.R
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoUserAssociation
 import co.edu.unicauca.urbanguard.domain.model.UserRole
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.*
 
 @Composable
 fun ConjuntoSelectionScreen(
-    onConjuntoSelected: (conjuntoId: String) -> Unit,
+    onConjuntoSelected: (conjuntoId: String, role: UserRole) -> Unit,
     onCreateConjunto: () -> Unit,
     onJoinByCode: () -> Unit,
     onLogout: () -> Unit,
     viewModel: ConjuntoSelectionViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showLogoutDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -44,39 +45,10 @@ fun ConjuntoSelectionScreen(
             .background(UgBackground)
     ) {
         // Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(UgNavy)
-                .padding(horizontal = 16.dp, vertical = 18.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.align(Alignment.CenterStart)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.logo_u),
-                    contentDescription = "Logo UrbanGuard",
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                )
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    text = "Seleccionar conjunto",
-                    color = Color.White,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp
-                )
-            }
-            IconButton(onClick = { showLogoutDialog = true }, modifier = Modifier.align(Alignment.CenterEnd)) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "Cerrar sesión",
-                    tint = UgEmerald
-                )
-            }
-        }
+        UrbanGuardTopBar(
+            title = "Seleccionar conjunto",
+            onLogout = onLogout
+        )
 
         when {
             uiState.isLoading -> {
@@ -106,8 +78,8 @@ fun ConjuntoSelectionScreen(
                         conjuntos = uiState.conjuntos,
                         conjuntoActivoId = uiState.conjuntoActivoId,
                         onConjuntoSelected = { id ->
-                            viewModel.onConjuntoSelected(id)
-                            onConjuntoSelected(id)
+                            val role = viewModel.onConjuntoSelected(id)
+                            onConjuntoSelected(id, role ?: UserRole.RESIDENT)
                         },
                         onCreateConjunto = onCreateConjunto,
                         onJoinByCode = onJoinByCode
@@ -116,15 +88,46 @@ fun ConjuntoSelectionScreen(
             }
         }
     }
+}
 
-    if (showLogoutDialog) {
-        LogoutDialog(
-            onConfirm = {
-                showLogoutDialog = false
-                onLogout()
-            },
-            onDismiss = { showLogoutDialog = false }
-        )
+@Composable
+private fun MenuButton(
+    onLogoutClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        IconButton(onClick = { menuExpanded = true }) {
+            Icon(
+                imageVector = Icons.Default.Menu,
+                contentDescription = "Menú",
+                tint = UgEmerald
+            )
+        }
+        DropdownMenu(
+            expanded = menuExpanded,
+            onDismissRequest = { menuExpanded = false },
+            containerColor = Color.White
+        ) {
+            DropdownMenuItem(
+                text = {
+                    Text("Cerrar sesión", fontSize = 14.sp, color = UgNavy)
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = null,
+                        tint = UgErrorText,
+                        modifier = Modifier.size(20.dp)
+                    )
+                },
+                onClick = {
+                    menuExpanded = false
+                    onLogoutClick()
+                }
+            )
+        }
     }
 }
 
@@ -243,7 +246,7 @@ private fun RoleBadge(role: UserRole) {
     }
     Box(
         modifier = Modifier
-            .background(color.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
+            .background(color.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
             .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
         Text(
@@ -313,7 +316,7 @@ private fun ActionButtons(
         Button(
             onClick = onCreateConjunto,
             colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)

@@ -1,13 +1,29 @@
 package co.edu.unicauca.urbanguard.ui.theme
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 // ─── Marca ──────────────────────────────────────────────────────────
 val UgNavy = Color(0xFF1E293B)              // estructura / encabezados / texto principal
+val UgNavyLight = Color(0xFF334155)         // navy variante ligera
+val UgNavyDark = Color(0xFF0F172A)          // navy variante oscura
 val UgEmerald = Color(0xFF10B981)           // acción / CTA / éxito / acento
+val UgEmeraldLight = Color(0xFF34D399)      // verde esmeralda claro
 val UgBackground = Color(0xFFF8FAFC)        // fondo general de pantalla
-val UgTextPrimary = Color(0xFF111827)       // título de contenido
+val UgTextPrimary = Color(0xFF0F172A)       // título de contenido
 val UgTextSecondary = Color(0xFF64748B)     // subtítulos / textos secundarios
+
+// ─── Gradientes ─────────────────────────────────────────────────────
+val UgNavyGradient = Brush.horizontalGradient(
+    colors = listOf(Color(0xFF0F172A), Color(0xFF1E293B))
+)
+val UgHeroGradient = Brush.linearGradient(
+    colors = listOf(Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0F2942))
+)
+val UgEmeraldGradient = Brush.horizontalGradient(
+    colors = listOf(Color(0xFF10B981), Color(0xFF059669))
+)
+val UgCardGlassBorder = Color(0x1F1E293B)
 
 // ─── Superficies y bordes ───────────────────────────────────────────
 val UgSurface = Color(0xFFFFFFFF)           // cards / superficies elevadas

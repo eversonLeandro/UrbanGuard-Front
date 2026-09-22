@@ -53,6 +53,8 @@ class SignUpUseCaseTest {
             return Result.success(UserSession("fake_token", email, name, UserRole.RESIDENT))
         }
 
+        override suspend fun restoreSession(): UserSession? = null
+
         override suspend fun logout() {}
     }
 }
