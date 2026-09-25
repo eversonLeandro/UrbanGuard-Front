@@ -10,7 +10,7 @@ class SignUpUseCase @Inject constructor(
     suspend operator fun invoke(
         email: String,
         password: String,
-        name: String = ""
+        name: String
     ): Result<UserSession> {
         if (email.isBlank() || !email.contains("@")) {
             return Result.failure(IllegalArgumentException("Ingresa un correo electrónico válido"))

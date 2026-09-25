@@ -5,7 +5,7 @@ import co.edu.unicauca.urbanguard.domain.model.LinkRequest
 
 fun LinkRequestDto.toDomain(): LinkRequest = LinkRequest(
     id = id,
-    nombreSolicitante = applicantName?.takeIf { it.isNotBlank() } ?: userId,
+    nombreSolicitante = applicantName?.takeIf { it.isNotBlank() } ?: "Usuario",
     emailSolicitante = applicantEmail.orEmpty(),
     conjuntoId = conjuntoId,
     conjuntoNombre = complexName.orEmpty(),
