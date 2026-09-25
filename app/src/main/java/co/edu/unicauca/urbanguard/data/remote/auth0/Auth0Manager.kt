@@ -44,8 +44,8 @@ class Auth0Manager @Inject constructor(
         name: String = "",
         connection: String = BuildConfig.AUTH0_DB_CONNECTION
     ): UserSession {
-        // 1. Ejecutar el registro nativo de Auth0
-        signUpDirect(email.trim(), password, connection)
+        // 1. Ejecutar el registro nativo de Auth0 (guarda el nombre en user_metadata)
+        signUpDirect(email.trim(), password, name, connection)
 
         // 2. Iniciar sesión para obtener las credenciales y tokens JWT
         return loginEmbedded(email.trim(), password, connection)
@@ -54,20 +54,28 @@ class Auth0Manager @Inject constructor(
     private suspend fun signUpDirect(
         email: String,
         password: String,
+        name: String,
         connection: String
     ): DatabaseUser = suspendCancellableCoroutine { continuation ->
-        apiClient.createUser(email, password, null, connection)
-            .start(object : Callback<DatabaseUser, AuthenticationException> {
-                override fun onSuccess(result: DatabaseUser) {
-                    Log.d(TAG, "Usuario creado exitosamente en Auth0: ${result.email}")
-                    continuation.resume(result)
-                }
+        // user_metadata.name: lo usa la Post-Login Action y el espejo JIT del backend.
+        val userMetadata = if (name.isBlank()) null else mapOf("name" to name)
+        var request = apiClient.createUser(email, password, null, connection, userMetadata)
+        // El atributo root "name" hace que Auth0 guarde el perfil con name = nombre escrito
+        // (si no, Auth0 pone name = email), y así el claim "name" del ID token lleva el nombre.
+        if (!name.isBlank()) {
+            request = request.addParameter("name", name)
+        }
+        request.start(object : Callback<DatabaseUser, AuthenticationException> {
+            override fun onSuccess(result: DatabaseUser) {
+                Log.d(TAG, "Usuario creado exitosamente en Auth0: ${result.email}")
+                continuation.resume(result)
+            }
 
-                override fun onFailure(error: AuthenticationException) {
-                    Log.e(TAG, "Error en registro de Auth0: code=${error.getCode()}, desc=${error.getDescription()}", error)
-                    continuation.resumeWithException(mapAuth0Error(error))
-                }
-            })
+            override fun onFailure(error: AuthenticationException) {
+                Log.e(TAG, "Error en registro de Auth0: code=${error.getCode()}, desc=${error.getDescription()}", error)
+                continuation.resumeWithException(mapAuth0Error(error))
+            }
+        })
     }
 
     private suspend fun authenticateDirect(
@@ -151,7 +159,8 @@ class Auth0Manager @Inject constructor(
                 val jwt = JWT(idTokenStr)
                 userId = jwt.subject ?: fallbackEmail
 
-                val nameClaim = jwt.getClaim("name").asString()
+                val nameClaim = jwt.getClaim("https://urbanguard.com/name").asString()
+                    ?: jwt.getClaim("name").asString()
                     ?: jwt.getClaim("nickname").asString()
                 if (!nameClaim.isNullOrBlank()) {
                     userName = nameClaim

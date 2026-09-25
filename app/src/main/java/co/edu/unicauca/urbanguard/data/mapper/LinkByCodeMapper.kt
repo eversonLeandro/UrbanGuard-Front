@@ -1,5 +1,6 @@
 package co.edu.unicauca.urbanguard.data.mapper
 
+import co.edu.unicauca.urbanguard.core.common.DateTimeUtils
 import co.edu.unicauca.urbanguard.data.remote.api.dto.ConjuntoSearchResponseDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.LinkRequestResponseDto
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoSearch
@@ -21,7 +22,7 @@ fun LinkRequestResponseDto.toDomain(): LinkRequest = LinkRequest(
     conjuntoNombre = complexName.orEmpty(),
     nombreSolicitante = applicantName.orEmpty(),
     emailSolicitante = applicantEmail.orEmpty(),
-    fechaSolicitud = createdAt.orEmpty(),
+    fechaSolicitud = DateTimeUtils.formatFechaSolicitud(createdAt),
     unidad = unit,
     estado = status
 )

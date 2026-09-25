@@ -279,7 +279,9 @@ private fun LinkRequestCard(
             Text(
                 text = request.fechaSolicitud.ifBlank { "Solicitud pendiente" },
                 fontSize = 11.sp,
-                color = UgTextSecondary
+                color = UgTextSecondary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
