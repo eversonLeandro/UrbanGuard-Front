@@ -12,7 +12,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Refresh
@@ -33,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.*
 
 @Composable
@@ -48,31 +48,12 @@ fun ConjuntoCodeScreen(
             .fillMaxSize()
             .background(UgBackground)
     ) {
-        // Header
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(UgNavy)
-                .padding(horizontal = 16.dp, vertical = 18.dp)
-        ) {
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier.align(Alignment.CenterStart)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = UgEmerald
-                )
-            }
-            Text(
-                text = "Código del conjunto",
-                color = Color.White,
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
+        // Header unificado
+        UrbanGuardTopBar(
+            title = "Código del conjunto",
+            onNavigateBack = onNavigateBack,
+            showMenu = false
+        )
 
         Column(
             modifier = Modifier
@@ -86,19 +67,21 @@ fun ConjuntoCodeScreen(
             // una vez que UG-45/UG-46 estén implementados.
             // El nombre vendrá del SessionManager o del ConjuntoConfig
             // que se cargará en el init del ViewModel.
-            Text(
-                text = "Conjunto residencial",
-                fontSize = 13.sp,
-                color = UgTextSecondary
-            )
-            Text(
-                text = uiState.conjuntoName, // <-- NOMBRE QUEMADO TEMPORAL en UiState
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = UgNavy
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = "Conjunto residencial",
+                    fontSize = 13.sp,
+                    color = UgTextSecondary
+                )
+                Text(
+                    text = uiState.conjuntoName, // <-- NOMBRE QUEMADO TEMPORAL en UiState
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = UgNavy
+                )
+            }
 
             when {
                 // Estado 1: carga inicial
@@ -175,7 +158,7 @@ private fun InitialLoadingContent() {
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White, RoundedCornerShape(12.dp))
-            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+            .border(1.dp, UgBorder, RoundedCornerShape(12.dp))
             .padding(40.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -196,7 +179,7 @@ private fun EmptyCodeContent(onGenerateClick: () -> Unit) {
             .background(Color.White, RoundedCornerShape(12.dp))
             .border(
                 width = 1.dp,
-                color = Color(0xFFCBD5E1),
+                color = UgIconFaint,
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(32.dp),
@@ -209,13 +192,13 @@ private fun EmptyCodeContent(onGenerateClick: () -> Unit) {
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .background(Color(0xFFF1F5F9), RoundedCornerShape(16.dp)),
+                    .background(UgBorderSoft, RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Key,
                     contentDescription = null,
-                    tint = Color(0xFF94A3B8),
+                    tint = UgIconMuted,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -241,7 +224,7 @@ private fun EmptyCodeContent(onGenerateClick: () -> Unit) {
     Button(
         onClick = onGenerateClick,
         colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(14.dp),
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
@@ -252,7 +235,7 @@ private fun EmptyCodeContent(onGenerateClick: () -> Unit) {
             modifier = Modifier.size(18.dp)
         )
         Spacer(Modifier.width(8.dp))
-        Text("Generar código", fontWeight = FontWeight.Medium)
+        Text("Generar código", fontWeight = FontWeight.Bold)
     }
 }
 
@@ -262,7 +245,7 @@ private fun ActionLoadingContent() {
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White, RoundedCornerShape(12.dp))
-            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+            .border(1.dp, UgBorder, RoundedCornerShape(12.dp))
             .padding(40.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -300,8 +283,8 @@ private fun CodeAvailableContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(12.dp))
-            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+            .background(Color.White, RoundedCornerShape(20.dp))
+            .border(1.dp, UgBorder, RoundedCornerShape(20.dp))
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -323,7 +306,7 @@ private fun CodeAvailableContent(
         // Badge estado activo
         Row(
             modifier = Modifier
-                .background(Color(0xFFF0FDF4), RoundedCornerShape(6.dp))
+                .background(UgSuccessBg, RoundedCornerShape(8.dp))
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -337,7 +320,7 @@ private fun CodeAvailableContent(
             Text(
                 text = if (isCodeActive) "Código activo" else "Código inactivo",
                 fontSize = 12.sp,
-                color = Color(0xFF065F46)
+                color = UgSuccessText
             )
         }
     }
@@ -347,7 +330,7 @@ private fun CodeAvailableContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFF0FDF4), RoundedCornerShape(8.dp))
+                .background(UgSuccessBg, RoundedCornerShape(12.dp))
                 .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -361,7 +344,7 @@ private fun CodeAvailableContent(
             Text(
                 text = "Código copiado al portapapeles",
                 fontSize = 13.sp,
-                color = Color(0xFF065F46),
+                color = UgSuccessText,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -373,7 +356,7 @@ private fun CodeAvailableContent(
     Button(
         onClick = onCopyClick,
         colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(14.dp),
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
@@ -382,7 +365,7 @@ private fun CodeAvailableContent(
         Spacer(Modifier.width(8.dp))
         Text(
             text = if (copySuccess) "Copiar de nuevo" else "Copiar código",
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Bold
         )
     }
 
@@ -390,31 +373,31 @@ private fun CodeAvailableContent(
     Button(
         onClick = onShareClick,
         colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(14.dp),
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
     ) {
         Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
-        Text("Compartir", fontWeight = FontWeight.Medium)
+        Text("Compartir", fontWeight = FontWeight.Bold)
     }
 
     // Separador + botón regenerar
-    Divider(color = Color(0xFFE2E8F0))
+    HorizontalDivider(color = UgBorderSoft)
 
     OutlinedButton(
         onClick = onRegenerateClick,
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5)),
-        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = UgErrorBright),
+        border = androidx.compose.foundation.BorderStroke(1.dp, UgErrorBorder),
+        shape = RoundedCornerShape(14.dp),
         modifier = Modifier
             .fillMaxWidth()
             .height(46.dp)
     ) {
         Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(8.dp))
-        Text("Regenerar código", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        Text("Regenerar código", fontSize = 13.sp, fontWeight = FontWeight.Bold)
     }
 
     // Modal de confirmación de regenerar (inline, no dialog flotante)
@@ -422,8 +405,8 @@ private fun CodeAvailableContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White, RoundedCornerShape(12.dp))
-                .border(1.dp, Color(0xFFFCA5A5), RoundedCornerShape(12.dp))
+                .background(Color.White, RoundedCornerShape(20.dp))
+                .border(1.dp, UgErrorBorder, RoundedCornerShape(20.dp))
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -434,13 +417,13 @@ private fun CodeAvailableContent(
                 Box(
                     modifier = Modifier
                         .size(32.dp)
-                        .background(Color(0xFFFEF2F2), RoundedCornerShape(8.dp)),
+                        .background(UgErrorBg, RoundedCornerShape(8.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Warning,
                         contentDescription = null,
-                        tint = Color(0xFFEF4444),
+                        tint = UgErrorBright,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -463,15 +446,15 @@ private fun CodeAvailableContent(
             ) {
                 OutlinedButton(
                     onClick = onRegenerateDismissed,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.weight(1f).height(40.dp)
                 ) {
                     Text("Cancelar", fontSize = 12.sp)
                 }
                 Button(
                     onClick = onRegenerateConfirmed,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
-                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = UgErrorBright),
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.weight(1f).height(40.dp)
                 ) {
                     Text("Sí, regenerar", fontSize = 12.sp)
@@ -490,20 +473,20 @@ fun InfoBanner(text: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFEFF6FF), RoundedCornerShape(8.dp))
+            .background(UgInfoBg, RoundedCornerShape(12.dp))
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Icon(
             imageVector = Icons.Default.Info,
             contentDescription = null,
-            tint = Color(0xFF3B82F6),
+            tint = UgInfoIcon,
             modifier = Modifier.size(16.dp).padding(top = 1.dp)
         )
         Text(
             text = text,
             fontSize = 12.sp,
-            color = Color(0xFF1E40AF),
+            color = UgInfoText,
             lineHeight = 18.sp
         )
     }
@@ -514,7 +497,7 @@ fun ErrorBanner(message: String, onDismiss: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(UgErrorBg, RoundedCornerShape(8.dp))
+            .background(UgErrorBg, RoundedCornerShape(12.dp))
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically

@@ -20,6 +20,7 @@ class AuthRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             // Limpiamos la sesión anterior por si el nuevo intento falla
             sessionManager.clearSession()
+            auth0Manager.clearStoredCredentials()
             Result.failure(Exception(NetworkErrorMapper.map(e)))
         }
     }
@@ -34,7 +35,14 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun restoreSession(): UserSession? {
+        val restored = auth0Manager.restoreSession() ?: return null
+        sessionManager.saveSession(restored)
+        return restored
+    }
+
     override suspend fun logout() {
+        auth0Manager.clearStoredCredentials()
         sessionManager.clearSession()
     }
 }

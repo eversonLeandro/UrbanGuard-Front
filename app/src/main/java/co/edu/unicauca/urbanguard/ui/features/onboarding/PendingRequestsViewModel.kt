@@ -20,11 +20,19 @@ class PendingRequestsViewModel @Inject constructor(
     val uiState: StateFlow<PendingRequestsUiState> = _uiState.asStateFlow()
 
     init {
-        loadRequests()
+        reloadRequests()
     }
 
-    private fun loadRequests() {
-        if (_uiState.value.isLoading) _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+    /**
+     * Recarga las solicitudes desde el backend. Se usa al entrar a la
+     * pantalla y al volver del detalle tras aprobar/rechazar, para que
+     * el estado se refleje de inmediato sin salir de la vista.
+     * Si ya hay datos cargados, refresca en silencio (sin parpadeo).
+     */
+    fun reloadRequests() {
+        if (_uiState.value.requests.isEmpty()) {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        }
         viewModelScope.launch {
             getLinkRequestsUseCase().fold(
                 onSuccess = { requests ->
@@ -51,5 +59,13 @@ class PendingRequestsViewModel @Inject constructor(
 
     fun onErrorDismissed() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+
+    fun showMessage(message: String) {
+        _uiState.value = _uiState.value.copy(message = message)
+    }
+
+    fun clearMessage() {
+        _uiState.value = _uiState.value.copy(message = null)
     }
 }

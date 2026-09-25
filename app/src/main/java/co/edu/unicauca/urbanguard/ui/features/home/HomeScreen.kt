@@ -1,30 +1,38 @@
 package co.edu.unicauca.urbanguard.ui.features.home
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.edu.unicauca.urbanguard.R
 import co.edu.unicauca.urbanguard.domain.model.UserRole
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.*
 
 @Composable
@@ -35,211 +43,303 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var menuExpanded by remember { mutableStateOf(false) }
-    var showLogoutDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(UgBackground)
     ) {
-        Spacer(Modifier.height(20.dp))
-        // Top bar
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(UgNavy)
-                .padding(horizontal = 16.dp, vertical = 18.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.align(Alignment.CenterStart)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.logo_u),
-                    contentDescription = "Logo UrbanGuard",
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                )
-                Spacer(Modifier.width(10.dp))
-                Text("UrbanGuard", color = Color.White, fontWeight = FontWeight.Medium, fontSize = 16.sp)
+        UrbanGuardTopBar(
+            title = "UrbanGuard",
+            onLogout = {
+                onLogout()
+                viewModel.onLogout()
             }
-            // Menú hamburguesa — visible para ADMIN y RESIDENTE,
-            // con opciones según el rol
-            if (uiState.role == UserRole.ADMIN || uiState.role == UserRole.RESIDENT) {
-                Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-                    IconButton(onClick = { menuExpanded = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Menu,
-                            contentDescription = "Menú",
-                            tint = UgEmerald
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = menuExpanded,
-                        onDismissRequest = { menuExpanded = false }
-                    ) {
-                        if (uiState.role == UserRole.ADMIN) {
-                            DropdownMenuItem(
-                                text = { Text("Configurar datos del conjunto") },
-                                onClick = {
-                                    menuExpanded = false
-                                    // TODO: definir si reutiliza RegisterConjuntoScreen
-                                    // en modo edición o se crea EditConjuntoScreen
-                                    // — pendiente de decisión
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Generar / compartir código") },
-                                onClick = {
-                                    menuExpanded = false
-                                    onOpenConjuntoCode()
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Aprobar solicitudes de vinculación") },
-                                onClick = {
-                                    menuExpanded = false
-                                    onOpenPendingRequests()
-                                }
-                            )
-                        }
-                        DropdownMenuItem(
-                            text = { Text("Cerrar sesión") },
-                            onClick = {
-                                menuExpanded = false
-                                showLogoutDialog = true
-                            }
-                        )
-                    }
-                }
-            }
-        }
+        )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(top = 18.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Greeting card
+            // ── Tarjeta Héroe de Bienvenida ──────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(16.dp))
-                    .padding(24.dp)
+                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), ambientColor = UgNavy.copy(alpha = 0.3f), spotColor = UgNavy.copy(alpha = 0.3f))
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(UgHeroGradient)
+                    .padding(22.dp)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = "¡Bienvenido!",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = UgNavy
-                    )
-                    if (uiState.userName.isNotBlank()) {
-                        Text(
-                            text = uiState.userName,
-                            fontSize = 16.sp,
-                            color = UgTextSecondary
-                        )
-                    }
-                    if (uiState.userRole.isNotBlank()) {
-                        Spacer(Modifier.height(4.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Box(
                             modifier = Modifier
-                                .background(
-                                    color = UgEmerald.copy(alpha = 0.12f),
-                                    shape = RoundedCornerShape(6.dp)
-                                )
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(UgEmerald.copy(alpha = 0.2f))
+                                .border(1.5.dp, UgEmerald, CircleShape),
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = uiState.userRole,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = UgEmerald
+                                text = if (uiState.userName.isNotBlank()) uiState.userName.take(1).uppercase() else "U",
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
+                        Spacer(Modifier.width(14.dp))
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                text = "¡Hola de nuevo!",
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.75f)
+                            )
+                            Text(
+                                text = if (uiState.userName.isNotBlank()) uiState.userName else "Usuario UrbanGuard",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            if (uiState.userRole.isNotBlank()) {
+                                Spacer(Modifier.height(2.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(UgEmerald.copy(alpha = 0.25f))
+                                        .border(1.dp, UgEmerald.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 9.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        text = uiState.userRole,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = UgEmeraldLight
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.12f), thickness = 1.dp)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        HeroStatItem(label = "Estado", value = "Activo", icon = Icons.Default.Shield)
+                        HeroStatItem(
+                            label = "Conjunto",
+                            value = if (uiState.conjuntoName.isNotBlank()) uiState.conjuntoName else "Bosques del Refugio",
+                            icon = Icons.Default.Key
+                        )
                     }
                 }
             }
 
-            // Placeholder content
+            // ── Acciones Administrativas (solo ADMIN) ───────────────────
+            if (uiState.role == UserRole.ADMIN) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Gestión de Administración",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = UgNavy
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        AdminQuickActionCard(
+                            title = "Compartir Código",
+                            subtitle = "Invitar residentes",
+                            icon = Icons.Default.Key,
+                            modifier = Modifier.weight(1f),
+                            onClick = onOpenConjuntoCode
+                        )
+                        AdminQuickActionCard(
+                            title = "Solicitudes",
+                            subtitle = "Aprobar accesos",
+                            icon = Icons.Default.PersonAdd,
+                            modifier = Modifier.weight(1f),
+                            onClick = onOpenPendingRequests
+                        )
+                    }
+                }
+            }
+
+            // ── Accesos Rápidos de Comunidad ────────────────────────────
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Servicios Principales",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UgNavy
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    HomeActionCard(
+                        title = "Pases QR",
+                        subtitle = "Invitar visitantes",
+                        icon = Icons.Default.QrCodeScanner,
+                        badgeColor = UgEmerald,
+                        modifier = Modifier.weight(1f)
+                    )
+                    HomeActionCard(
+                        title = "Paquetes",
+                        subtitle = "Entregas en portería",
+                        icon = Icons.Default.Inventory2,
+                        badgeColor = UgInfoIcon,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    HomeActionCard(
+                        title = "Comunicados",
+                        subtitle = "Noticias del conjunto",
+                        icon = Icons.Default.Campaign,
+                        badgeColor = UgAmber,
+                        modifier = Modifier.weight(1f)
+                    )
+                    HomeActionCard(
+                        title = "PQRS & Reportes",
+                        subtitle = "Atención al residente",
+                        icon = Icons.AutoMirrored.Filled.Chat,
+                        badgeColor = UgNavy,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            // ── Banner Informativo ──────────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .background(Color.White, RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
+                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(18.dp))
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color.White)
+                    .border(1.dp, UgBorder, RoundedCornerShape(18.dp))
+                    .padding(18.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(64.dp)
-                            .background(UgBackground, RoundedCornerShape(20.dp)),
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(UgInfoBg),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = null,
-                            tint = UgEmerald,
-                            modifier = Modifier.size(32.dp)
-                        )
+                        Icon(Icons.Default.Notifications, contentDescription = null, tint = UgInfoIcon, modifier = Modifier.size(22.dp))
                     }
-                    Text(
-                        text = "Dashboard",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = UgNavy
-                    )
-                    Text(
-                        text = "Próximamente las funcionalidades\nde tu comunidad estarán aquí.",
-                        fontSize = 13.sp,
-                        color = UgTextSecondary,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        lineHeight = 20.sp
-                    )
+                    Spacer(Modifier.width(14.dp))
+                    Column {
+                        Text("Comunidad al día", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = UgNavy)
+                        Text("Mantente informado sobre anuncios de tu conjunto residencial.", fontSize = 12.sp, color = UgTextSecondary)
+                    }
                 }
             }
         }
     }
+}
 
-    if (showLogoutDialog) {
-        LogoutDialog(
-            onConfirm = {
-                showLogoutDialog = false
-                onLogout()
-                viewModel.onLogout()
-            },
-            onDismiss = { showLogoutDialog = false }
-        )
+@Composable
+private fun HeroStatItem(label: String, value: String, icon: ImageVector) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = UgEmeraldLight, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(6.dp))
+        Column {
+            Text(label, fontSize = 11.sp, color = Color.White.copy(alpha = 0.65f))
+            Text(value, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+        }
     }
 }
 
 @Composable
-private fun LogoutDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+private fun HomeActionCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    badgeColor: Color,
+    modifier: Modifier = Modifier
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Cerrar sesión", fontWeight = FontWeight.Bold, color = UgNavy) },
-        text = { Text("¿Seguro que deseas cerrar sesión?", color = UgTextSecondary) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Sí, cerrar sesión", color = UgErrorText, fontWeight = FontWeight.Medium)
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(badgeColor.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = badgeColor, modifier = Modifier.size(22.dp))
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = UgTextSecondary)
+            Column {
+                Text(title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = UgNavy)
+                Text(subtitle, fontSize = 11.5.sp, color = UgTextSecondary, lineHeight = 15.sp)
             }
-        },
-        containerColor = Color.White
-    )
+        }
+    }
 }
+
+@Composable
+private fun AdminQuickActionCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = UgNavy),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        modifier = modifier.height(80.dp).clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(UgEmerald.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = UgEmerald, modifier = Modifier.size(18.dp))
+            }
+            Spacer(Modifier.width(10.dp))
+            Column {
+                Text(title, fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = Color.White)
+                Text(subtitle, fontSize = 10.5.sp, color = Color.White.copy(alpha = 0.7f))
+            }
+        }
+    }
+}
+

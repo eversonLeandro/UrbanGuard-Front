@@ -104,6 +104,8 @@ class LoginViewModelTest {
             )
         }
 
+        override suspend fun restoreSession(): UserSession? = null
+
         override suspend fun logout() = Unit
     }
 }

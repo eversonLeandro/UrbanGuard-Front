@@ -6,6 +6,7 @@ import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
 import com.auth0.android.authentication.AuthenticationAPIClient
 import com.auth0.android.authentication.AuthenticationException
+import com.auth0.android.authentication.storage.SecureCredentialsManager
 import com.auth0.android.callback.Callback
 import com.auth0.android.jwt.JWT
 import com.auth0.android.result.Credentials
@@ -19,7 +20,8 @@ import kotlin.coroutines.resumeWithException
 
 @Singleton
 class Auth0Manager @Inject constructor(
-    private val apiClient: AuthenticationAPIClient
+    private val apiClient: AuthenticationAPIClient,
+    private val credentialsManager: SecureCredentialsManager
 ) {
 
     companion object {
@@ -32,6 +34,7 @@ class Auth0Manager @Inject constructor(
         connection: String = BuildConfig.AUTH0_DB_CONNECTION
     ): UserSession {
         val credentials = authenticateDirect(email.trim(), password, connection)
+        saveCredentials(credentials)
         return mapCredentialsToSession(credentials, fallbackEmail = email.trim())
     }
 
@@ -73,7 +76,7 @@ class Auth0Manager @Inject constructor(
         connection: String
     ): Credentials = suspendCancellableCoroutine { continuation ->
         apiClient.login(email, password, connection)
-            .setScope("openid profile email")
+            .setScope("openid profile email offline_access")
             .setAudience(BuildConfig.AUTH0_AUDIENCE)
             .validateClaims()
             .start(object : Callback<Credentials, AuthenticationException> {
@@ -87,6 +90,49 @@ class Auth0Manager @Inject constructor(
                     continuation.resumeWithException(mapAuth0Error(error))
                 }
             })
+    }
+
+    /**
+     * Persiste las credenciales de forma cifrada (Android Keystore). Si en la
+     * respuesta viene un refresh_token (offline_access), la sesión podrá
+     * restaurarse al reabrir la app.
+     */
+    private fun saveCredentials(credentials: Credentials) {
+        try {
+            credentialsManager.saveCredentials(credentials)
+            Log.d(TAG, "Credenciales persistidas de forma segura (refresh=${credentials.refreshToken != null})")
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudieron persistir las credenciales", e)
+        }
+    }
+
+    /**
+     * Restaura la sesión persistida al arrancar la app. Si el access token
+     * expiró y hay refresh_token, Auth0 emite uno nuevo (rotación automática).
+     * Devuelve null cuando no hay credenciales o ya no son renovables.
+     */
+    suspend fun restoreSession(): UserSession? {
+        return try {
+            if (!credentialsManager.hasValidCredentials()) {
+                Log.d(TAG, "No hay credenciales válidas persistidas")
+                return null
+            }
+            val credentials = credentialsManager.awaitCredentials()
+            Log.d(TAG, "Sesión restaurada desde almacenamiento seguro")
+            mapCredentialsToSession(credentials, fallbackEmail = "usuario@urbanguard.com")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error al restaurar la sesión", e)
+            null
+        }
+    }
+
+    fun clearStoredCredentials() {
+        try {
+            credentialsManager.clearCredentials()
+            Log.d(TAG, "Credenciales persistidas eliminadas")
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudieron limpiar las credenciales", e)
+        }
     }
 
     private fun mapCredentialsToSession(

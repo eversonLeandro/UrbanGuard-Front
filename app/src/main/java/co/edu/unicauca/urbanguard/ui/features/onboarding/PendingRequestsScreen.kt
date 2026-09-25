@@ -21,12 +21,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,58 +46,93 @@ import co.edu.unicauca.urbanguard.domain.model.LinkRequestState
 import co.edu.unicauca.urbanguard.ui.theme.UgAmber
 import co.edu.unicauca.urbanguard.ui.theme.UgAmberSoft
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgBorder
 import co.edu.unicauca.urbanguard.ui.theme.UgDivider
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorBg
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
+import co.edu.unicauca.urbanguard.ui.theme.UgIconFaint
+import co.edu.unicauca.urbanguard.ui.theme.UgIconMuted
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgSuccessBg
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 
 // Vista 1 de UG-49: lista de solicitudes de vinculación con filtros y estado.
 @Composable
 fun PendingRequestsScreen(
     onNavigateBack: () -> Unit,
     onOpenDetail: (String) -> Unit,
+    reviewResult: String? = null,
+    onReviewResultHandled: () -> Unit = {},
     viewModel: PendingRequestsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Al volver del detalle tras aprobar/rechazar, muestra la confirmación,
+    // recarga la lista (para que el nuevo estado se refleje de inmediato)
+    // y limpia el resultado para que solo se muestre una vez.
+    LaunchedEffect(reviewResult) {
+        if (reviewResult != null) {
+            viewModel.showMessage(
+                if (reviewResult.equals("APROBADA", ignoreCase = true)) {
+                    "Solicitud aceptada correctamente. El usuario fue agregado como residente."
+                } else {
+                    "Solicitud rechazada correctamente."
+                }
+            )
+            viewModel.reloadRequests()
+            onReviewResultHandled()
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(UgBackground)
     ) {
-        // Header navy (mismo patrón que el resto de onboarding)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(UgNavy)
-                .padding(horizontal = 16.dp, vertical = 18.dp)
-        ) {
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier.align(Alignment.CenterStart)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = UgEmerald
-                )
-            }
-            Text(
-                text = "Solicitudes de vinculación",
-                color = Color.White,
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
+        // Header unificado
+        UrbanGuardTopBar(
+            title = "Solicitudes de vinculación",
+            onNavigateBack = onNavigateBack,
+            showMenu = false
+        )
 
         // Filtros por estado
         FilterChips(
             activeFilter = uiState.activeFilter,
             onFilterSelected = viewModel::onFilterSelected
         )
+
+        // Confirmación de la acción realizada en el detalle (aprobar/rechazar)
+        uiState.message?.let { message ->
+            val isApproved = message.contains("aceptada", ignoreCase = true)
+            val textColor = if (isApproved) UgEmerald else UgErrorText
+            val bgColor = if (isApproved) UgSuccessBg else UgErrorBg
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .background(bgColor, RoundedCornerShape(10.dp))
+                    .clickable { viewModel.clearMessage() }
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = if (isApproved) Icons.Filled.CheckCircle else Icons.Filled.Warning,
+                    contentDescription = null,
+                    tint = textColor,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = message,
+                    fontSize = 13.sp,
+                    color = textColor,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
 
         when {
             uiState.isLoading -> {
@@ -172,7 +210,7 @@ private fun FilterChips(
                     .background(color = if (isActive) UgNavy else Color.White)
                     .border(
                         width = 1.dp,
-                        color = if (isActive) UgNavy else Color(0xFFE2E8F0),
+                        color = if (isActive) UgNavy else UgBorder,
                         shape = RoundedCornerShape(20.dp)
                     )
                     .clickable { onFilterSelected(filter) }
@@ -257,7 +295,7 @@ private fun LinkRequestCard(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = "Ver detalle",
-                tint = Color(0xFFCBD5E1)
+                tint = UgIconFaint
             )
         }
     }
@@ -295,7 +333,7 @@ private fun RequestAvatar(name: String) {
 private fun RequestStatusBadge(status: LinkRequestState) {
     val (bg, content) = when (status) {
         LinkRequestState.PENDIENTE -> UgAmberSoft to UgAmber
-        LinkRequestState.APROBADA -> Color(0xFFECFDF5) to UgEmerald
+        LinkRequestState.APROBADA -> UgSuccessBg to UgEmerald
         LinkRequestState.RECHAZADA -> UgErrorBg to UgErrorText
     }
     Box(
@@ -335,13 +373,13 @@ private fun EmptyRequestsState(
             modifier = Modifier
                 .size(72.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFE2E8F0)),
+                .background(UgBorder),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = if (filter == LinkRequestState.PENDIENTE) "✓" else "!",
                 fontSize = 30.sp,
-                color = Color(0xFF94A3B8),
+                color = UgIconMuted,
                 fontWeight = FontWeight.Medium
             )
         }

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GetMyConjuntosUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,8 +55,11 @@ class ConjuntoSelectionViewModel @Inject constructor(
         }
     }
 
-    fun onConjuntoSelected(conjuntoId: String) {
+    fun onConjuntoSelected(conjuntoId: String): UserRole? {
         sessionManager.setActiveConjunto(conjuntoId)
         _uiState.value = _uiState.value.copy(conjuntoActivoId = conjuntoId)
+        return currentRole()
     }
+
+    fun currentRole(): UserRole? = sessionManager.currentRole()
 }

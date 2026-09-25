@@ -1,8 +1,29 @@
 package co.edu.unicauca.urbanguard.ui.navigation
 import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -30,10 +51,18 @@ import co.edu.unicauca.urbanguard.ui.features.onboarding.PendingRequestsScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.RegisterConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolHistoryScreen
 import co.edu.unicauca.urbanguard.ui.features.profile.ProfileScreen
+import co.edu.unicauca.urbanguard.ui.features.guard.GuardHomeScreen
+import co.edu.unicauca.urbanguard.ui.features.guard.GuardSeguridadScreen
+import co.edu.unicauca.urbanguard.ui.features.guard.GuardVisitantesScreen
+import co.edu.unicauca.urbanguard.ui.features.guard.GuardScanQrScreen
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 import kotlinx.coroutines.launch
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoSelectionScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkByCodeScreen
+import co.edu.unicauca.urbanguard.ui.features.admin.RegisterGuardScreen
+import co.edu.unicauca.urbanguard.ui.features.admin.AdminSecurityMenuScreen
 
 // Rutas de navegación — una constante por pantalla
 object Routes {
@@ -59,17 +88,94 @@ object Routes {
     const val REGISTER = "register"
     const val CONJUNTO_SELECTION = "conjunto_selection"
     const val ADMIN = "admin"
+    const val REGISTER_GUARD = "register_guard"
+    const val PATROL_HISTORY = "patrol_history"
+
+    // Rutas del Vigilante (barra de navegación inferior del rol GUARD)
+    const val GUARD_HOME = "guard_home"
+    const val GUARD_VISITANTES = "guard_visitantes"
+    const val GUARD_SEGURIDAD = "guard_seguridad"
+    const val GUARD_PERFIL = "guard_perfil"
+    const val GUARD_SCAN_QR = "guard_scan_qr"
+}
+
+// Clave en el savedStateHandle de PENDING_REQUESTS para recibir el
+// resultado de la decisión (APROBADA/RECHAZADA) tomada en el detalle.
+private const val KEY_REVIEW_RESULT = "review_result"
+
+// Cierre de sesión: vacía por completo el back stack y deja solo el Login.
+// popUpTo(0) es un id inexistente, así que se descartan TODAS las entradas
+// (incluidas las de la sesión anterior). Con el botón "atrás" en el Login
+// la app se cierra: es imposible volver a una pantalla autenticada.
+fun NavHostController.navigateToLogin() {
+    navigate(Routes.LOGIN) {
+        popUpTo(graph.id) { inclusive = true }
+        launchSingleTop = true
+    }
+}
+
+// Pantalla de entrada según el rol. null (sin sesión) → Login.
+fun roleToDestination(role: UserRole?): String = when (role) {
+    UserRole.USER -> Routes.CONJUNTO_SELECTION
+    UserRole.SUPERADMIN -> Routes.ADMIN
+    UserRole.GUARD -> Routes.GUARD_HOME
+    UserRole.ADMIN, UserRole.RESIDENT -> Routes.HOME
+    else -> Routes.LOGIN
 }
 
 @Composable
 fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sessionViewModel: SessionViewModel = hiltViewModel()
 ) {
+    // Mientras se restaura la sesión persistida se muestra un splash breve;
+    // el NavHost arranca directamente en la pantalla del rol (sin flash de Login).
+    var restoring by remember { mutableStateOf(true) }
+    var initialRoute by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        initialRoute = sessionViewModel.initialRoute()
+        restoring = false
+    }
+
+    if (restoring) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(Color.White),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(UgEmerald, RoundedCornerShape(16.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Apartment,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = "UrbanGuard",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UgNavy
+                )
+            }
+        }
+        return
+    }
+
     NavHost(
         navController = navController,
         modifier = modifier,
-        startDestination = Routes.LOGIN
+        startDestination = initialRoute ?: Routes.LOGIN
     ) {
         composable(Routes.LOGIN) {
             LoginScreen(
@@ -79,11 +185,7 @@ fun AppNavGraph(
                     // SUPERADMIN → panel global de plataforma (Capa 2.3, D3).
                     // ADMIN / RESIDENT / GUARD ya tienen conjunto activo en Auth0 → Home.
                     // La carga real de conjuntos ocurre en ConjuntoSelectionViewModel.
-                    val destination = when (role) {
-                        UserRole.USER -> Routes.CONJUNTO_SELECTION
-                        UserRole.SUPERADMIN -> Routes.ADMIN
-                        else -> Routes.HOME
-                    }
+                    val destination = roleToDestination(role)
                     Log.d("NavGraph", "=== [LOGIN NAVIGATION] role: $role -> destino: $destination ===")
                     navController.navigate(destination) {
                         // Elimina el Login del backstack — el usuario
@@ -124,11 +226,12 @@ fun AppNavGraph(
         // cuando el usuario tiene rol USER (o quiere cambiar de conjunto activo).
         composable(Routes.CONJUNTO_SELECTION) {
             ConjuntoSelectionScreen(
-                onConjuntoSelected = { conjuntoId ->
+                onConjuntoSelected = { _, role ->
                     // setActiveConjunto ya lo hizo el ViewModel (llamado onConjuntoSelected),
                     // aquí solo se navega al Home del rol correspondiente a ese conjunto.
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    // Se vacía la pila: el destino queda como única entrada de la sesión.
+                    navController.navigate(roleToDestination(role)) {
+                        popUpTo(navController.graph.id) { inclusive = true }
                     }
                 },
                 onCreateConjunto = {
@@ -138,10 +241,8 @@ fun AppNavGraph(
                     navController.navigate(Routes.LINK_BY_CODE)
                 },
                 onLogout = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
-                        }
+                    sessionViewModel.logout {
+                        navController.navigateToLogin()
                     }
                 }
             )
@@ -158,6 +259,9 @@ fun AppNavGraph(
 
         composable(Routes.ACTIVATE_CONJUNTO) {
             ActivateConjuntoScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
                 onValidated = { activationCode ->
                     navController.navigate("register_conjunto/$activationCode") {
                         // No se puede volver de Register a Activate:
@@ -186,8 +290,8 @@ fun AppNavGraph(
         composable(Routes.HOME) {
             HomeScreen(
                 onLogout = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.HOME) { inclusive = true }
+                    sessionViewModel.logout {
+                        navController.navigateToLogin()
                     }
                 },
                 onOpenConjuntoCode = {
@@ -200,7 +304,19 @@ fun AppNavGraph(
         }
 
         composable(Routes.PENDING_REQUESTS) {
+            // Resultado devuelto por el detalle tras aprobar/rechazar.
+            // Si no es null se muestra el mensaje de confirmación y se recarga la lista.
+            val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+            val reviewResult by savedStateHandle
+                ?.getStateFlow<String?>(KEY_REVIEW_RESULT, null)
+                ?.collectAsStateWithLifecycle()
+                ?: remember { mutableStateOf<String?>(null) }
+
             PendingRequestsScreen(
+                reviewResult = reviewResult,
+                onReviewResultHandled = {
+                    savedStateHandle?.set(KEY_REVIEW_RESULT, null)
+                },
                 onNavigateBack = {
                     navController.popBackStack()
                 },
@@ -219,6 +335,14 @@ fun AppNavGraph(
             LinkRequestDetailScreen(
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onReviewFinished = { result ->
+                    // Se deja el resultado en el savedStateHandle de la lista
+                    // para que al volver muestre la confirmación y actualice el estado.
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(KEY_REVIEW_RESULT, result)
+                    navController.popBackStack()
                 }
             )
         }
@@ -228,7 +352,30 @@ fun AppNavGraph(
         }
 
         composable(Routes.SECURITY) {
-            PatrolHistoryScreen()
+            AdminSecurityMenuScreen(
+                onNavigateToRegisterGuard = {
+                    navController.navigate(Routes.REGISTER_GUARD)
+                },
+                onNavigateToPatrolHistory = {
+                    navController.navigate(Routes.PATROL_HISTORY)
+                }
+            )
+        }
+
+        composable(Routes.PATROL_HISTORY) {
+            PatrolHistoryScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.REGISTER_GUARD) {
+            RegisterGuardScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
 
         composable(Routes.NEWS) {
@@ -244,18 +391,12 @@ fun AppNavGraph(
         composable(Routes.LINK_BY_CODE) {
             LinkByCodeScreen(
                 onNavigateBack = {
-                    navController.navigate(Routes.CONJUNTO_SELECTION) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
-                        }
-                    }
+                    navController.popBackStack()
                 },
                 onLinkSuccess = {
                     // La solicitud está pendiente de aprobación — vuelve al selector
                     navController.navigate(Routes.CONJUNTO_SELECTION) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
-                        }
+                        popUpTo(navController.graph.id) { inclusive = true }
                     }
                 }
             )
@@ -297,17 +438,79 @@ fun AppNavGraph(
         }
 
         composable(Routes.PROFILE) {
-            ProfileScreen()
+            ProfileScreen(
+                onLogout = {
+                    sessionViewModel.logout {
+                        navController.navigateToLogin()
+                    }
+                }
+            )
         }
 
         composable(Routes.ADMIN) {
             SuperAdminScreen(
                 onLogout = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
-                        }
+                    sessionViewModel.logout {
+                        navController.navigateToLogin()
                     }
+                }
+            )
+        }
+
+        // ── Vigilante (rol GUARD) ─────────────────────────────────────
+        composable(Routes.GUARD_HOME) {
+            GuardHomeScreen(
+                navController = navController,
+                onLogout = {
+                    sessionViewModel.logout {
+                        navController.navigateToLogin()
+                    }
+                },
+                onScanQr = {
+                    navController.navigate(Routes.GUARD_SCAN_QR)
+                }
+            )
+        }
+
+        composable(Routes.GUARD_VISITANTES) {
+            GuardVisitantesScreen(
+                navController = navController,
+                onLogout = {
+                    sessionViewModel.logout {
+                        navController.navigateToLogin()
+                    }
+                },
+                onScanQr = {
+                    navController.navigate(Routes.GUARD_SCAN_QR)
+                }
+            )
+        }
+
+        composable(Routes.GUARD_SEGURIDAD) {
+            GuardSeguridadScreen(
+                navController = navController,
+                onLogout = {
+                    sessionViewModel.logout {
+                        navController.navigateToLogin()
+                    }
+                }
+            )
+        }
+
+        composable(Routes.GUARD_PERFIL) {
+            ProfileScreen(
+                onLogout = {
+                    sessionViewModel.logout {
+                        navController.navigateToLogin()
+                    }
+                }
+            )
+        }
+
+        composable(Routes.GUARD_SCAN_QR) {
+            GuardScanQrScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

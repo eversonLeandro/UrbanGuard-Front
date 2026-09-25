@@ -1,44 +1,32 @@
 package co.edu.unicauca.urbanguard.ui.features.admin
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.Apartment
 import androidx.compose.material.icons.filled.Construction
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import co.edu.unicauca.urbanguard.ui.theme.UgAmber
-import co.edu.unicauca.urbanguard.ui.theme.UgBackground
-import co.edu.unicauca.urbanguard.ui.theme.UgCardBg
-import co.edu.unicauca.urbanguard.ui.theme.UgNavy
-import co.edu.unicauca.urbanguard.ui.theme.UgTextPrimary
-import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
+import co.edu.unicauca.urbanguard.ui.theme.*
 
 @Composable
 fun SuperAdminScreen(
@@ -49,173 +37,174 @@ fun SuperAdminScreen(
             .fillMaxSize()
             .background(UgBackground)
     ) {
-        Spacer(Modifier.height(20.dp))
+        UrbanGuardTopBar(
+            title = "Plataforma Global",
+            onLogout = onLogout
+        )
 
-        // Top Bar
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(UgNavy)
-                .padding(horizontal = 20.dp, vertical = 18.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        text = "UrbanGuard Platform",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "Consola de Superadministrador",
-                        fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.7f)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .background(UgAmber.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 5.dp)
-                ) {
-                    Text(
-                        text = "SUPERADMIN",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = UgAmber
-                    )
-                }
-            }
-        }
-
-        // Body Content
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(top = 18.dp, bottom = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Spacer(Modifier.height(20.dp))
-
-            // Icon Header
+            // ── Card de Encabezado SuperAdmin ─────────────────────────
             Box(
                 modifier = Modifier
-                    .size(80.dp)
-                    .background(UgNavy, RoundedCornerShape(24.dp)),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), ambientColor = UgNavy.copy(alpha = 0.3f))
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(UgHeroGradient)
+                    .padding(22.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.AdminPanelSettings,
-                    contentDescription = null,
-                    tint = UgAmber,
-                    modifier = Modifier.size(44.dp)
-                )
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            Text(
-                text = "Panel de Superadministrador",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = UgNavy,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = "Has iniciado sesión con privilegios globales de plataforma (Capa 2.3).",
-                fontSize = 14.sp,
-                color = UgTextSecondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            Spacer(Modifier.height(28.dp))
-
-            // Card Informativa Estática (A Futuro)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = UgCardBg),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Construction,
-                            contentDescription = null,
-                            tint = UgAmber,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = "Módulo en construcción (a futuro)",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = UgNavy
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .clip(CircleShape)
+                                    .background(UgAmber.copy(alpha = 0.2f))
+                                    .border(1.5.dp, UgAmber, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.AdminPanelSettings, contentDescription = null, tint = UgAmber, modifier = Modifier.size(24.dp))
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text("Consola Global", fontSize = 12.sp, color = Color.White.copy(alpha = 0.7f))
+                                Text("Superadministrador", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(UgAmber.copy(alpha = 0.25f))
+                                .border(1.dp, UgAmber.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 10.dp, vertical = 5.dp)
+                        ) {
+                            Text("SUPERADMIN", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = UgAmber)
+                        }
                     }
 
-                    Spacer(Modifier.height(10.dp))
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.12f))
 
                     Text(
-                        text = "Esta sección estará habilitada en una próxima versión para gestionar de forma centralizada toda la infraestructura de UrbanGuard:",
-                        fontSize = 13.sp,
-                        color = UgTextPrimary,
-                        lineHeight = 18.sp
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    Text(
-                        text = "• Alta y provisión global de conjuntos residenciales\n" +
-                                "• Asignación y control de administradores de conjunto\n" +
-                                "• Métricas, auditoría de eventos y logs de seguridad\n" +
-                                "• Gestión de suscripciones y licencias de plataforma",
-                        fontSize = 13.sp,
-                        color = UgTextSecondary,
-                        lineHeight = 20.sp
+                        "Gestión centralizada de infraestructura residencial UrbanGuard (Capa 2.3).",
+                        fontSize = 12.5.sp,
+                        color = Color.White.copy(alpha = 0.8f)
                     )
                 }
             }
 
-            Spacer(Modifier.height(36.dp))
-
-            // Botón para cerrar sesión
-            OutlinedButton(
-                onClick = onLogout,
+            // ── Métricas de Plataforma ───────────────────────────────
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = UgNavy
-                )
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                    contentDescription = "Cerrar sesión",
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = "Cerrar sesión",
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp
-                )
+                Card(
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Icon(Icons.Default.Apartment, contentDescription = null, tint = UgNavy, modifier = Modifier.size(22.dp))
+                        Text("12", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = UgNavy)
+                        Text("Conjuntos Activos", fontSize = 11.5.sp, color = UgTextSecondary)
+                    }
+                }
+
+                Card(
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Icon(Icons.Default.Insights, contentDescription = null, tint = UgEmerald, modifier = Modifier.size(22.dp))
+                        Text("99.9%", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = UgNavy)
+                        Text("Disponibilidad API", fontSize = 11.5.sp, color = UgTextSecondary)
+                    }
+                }
             }
 
-            Spacer(Modifier.height(20.dp))
+            // ── Módulo en Desarrollo ──────────────────────────────────
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(UgAmberSoft),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Construction, contentDescription = null, tint = UgAmber, modifier = Modifier.size(20.dp))
+                        }
+                        Spacer(Modifier.width(10.dp))
+                        Text("Próximos Módulos de Control", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = UgNavy)
+                    }
+
+                    Text(
+                        "Funcionalidades avanzadas de provisión y control global:",
+                        fontSize = 13.sp,
+                        color = UgTextSecondary
+                    )
+
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        FeatureBullet("Alta y provisión automatizada de conjuntos")
+                        FeatureBullet("Asignación de licencias y administradores")
+                        FeatureBullet("Auditoría global de logs y eventos de seguridad")
+                    }
+                }
+            }
+
+            // ── Botón de Cerrar Sesión ──────────────────────────────
+            Button(
+                onClick = onLogout,
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = UgErrorBg, contentColor = UgErrorText),
+                border = androidx.compose.foundation.BorderStroke(1.dp, UgErrorBorder),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, tint = UgErrorText, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Cerrar Sesión Global", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
         }
     }
 }
+
+@Composable
+private fun FeatureBullet(text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(UgEmerald)
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(text, fontSize = 12.5.sp, color = UgNavy, fontWeight = FontWeight.Medium)
+    }
+}
+

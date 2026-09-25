@@ -12,8 +12,8 @@ import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.navigation.AppNavGraph
 import co.edu.unicauca.urbanguard.ui.navigation.Routes
 import co.edu.unicauca.urbanguard.ui.navigation.adminNavItems
+import co.edu.unicauca.urbanguard.ui.navigation.guardNavItems
 import co.edu.unicauca.urbanguard.ui.navigation.residentNavItems
-import co.edu.unicauca.urbanguard.ui.navigation.vigilanteNavItems
 
 private val bottomBarRoutes = setOf(
     Routes.HOME,
@@ -22,7 +22,11 @@ private val bottomBarRoutes = setOf(
     Routes.NEWS,
     Routes.PROFILE,
     Routes.VISITORS,
-    Routes.SUPPORT
+    Routes.SUPPORT,
+    Routes.GUARD_HOME,
+    Routes.GUARD_VISITANTES,
+    Routes.GUARD_SEGURIDAD,
+    Routes.GUARD_PERFIL
 )
 
 @Composable
@@ -41,7 +45,7 @@ fun MainScaffold(
                     UserRole.ADMIN -> adminNavItems
                     UserRole.RESIDENT -> residentNavItems
                     UserRole.USER -> residentNavItems
-                    UserRole.GUARD -> vigilanteNavItems
+                    UserRole.GUARD -> guardNavItems
                     UserRole.SUPERADMIN -> emptyList()
                     null -> emptyList()
                 }

@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.*
 import co.edu.unicauca.urbanguard.R
 import androidx.compose.foundation.Image
@@ -49,6 +50,7 @@ import androidx.compose.ui.res.painterResource
 
 @Composable
 fun ActivateConjuntoScreen(
+    onNavigateBack: () -> Unit = {},
     onValidated: (activationCode: String) -> Unit = {},
     viewModel: ActivateConjuntoViewModel = hiltViewModel()
 ) {
@@ -64,9 +66,13 @@ fun ActivateConjuntoScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(UgSurfaceLight)
+            .background(UgBackground)
     ) {
-        TopBar()
+        UrbanGuardTopBar(
+            title = "Activar Condominio",
+            onNavigateBack = onNavigateBack,
+            showMenu = false
+        )
 
         Column(
             modifier = Modifier
@@ -126,7 +132,7 @@ fun ActivateConjuntoScreen(
                 onValueChange = { viewModel.onCodeChange(formatActivationCode(it)) },
                 placeholder = {
                     Text(
-                        "ACT-XXXX-YYYY",
+                        "Ingresa tu código de licencia",
                         fontSize = 16.sp,
                         color = UgTextSecondary,
                         textAlign = TextAlign.Center,
@@ -146,10 +152,10 @@ fun ActivateConjuntoScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    focusedBorderColor = UgViolet,
-                    unfocusedBorderColor = UgViolet.copy(alpha = 0.5f),
-                    errorBorderColor = Color(0xFFDC2626),
-                    cursorColor = UgViolet
+                    focusedBorderColor = UgNavy,
+                    unfocusedBorderColor = UgBorder,
+                    errorBorderColor = UgErrorBright,
+                    cursorColor = UgNavy
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -160,25 +166,18 @@ fun ActivateConjuntoScreen(
                 Text(
                     text = errorMessage,
                     fontSize = 12.sp,
-                    color = Color(0xFFDC2626),
+                    color = UgErrorText,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(8.dp))
             } else {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "FORMATO OBLIGATORIO: ",
-                        fontSize = 11.sp,
-                        color = UgTextSecondary
-                    )
-                    Text(
-                        text = "ACT-XXXX-YYYY",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = UgViolet
-                    )
-                }
+                Text(
+                    text = "EL CÓDIGO ES ALFANUMÉRICO: usa letras y números.",
+                    fontSize = 11.sp,
+                    color = UgTextSecondary,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             Spacer(Modifier.height(20.dp))
@@ -193,9 +192,9 @@ fun ActivateConjuntoScreen(
                 onClick = { viewModel.validateCode() },
                 enabled = isEnabled,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = UgViolet,
+                    containerColor = UgEmerald,
                     contentColor = Color.White,
-                    disabledContainerColor = UgDisabled,
+                    disabledContainerColor = UgDivider,
                     disabledContentColor = UgDisabledText
                 ),
                 shape = RoundedCornerShape(10.dp),
@@ -236,7 +235,7 @@ fun ActivateConjuntoScreen(
                     text = "Contactar soporte",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = UgViolet
+                    color = UgNavy
                 )
             }
 
@@ -245,39 +244,7 @@ fun ActivateConjuntoScreen(
     }
 }
 
-@Composable
-private fun TopBar() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .border(width = 1.dp, color = UgDivider)
-            .padding(vertical = 14.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .background(UgViolet, RoundedCornerShape(8.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.GppGood,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(16.dp)
-            )
-        }
-        Spacer(Modifier.width(10.dp))
-        Text(
-            text = "Activar Condominio",
-            fontSize = 15.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = UgTextPrimary
-        )
-    }
-}
+
 
 /**
  * TODO: Reemplazar por el asset real de ilustración "manos sosteniendo casa"
@@ -309,14 +276,14 @@ private fun WhyNecessaryCard() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(UgCardBg, RoundedCornerShape(12.dp))
+            .background(UgInputBg, RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = Icons.Filled.Info,
                 contentDescription = null,
-                tint = UgViolet,
+                tint = UgEmerald,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(Modifier.width(8.dp))
@@ -338,11 +305,5 @@ private fun WhyNecessaryCard() {
 }
 
 private fun formatActivationCode(input: String): String {
-    val cleaned = input.uppercase().filter { it.isLetterOrDigit() }.take(11)
-    val builder = StringBuilder()
-    cleaned.forEachIndexed { index, char ->
-        if (index == 3 || index == 8) builder.append('-')
-        builder.append(char)
-    }
-    return builder.toString().take(13)
+    return input.uppercase().filter { it.isLetterOrDigit() || it == '-' }.take(20)
 }
