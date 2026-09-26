@@ -196,7 +196,9 @@ fun RegisterGuardScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { /* TODO: Implementar registro */ },
+                // Pendiente: el registro de vigilantes aún no está implementado;
+                // el botón habilita la validación de campos pero no persiste nada.
+                onClick = {},
                 enabled = email.isNotBlank() && nombres.isNotBlank() && apellidos.isNotBlank() && telefono.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
                 shape = RoundedCornerShape(12.dp),

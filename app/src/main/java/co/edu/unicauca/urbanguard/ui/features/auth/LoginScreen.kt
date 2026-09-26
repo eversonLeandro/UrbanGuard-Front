@@ -269,7 +269,9 @@ fun LoginScreen(
                         color = textPrimary,
                         fontSize = 12.5.sp,
                         modifier = Modifier.align(Alignment.End)
-                        // TODO: onClick -> flujo de recuperación (fuera del Sprint 1)
+                        // Pendiente: conectar con el flujo de recuperación de
+                        // contraseña, que quedó fuera del Sprint 1. Por ahora el
+                        // enlace es visual pero no navega.
                     )
 
                     // Banner de error con animación

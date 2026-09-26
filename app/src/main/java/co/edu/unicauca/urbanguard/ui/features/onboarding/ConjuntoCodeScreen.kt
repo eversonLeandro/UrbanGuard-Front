@@ -96,7 +96,7 @@ fun ConjuntoCodeScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Nombre del conjunto
-            // TODO: reemplazar el texto quemado por el nombre real del conjunto
+            // Pendiente: reemplazar el texto quemado por el nombre real del conjunto
             // una vez que UG-45/UG-46 estén implementados.
             // El nombre vendrá del SessionManager o del ConjuntoConfig
             // que se cargará en el init del ViewModel.

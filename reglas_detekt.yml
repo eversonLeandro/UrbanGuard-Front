@@ -36,3 +36,7 @@ naming:
 empty-blocks:
   EmptyFunctionBlock:
     active: true # Evita callbacks de eventos que se queden vacíos y sin implementar
+    # Los overrides vacíos son legitimos: los fakes de test implementan la
+    # interfaz sin comportamiento a proposito. La regla apunta a callbacks de
+    # eventos sin implementar, no a implementaciones por defecto.
+    ignoreOverridden: true

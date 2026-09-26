@@ -87,7 +87,8 @@ fun AdminSecurityMenuScreen(
                 title = "Hacer ronda de patrullaje",
                 subtitle = "Registrar puntos de control mediante NFC",
                 icon = Icons.Default.Nfc,
-                onClick = { /* TODO */ }
+                // Pendiente: la ronda de patrullaje aún no está implementada.
+                onClick = {}
             )
         }
     }
