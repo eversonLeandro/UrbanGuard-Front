@@ -66,8 +66,11 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
  * carga datos, asi que aqui no se observa su `uiState`. El parametro se conserva
  * a proposito para que la pantalla pueda engancharse al ViewModel cuando la
  * feature se implemente.
+ *
+ * [LongMethod] tambien esta suprimido: partir este composable en
+ * subcomposables ahora es trabajo que se pierde al implementar la feature real.
  */
-@Suppress("UnusedParameter")
+@Suppress("UnusedParameter", "LongMethod")
 @Composable
 fun GuardVisitantesScreen(
     onNotificationsClick: (() -> Unit)? = null,
