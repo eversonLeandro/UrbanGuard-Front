@@ -35,6 +35,7 @@ fun ConjuntoSelectionScreen(
     onCreateConjunto: () -> Unit,
     onJoinByCode: () -> Unit,
     onLogout: () -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
     viewModel: ConjuntoSelectionViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -47,7 +48,8 @@ fun ConjuntoSelectionScreen(
         // Header
         UrbanGuardTopBar(
             title = "Seleccionar conjunto",
-            onLogout = onLogout
+            onLogout = onLogout,
+            onNavigateBack = onNavigateBack
         )
 
         when {

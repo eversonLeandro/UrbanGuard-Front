@@ -36,7 +36,7 @@ import co.edu.unicauca.urbanguard.ui.theme.*
 @Composable
 fun GuardHomeScreen(
     navController: NavHostController,
-    onLogout: () -> Unit = {},
+    onNotificationsClick: (() -> Unit)? = null,
     onScanQr: () -> Unit = {},
     viewModel: GuardHomeViewModel = hiltViewModel()
 ) {
@@ -49,7 +49,7 @@ fun GuardHomeScreen(
     ) {
         UrbanGuardTopBar(
             title = "Panel de Vigilancia",
-            onLogout = onLogout
+            onNotificationsClick = onNotificationsClick
         )
 
         Column(

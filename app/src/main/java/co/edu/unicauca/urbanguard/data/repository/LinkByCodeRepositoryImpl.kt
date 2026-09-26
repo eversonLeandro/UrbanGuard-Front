@@ -17,7 +17,7 @@ class LinkByCodeRepositoryImpl @Inject constructor(
         return try {
             Result.success(api.searchConjunto(code.trim()).toDomain())
         } catch (e: Exception) {
-            Result.failure(Exception(NetworkErrorMapper.map(e)))
+            Result.failure(NetworkErrorMapper.toAppException(e))
         }
     }
 
@@ -29,7 +29,7 @@ class LinkByCodeRepositoryImpl @Inject constructor(
                 ).toDomain()
             )
         } catch (e: Exception) {
-            Result.failure(Exception(NetworkErrorMapper.map(e)))
+            Result.failure(NetworkErrorMapper.toAppException(e))
         }
     }
 }

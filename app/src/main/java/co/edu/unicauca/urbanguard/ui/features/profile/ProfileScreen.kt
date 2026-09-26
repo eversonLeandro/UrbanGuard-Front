@@ -51,8 +51,7 @@ fun ProfileScreen(
             .background(UgBackground)
     ) {
         UrbanGuardTopBar(
-            title = "Mi Perfil",
-            onLogout = onLogout
+            title = "Mi Perfil"
         )
 
         Column(

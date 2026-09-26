@@ -1,5 +1,6 @@
 package co.edu.unicauca.urbanguard.ui.features.auth
 
+import co.edu.unicauca.urbanguard.core.session.NoOpRolePersistence
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
@@ -34,7 +35,7 @@ class LoginViewModelTest {
 
     @Test
     fun `onLoginHandled clears the success flag after a successful login`() = runTest {
-        val viewModel = LoginViewModel(LoginUseCase(FakeAuthRepository()), SessionManager())
+        val viewModel = LoginViewModel(LoginUseCase(FakeAuthRepository()), SessionManager(NoOpRolePersistence))
 
         viewModel.onEmailChange("admin@urbanguard.co")
         viewModel.onPasswordChange("password123")
@@ -51,7 +52,7 @@ class LoginViewModelTest {
     @Test
     fun `login with superadmin returns SUPERADMIN userRole in uiState`() = runTest {
         val superadminRepo = FakeAuthRepository(role = UserRole.SUPERADMIN)
-        val viewModel = LoginViewModel(LoginUseCase(superadminRepo), SessionManager())
+        val viewModel = LoginViewModel(LoginUseCase(superadminRepo), SessionManager(NoOpRolePersistence))
 
         viewModel.onEmailChange("superadmin@urbanguard.com")
         viewModel.onPasswordChange("password123")
@@ -70,7 +71,7 @@ class LoginViewModelTest {
     @Test
     fun `login with no business role returns USER sentinel in uiState`() = runTest {
         val noRoleRepo = FakeAuthRepository(role = UserRole.USER)
-        val viewModel = LoginViewModel(LoginUseCase(noRoleRepo), SessionManager())
+        val viewModel = LoginViewModel(LoginUseCase(noRoleRepo), SessionManager(NoOpRolePersistence))
 
         viewModel.onEmailChange("nuevo@urbanguard.com")
         viewModel.onPasswordChange("password123")

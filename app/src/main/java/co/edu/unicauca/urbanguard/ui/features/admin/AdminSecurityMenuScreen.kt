@@ -35,8 +35,7 @@ fun AdminSecurityMenuScreen(
             .background(UgBackground)
     ) {
         UrbanGuardTopBar(
-            title = "Seguridad",
-            showMenu = false
+            title = "Seguridad"
         )
 
         Column(

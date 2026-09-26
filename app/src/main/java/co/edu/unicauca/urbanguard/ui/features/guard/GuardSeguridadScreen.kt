@@ -31,7 +31,7 @@ import co.edu.unicauca.urbanguard.ui.theme.*
 @Composable
 fun GuardSeguridadScreen(
     navController: NavHostController,
-    onLogout: () -> Unit = {},
+    onNotificationsClick: (() -> Unit)? = null,
     viewModel: GuardSeguridadViewModel = hiltViewModel()
 ) {
     Column(
@@ -41,7 +41,7 @@ fun GuardSeguridadScreen(
     ) {
         UrbanGuardTopBar(
             title = "Rondas y Patrullaje",
-            onLogout = onLogout
+            onNotificationsClick = onNotificationsClick
         )
 
         Column(

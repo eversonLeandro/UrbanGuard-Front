@@ -38,8 +38,7 @@ fun SuperAdminScreen(
             .background(UgBackground)
     ) {
         UrbanGuardTopBar(
-            title = "Plataforma Global",
-            onLogout = onLogout
+            title = "Plataforma Global"
         )
 
         Column(

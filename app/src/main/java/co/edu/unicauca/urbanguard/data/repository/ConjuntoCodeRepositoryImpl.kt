@@ -18,7 +18,7 @@ class ConjuntoCodeRepositoryImpl @Inject constructor(
             val response = onboardingApi.getCode(conjuntoId)
             Result.success(response.toDomain())
         } catch (e: Exception) {
-            Result.failure(Exception(NetworkErrorMapper.map(e)))
+            Result.failure(NetworkErrorMapper.toAppException(e))
         }
     }
 
@@ -27,7 +27,7 @@ class ConjuntoCodeRepositoryImpl @Inject constructor(
             val response = onboardingApi.generateCode(conjuntoId)
             Result.success(response.toDomain())
         } catch (e: Exception) {
-            Result.failure(Exception(NetworkErrorMapper.map(e)))
+            Result.failure(NetworkErrorMapper.toAppException(e))
         }
     }
 
@@ -36,7 +36,7 @@ class ConjuntoCodeRepositoryImpl @Inject constructor(
             val response = onboardingApi.regenerateCode(conjuntoId)
             Result.success(response.toDomain())
         } catch (e: Exception) {
-            Result.failure(Exception(NetworkErrorMapper.map(e)))
+            Result.failure(NetworkErrorMapper.toAppException(e))
         }
     }
 
@@ -58,7 +58,7 @@ class ConjuntoCodeRepositoryImpl @Inject constructor(
             val response = onboardingApi.createConjunto(request)
             Result.success(response.toDomain())
         } catch (e: Exception) {
-            Result.failure(Exception(NetworkErrorMapper.map(e)))
+            Result.failure(NetworkErrorMapper.toAppException(e))
         }
     }
 }

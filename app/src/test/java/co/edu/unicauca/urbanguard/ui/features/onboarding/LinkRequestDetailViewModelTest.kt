@@ -1,9 +1,12 @@
 package co.edu.unicauca.urbanguard.ui.features.onboarding
 
 import androidx.lifecycle.SavedStateHandle
+import co.edu.unicauca.urbanguard.core.session.NoOpRolePersistence
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.data.remote.api.dto.ComplexSummaryDto
 import co.edu.unicauca.urbanguard.data.remote.api.service.CommunityApi
+import co.edu.unicauca.urbanguard.domain.model.AppError
+import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoUserAssociation
 import co.edu.unicauca.urbanguard.domain.model.LinkRequest
 import co.edu.unicauca.urbanguard.domain.repository.ConjuntoAssociationRepository
@@ -75,17 +78,33 @@ class LinkRequestDetailViewModelTest {
 
     @Test
     fun `error al aprobar muestra mensaje de error en uiState`() = runTest {
+        // El repositorio real falla con un AppException ya traducido, no con una
+        // Exception suelta: ese es el contrato que consume la UI.
         val repo = FakeLinkRequestRepository(
             detailRequest = LinkRequest(id = "req1", nombreSolicitante = "Juan"),
-            approveError = Exception("Error de red")
+            approveError = AppException(AppError.NoConnection(AppError.NoConnection.MESSAGE))
         )
         val viewModel = createViewModel(repo)
 
         viewModel.onApproveConfirmed()
         advanceUntilIdle()
 
-        assertEquals("Error de red", viewModel.uiState.value.errorMessage)
+        assertEquals(AppError.NoConnection.MESSAGE, viewModel.uiState.value.errorMessage)
         assertNull(viewModel.uiState.value.successMessage)
+    }
+
+    @Test
+    fun `un error que no viene de la capa de datos no filtra texto tecnico al usuario`() = runTest {
+        val repo = FakeLinkRequestRepository(
+            detailRequest = LinkRequest(id = "req1", nombreSolicitante = "Juan"),
+            approveError = IllegalStateException("java.lang.NullPointerException at Foo.kt:42")
+        )
+        val viewModel = createViewModel(repo)
+
+        viewModel.onApproveConfirmed()
+        advanceUntilIdle()
+
+        assertEquals(AppError.Unexpected.MESSAGE, viewModel.uiState.value.errorMessage)
     }
 
     private fun createViewModel(linkRepo: LinkRequestRepository): LinkRequestDetailViewModel {
@@ -93,7 +112,7 @@ class LinkRequestDetailViewModelTest {
             getLinkRequestDetailUseCase = GetLinkRequestDetailUseCase(linkRepo),
             reviewLinkRequestUseCase = ReviewLinkRequestUseCase(linkRepo),
             conjuntoAssociationRepository = FakeConjuntoAssociationRepository(),
-            sessionManager = SessionManager(),
+            sessionManager = SessionManager(NoOpRolePersistence),
             communityApi = FakeCommunityApi(),
             savedStateHandle = SavedStateHandle(mapOf("requestId" to "req1"))
         )

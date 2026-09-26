@@ -1,5 +1,6 @@
 package co.edu.unicauca.urbanguard.ui.navigation
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.components.PlaceholderScreen
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.features.admin.SuperAdminScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.LoginScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.RegisterScreen
@@ -146,28 +148,12 @@ fun AppNavGraph(
                 .background(Color.White),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .background(UgEmerald, RoundedCornerShape(16.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Apartment,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(30.dp)
-                    )
-                }
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    text = "UrbanGuard",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = UgNavy
-                )
-            }
+            Image(
+                painter = androidx.compose.ui.res.painterResource(co.edu.unicauca.urbanguard.R.drawable.logo_u),
+                contentDescription = "Logo UrbanGuard",
+                modifier = Modifier.size(120.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit
+            )
         }
         return
     }
@@ -244,6 +230,13 @@ fun AppNavGraph(
                     sessionViewModel.logout {
                         navController.navigateToLogin()
                     }
+                },
+                // Solo se ofrece volver cuando la pantalla no es el punto de
+                // partida de la sesión; en el onboarding inicial no hay a dónde ir.
+                onNavigateBack = if (navController.previousBackStackEntry != null) {
+                    { navController.popBackStack() }
+                } else {
+                    null
                 }
             )
         }
@@ -289,10 +282,9 @@ fun AppNavGraph(
 
         composable(Routes.HOME) {
             HomeScreen(
-                onLogout = {
-                    sessionViewModel.logout {
-                        navController.navigateToLogin()
-                    }
+                onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
+                onOpenConjuntoSelection = {
+                    navController.navigate(Routes.CONJUNTO_SELECTION)
                 },
                 onOpenConjuntoCode = {
                     navController.navigate(Routes.CONJUNTO_CODE)
@@ -431,10 +423,16 @@ fun AppNavGraph(
         }
 
         composable(Routes.NOTIFICATIONS) {
-            PlaceholderScreen(
-                title = "Notificaciones",
-                icon = Icons.Default.Notifications
-            )
+            Column(modifier = Modifier.fillMaxSize()) {
+                UrbanGuardTopBar(
+                    title = "Notificaciones",
+                    onNavigateBack = { navController.popBackStack() }
+                )
+                PlaceholderScreen(
+                    title = "Notificaciones",
+                    icon = Icons.Default.Notifications
+                )
+            }
         }
 
         composable(Routes.PROFILE) {
@@ -461,11 +459,7 @@ fun AppNavGraph(
         composable(Routes.GUARD_HOME) {
             GuardHomeScreen(
                 navController = navController,
-                onLogout = {
-                    sessionViewModel.logout {
-                        navController.navigateToLogin()
-                    }
-                },
+                onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
                 onScanQr = {
                     navController.navigate(Routes.GUARD_SCAN_QR)
                 }
@@ -475,11 +469,7 @@ fun AppNavGraph(
         composable(Routes.GUARD_VISITANTES) {
             GuardVisitantesScreen(
                 navController = navController,
-                onLogout = {
-                    sessionViewModel.logout {
-                        navController.navigateToLogin()
-                    }
-                },
+                onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
                 onScanQr = {
                     navController.navigate(Routes.GUARD_SCAN_QR)
                 }
@@ -489,11 +479,7 @@ fun AppNavGraph(
         composable(Routes.GUARD_SEGURIDAD) {
             GuardSeguridadScreen(
                 navController = navController,
-                onLogout = {
-                    sessionViewModel.logout {
-                        navController.navigateToLogin()
-                    }
-                }
+                onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) }
             )
         }
 

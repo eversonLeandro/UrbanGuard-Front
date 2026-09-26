@@ -73,14 +73,14 @@ fun LinkByCodeScreen(
         // Header
         UrbanGuardTopBar(
             title = "Unirse a conjunto",
-            onNavigateBack = onNavigateBack,
-            showMenu = false
+            onNavigateBack = onNavigateBack
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(horizontal = 24.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -98,7 +98,7 @@ fun LinkByCodeScreen(
                     value = uiState.code,
                     onValueChange = viewModel::onCodeChange,
                     label = { Text("Código de vinculación") },
-                    placeholder = { Text("Ej: URB-4X9K", color = UgEmerald, fontSize = 13.sp) },
+                    placeholder = { Text("Ingresa el código que te dio tu administrador", color = UgEmerald, fontSize = 13.sp) },
                     singleLine = true,
                     isError = uiState.codeError != null || uiState.searchError != null,
                     shape = RoundedCornerShape(8.dp),
@@ -119,6 +119,11 @@ fun LinkByCodeScreen(
                         errorBorderColor = UgErrorBright,
                         errorLabelColor = UgErrorBright
                     ),
+                    supportingText = {
+                        // El backend genera 6 caracteres sin separadores, así que se
+                        // explica el formato real en vez de mostrar un ejemplo inventado.
+                        Text("Son 6 caracteres, sin guiones ni espacios.", fontSize = 12.sp)
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -546,6 +551,7 @@ private fun LinkSuccessScreen(
         }
 
         Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(32.dp))
 
         // Botón volver al inicio
         OutlinedButton(

@@ -10,10 +10,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Apartment
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Shield
@@ -28,6 +29,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -37,7 +39,8 @@ import co.edu.unicauca.urbanguard.ui.theme.*
 
 @Composable
 fun HomeScreen(
-    onLogout: () -> Unit = {},
+    onNotificationsClick: (() -> Unit)? = null,
+    onOpenConjuntoSelection: () -> Unit = {},
     onOpenConjuntoCode: () -> Unit = {},
     onOpenPendingRequests: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
@@ -51,10 +54,7 @@ fun HomeScreen(
     ) {
         UrbanGuardTopBar(
             title = "UrbanGuard",
-            onLogout = {
-                onLogout()
-                viewModel.onLogout()
-            }
+            onNotificationsClick = onNotificationsClick
         )
 
         Column(
@@ -136,7 +136,7 @@ fun HomeScreen(
                         HeroStatItem(label = "Estado", value = "Activo", icon = Icons.Default.Shield)
                         HeroStatItem(
                             label = "Conjunto",
-                            value = if (uiState.conjuntoName.isNotBlank()) uiState.conjuntoName else "Bosques del Refugio",
+                            value = uiState.conjuntoName.ifBlank { "Sin conjunto" },
                             icon = Icons.Default.Key
                         )
                     }
@@ -225,7 +225,9 @@ fun HomeScreen(
                 }
             }
 
-            // ── Banner Informativo ──────────────────────────────────────
+            // ── Selector de conjunto ───────────────────────────────────
+            // Reemplaza el banner informativo anterior, que repetia lo que ya
+            // dice la tarjeta "Comunicados" de la seccion de servicios.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -233,6 +235,7 @@ fun HomeScreen(
                     .clip(RoundedCornerShape(18.dp))
                     .background(Color.White)
                     .border(1.dp, UgBorder, RoundedCornerShape(18.dp))
+                    .clickable(onClick = onOpenConjuntoSelection)
                     .padding(18.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -240,16 +243,38 @@ fun HomeScreen(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(UgInfoBg),
+                            .background(UgEmerald.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Notifications, contentDescription = null, tint = UgInfoIcon, modifier = Modifier.size(22.dp))
+                        Icon(
+                            imageVector = Icons.Default.Apartment,
+                            contentDescription = null,
+                            tint = UgEmerald,
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
                     Spacer(Modifier.width(14.dp))
-                    Column {
-                        Text("Comunidad al día", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = UgNavy)
-                        Text("Mantente informado sobre anuncios de tu conjunto residencial.", fontSize = 12.sp, color = UgTextSecondary)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Seleccionar conjunto", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = UgNavy)
+                        Text(
+                            text = if (uiState.conjuntoName.isNotBlank()) {
+                                uiState.conjuntoName
+                            } else {
+                                "Toca para ver los conjuntos vinculados a tu cuenta"
+                            },
+                            fontSize = 12.sp,
+                            color = UgTextSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
+                    Spacer(Modifier.width(8.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = UgTextSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
@@ -261,9 +286,18 @@ private fun HeroStatItem(label: String, value: String, icon: ImageVector) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, contentDescription = null, tint = UgEmeraldLight, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(6.dp))
-        Column {
+        // weight + ellipsis: los nombres de conjunto reales son largos y sin limite
+        // romperian el reparto de la fila contra el stat de "Estado".
+        Column(modifier = Modifier.weight(1f, fill = false)) {
             Text(label, fontSize = 11.sp, color = Color.White.copy(alpha = 0.65f))
-            Text(value, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+            Text(
+                text = value,
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

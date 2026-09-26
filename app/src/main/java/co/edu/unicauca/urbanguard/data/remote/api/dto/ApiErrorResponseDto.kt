@@ -1,11 +1,17 @@
 package co.edu.unicauca.urbanguard.data.remote.api.dto
+
 /**
- * Forma esperada del cuerpo de error que devuelve el Gateway o los microservicios.
- * AJUSTAR los nombres de campo en cuanto el equipo de backend confirme
- * el formato real (esto es una suposición razonable, no un contrato confirmado).
+ * Cuerpo de error estándar que devuelve el API Gateway y los microservicios.
+ *
+ * Refleja el formato real de `ApiError` del backend. [correlationId] es la
+ * referencia que permite rastrear el fallo en los logs del servidor, por eso
+ * se conserva aunque no se muestre al usuario.
  */
 data class ApiErrorResponseDto(
+    val timestamp: String? = null,
+    val status: Int? = null,
+    val error: String? = null,
     val message: String? = null,
-    val code: String? = null,
-    val service: String? = null
+    val path: String? = null,
+    val correlationId: String? = null
 )

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -44,7 +45,6 @@ import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.*
 import co.edu.unicauca.urbanguard.R
 import androidx.compose.foundation.Image
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 
@@ -70,14 +70,14 @@ fun ActivateConjuntoScreen(
     ) {
         UrbanGuardTopBar(
             title = "Activar Condominio",
-            onNavigateBack = onNavigateBack,
-            showMenu = false
+            onNavigateBack = onNavigateBack
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(horizontal = 20.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -247,26 +247,23 @@ fun ActivateConjuntoScreen(
 
 
 /**
- * TODO: Reemplazar por el asset real de ilustración "manos sosteniendo casa"
- * (no existe ningún drawable/vector con esa escena en el proyecto).
- * Se usa un ícono de Home como marcador de posición manteniendo la
- * composición (fondo teal redondeado + ícono central).
+ * Muestra el logo de marca centrado sobre el fondo de la pantalla.
+ * El recurso ya no tiene fondo blanco (transparencia real), asi que se
+ * integra directamente con la superficie sin ningun cuadro visible.
  */
 @Composable
 private fun HeroImage() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp),            
+            .height(180.dp),
         contentAlignment = Alignment.Center
     ) {
         Image(
-            painter = painterResource(id = R.drawable.logourbanguard), // Nombre de tu archivo sin extensión
+            painter = painterResource(R.drawable.logo_u),
             contentDescription = "Logo UrbanGuard",
-            contentScale = ContentScale.Fit, 
-            modifier = Modifier
-                .height(180.dp)
-                .clip(RoundedCornerShape(16.dp)) 
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.size(150.dp)
         )
     }
 }

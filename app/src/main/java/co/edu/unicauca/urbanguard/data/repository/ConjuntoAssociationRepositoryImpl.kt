@@ -28,7 +28,7 @@ class ConjuntoAssociationRepositoryImpl @Inject constructor(
             Result.success(dtos.map { it.toDomain() })
         } catch (e: Exception) {
             Log.e("ConjuntoRepo", "Error: ${e.message}", e)
-            Result.failure(Exception(NetworkErrorMapper.map(e)))
+            Result.failure(NetworkErrorMapper.toAppException(e))
         }
     }
 }

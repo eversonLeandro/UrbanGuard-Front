@@ -17,7 +17,7 @@ class OnboardingRepositoryImpl @Inject constructor(
             val response = onboardingApi.getStatus()
             Result.success(response.toDomain())
         } catch (e: Exception) {
-            Result.failure(Exception(NetworkErrorMapper.map(e)))
+            Result.failure(NetworkErrorMapper.toAppException(e))
         }
     }
 
@@ -29,10 +29,10 @@ class OnboardingRepositoryImpl @Inject constructor(
             if (response.isSuccessful) {
                 Result.success(Unit)
             } else {
-                Result.failure(Exception(NetworkErrorMapper.map(retrofit2.HttpException(response))))
+                Result.failure(NetworkErrorMapper.toAppException(retrofit2.HttpException(response)))
             }
         } catch (e: Exception) {
-            Result.failure(Exception(NetworkErrorMapper.map(e)))
+            Result.failure(NetworkErrorMapper.toAppException(e))
         }
     }
 }

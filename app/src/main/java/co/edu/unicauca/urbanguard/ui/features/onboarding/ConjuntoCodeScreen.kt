@@ -51,8 +51,7 @@ fun ConjuntoCodeScreen(
         // Header unificado
         UrbanGuardTopBar(
             title = "Código del conjunto",
-            onNavigateBack = onNavigateBack,
-            showMenu = false
+            onNavigateBack = onNavigateBack
         )
 
         Column(

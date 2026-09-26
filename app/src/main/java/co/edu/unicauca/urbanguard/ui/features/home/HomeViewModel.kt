@@ -1,13 +1,14 @@
 package co.edu.unicauca.urbanguard.ui.features.home
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -19,26 +20,28 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        val session = sessionManager.session.value
-        val activeConjunto = sessionManager.getActiveConjunto()
-        _uiState.update {
-            it.copy(
-                userName = session?.name ?: "",
-                userRole = when (session?.role) {
-                    UserRole.ADMIN -> "ADMINISTRADOR"
-                    UserRole.GUARD -> "GUARDIA"
-                    UserRole.RESIDENT -> "RESIDENTE"
-                    UserRole.USER -> "USUARIO"
-                    UserRole.SUPERADMIN -> "SUPERADMIN"
-                    null -> ""
-                },
-                role = session?.role,
-                conjuntoName = activeConjunto?.nombre ?: "Bosques del Refugio"
-            )
+        // Se observa la sesion en lugar de leerla una unica vez en el init: el rol y el
+        // conjunto activo se resuelven de forma asincrona (restauracion desde disco y
+        // recarga de asociaciones) y una foto fija dejaba la pantalla desactualizada,
+        // por ejemplo al cambiar de conjunto desde el Inicio.
+        viewModelScope.launch {
+            sessionManager.session.collect { session ->
+                _uiState.value = HomeUiState(
+                    userName = session?.name.orEmpty(),
+                    userRole = session?.role?.label.orEmpty(),
+                    role = session?.role,
+                    conjuntoName = sessionManager.getActiveConjunto()?.nombre.orEmpty()
+                )
+            }
         }
     }
 
-    fun onLogout() {
-        sessionManager.clearSession()
-    }
+    private val UserRole.label: String
+        get() = when (this) {
+            UserRole.ADMIN -> "ADMINISTRADOR"
+            UserRole.GUARD -> "GUARDIA"
+            UserRole.RESIDENT -> "RESIDENTE"
+            UserRole.USER -> "USUARIO"
+            UserRole.SUPERADMIN -> "SUPERADMIN"
+        }
 }

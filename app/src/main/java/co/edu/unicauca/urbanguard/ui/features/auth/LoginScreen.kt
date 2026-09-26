@@ -105,21 +105,13 @@ fun LoginScreen(
             .fillMaxSize()
             .background(UgBackground)
             .verticalScroll(rememberScrollState())
+            .imePadding()
             .padding(horizontal = 24.dp)
             .padding(top = if (isSmallScreen) 24.dp else 56.dp, bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // ── Bloque logo + título ─────────────────────────────────────────
         LoginEntranceBlock(step = 0) {
-            Image(
-                painter = painterResource(R.drawable.logo_u),
-                contentDescription = "Logo UrbanGuard",
-                modifier = Modifier
-                    .size(96.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp))
-            )
-            Spacer(Modifier.height(12.dp))
             Text(
                 "UrbanGuard",
                 color = textPrimary,
@@ -127,13 +119,14 @@ fun LoginScreen(
                 fontSize = 24.sp,
                 letterSpacing = 0.4.sp
             )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "Seguridad residencial en un solo lugar",
-                color = textSecondary,
-                fontSize = 13.sp,
-                lineHeight = 18.sp,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+            Spacer(Modifier.height(12.dp))
+            Image(
+                painter = painterResource(R.drawable.logo_u),
+                contentDescription = "Logo UrbanGuard",
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp))
             )
         }
 
@@ -179,7 +172,8 @@ fun LoginScreen(
                         leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = textSecondary) },
                         keyboardType = KeyboardType.Email,
                         enabled = !uiState.isLoading,
-                        isError = uiState.errorMessage != null,
+                        isError = uiState.emailError != null,
+                        errorText = uiState.emailError,
                         inputBg = inputBg,
                         textPrimary = textPrimary,
                         textSecondary = textSecondary,
@@ -206,7 +200,8 @@ fun LoginScreen(
                             }
                         },
                         visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        isError = uiState.errorMessage != null,
+                        isError = uiState.passwordError != null,
+                        errorText = uiState.passwordError,
                         imeAction = ImeAction.Done,
                         onImeDone = { viewModel.onLoginClick() },
                         inputBg = inputBg,
@@ -342,7 +337,8 @@ private fun LoginTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Next,
     onImeDone: () -> Unit = {},
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    errorText: String? = null
 ) {
     OutlinedTextField(
         value = value,
@@ -356,6 +352,9 @@ private fun LoginTextField(
         singleLine = true,
         enabled = enabled,
         isError = isError,
+        supportingText = errorText?.let { message ->
+            { Text(message, color = UgErrorText, fontSize = 12.sp) }
+        },
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = inputBg,
@@ -370,7 +369,8 @@ private fun LoginTextField(
             focusedLeadingIconColor = UgNavy,
             unfocusedLeadingIconColor = textSecondary,
             focusedTrailingIconColor = textSecondary,
-            unfocusedTrailingIconColor = textSecondary
+            unfocusedTrailingIconColor = textSecondary,
+            errorSupportingTextColor = UgErrorText
         ),
         modifier = Modifier
             .fillMaxWidth()

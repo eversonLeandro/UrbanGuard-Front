@@ -24,8 +24,7 @@ fun PatrolHistoryScreen(
     ) {
         UrbanGuardTopBar(
             title = "Historial de patrullaje",
-            onNavigateBack = onNavigateBack,
-            showMenu = false
+            onNavigateBack = onNavigateBack
         )
 
         Box(

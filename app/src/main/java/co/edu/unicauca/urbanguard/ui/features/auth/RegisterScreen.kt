@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -23,6 +24,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -46,6 +51,11 @@ fun RegisterScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val moveToNextField = {
+        focusManager.moveFocus(FocusDirection.Down)
+    }
 
     LaunchedEffect(uiState.registerSuccess) {
         if (uiState.registerSuccess) {
@@ -64,6 +74,7 @@ fun RegisterScreen(
             .fillMaxSize()
             .background(UgBackground)
             .verticalScroll(scrollState)
+            .imePadding()
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -103,7 +114,13 @@ fun RegisterScreen(
             label = { Text("Nombre completo") },
             leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = UgTextSecondary) },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Words,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(onNext = { moveToNextField() }),
+            isError = uiState.nameError != null,
+            supportingText = uiState.nameError?.let { { Text(it) } },
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
         )
@@ -116,8 +133,13 @@ fun RegisterScreen(
             label = { Text("Correo electrónico") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = UgTextSecondary) },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            isError = uiState.errorMessage != null,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(onNext = { moveToNextField() }),
+            isError = uiState.emailError != null,
+            supportingText = uiState.emailError?.let { { Text(it) } },
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
         )
@@ -127,7 +149,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = uiState.password,
             onValueChange = viewModel::onPasswordChange,
-            label = { Text("Contraseña (mínimo 8 caracteres)") },
+            label = { Text("Contraseña") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = UgTextSecondary) },
             trailingIcon = {
                 IconButton(onClick = viewModel::togglePasswordVisibility) {
@@ -140,7 +162,15 @@ fun RegisterScreen(
             },
             visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             singleLine = true,
-            isError = uiState.errorMessage != null,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(onNext = { moveToNextField() }),
+            isError = uiState.passwordError != null,
+            supportingText = {
+                Text(uiState.passwordError ?: "Mínimo 8 caracteres, con una mayúscula y un número.")
+            },
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
         )
@@ -163,7 +193,18 @@ fun RegisterScreen(
             },
             visualTransformation = if (uiState.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             singleLine = true,
-            isError = uiState.errorMessage != null,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    keyboardController?.hide()
+                    viewModel.onRegisterClick()
+                }
+            ),
+            isError = uiState.confirmPasswordError != null,
+            supportingText = uiState.confirmPasswordError?.let { { Text(it) } },
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
         )

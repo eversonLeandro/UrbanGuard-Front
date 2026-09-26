@@ -1,5 +1,7 @@
 package co.edu.unicauca.urbanguard.ui.features.onboarding
 
+import co.edu.unicauca.urbanguard.domain.model.AppError
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.ActivateConjuntoUseCase
@@ -47,7 +49,7 @@ class ActivateConjuntoViewModel @Inject constructor(
                         isLoading = false,
                         isValidated = false,
                         activationCode = null,
-                        errorMessage = error.message ?: "Ocurrió un error al validar el código."
+                        errorMessage = AppError.from(error).message ?: "Ocurrió un error al validar el código."
                     )
                 }
             )

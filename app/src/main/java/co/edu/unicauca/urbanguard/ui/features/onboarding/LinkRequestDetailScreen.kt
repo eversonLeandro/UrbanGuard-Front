@@ -1,5 +1,6 @@
 package co.edu.unicauca.urbanguard.ui.features.onboarding
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,14 +18,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.domain.model.LinkRequest
 import co.edu.unicauca.urbanguard.domain.model.LinkRequestState
 import kotlinx.coroutines.delay
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgAmber
 import co.edu.unicauca.urbanguard.ui.theme.UgAmberSoft
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
@@ -50,7 +52,6 @@ import co.edu.unicauca.urbanguard.ui.theme.UgBorder
 import co.edu.unicauca.urbanguard.ui.theme.UgBorderSoft
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorBg
-import co.edu.unicauca.urbanguard.ui.theme.UgErrorBorder
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 import co.edu.unicauca.urbanguard.ui.theme.UgSuccessBg
@@ -82,31 +83,10 @@ fun LinkRequestDetailScreen(
             .fillMaxSize()
             .background(UgBackground)
     ) {
-        // Header navy (mismo patrón que el resto de onboarding)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(UgNavy)
-                .padding(horizontal = 16.dp, vertical = 18.dp)
-        ) {
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier.align(Alignment.CenterStart)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = UgEmerald
-                )
-            }
-            Text(
-                text = "Detalle de solicitud",
-                color = Color.White,
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
+        UrbanGuardTopBar(
+            title = "Detalle de solicitud",
+            onNavigateBack = onNavigateBack
+        )
 
         when {
             uiState.isLoading -> {
@@ -130,62 +110,79 @@ fun LinkRequestDetailScreen(
                         RequestHeaderCard(request)
                         InfoCard(request)
 
-                        uiState.successMessage?.let { message ->
-                            val isWarning = message.contains("pendiente", ignoreCase = true)
-                            val textColor = if (isWarning) UgAmber else UgEmerald
-                            val bgColor = if (isWarning) UgAmberSoft else UgSuccessBg
-                            Text(
+                        uiState.errorMessage?.let { message ->
+                            DetailMessageBanner(
                                 text = message,
-                                color = textColor,
-                                fontSize = 13.sp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(bgColor, RoundedCornerShape(10.dp))
-                                    .padding(14.dp)
-                                    .clickable { viewModel.onSuccessDismissed() }
+                                textColor = UgErrorText,
+                                backgroundColor = UgErrorBg,
+                                onDismiss = viewModel::onErrorDismissed
                             )
                         }
 
-                        Spacer(Modifier.weight(1f))
+                        uiState.successMessage?.let { message ->
+                            val isWarning = message.contains("pendiente", ignoreCase = true)
+                            DetailMessageBanner(
+                                text = message,
+                                textColor = if (isWarning) UgAmber else UgEmerald,
+                                backgroundColor = if (isWarning) UgAmberSoft else UgSuccessBg,
+                                onDismiss = viewModel::onSuccessDismissed
+                            )
+                        }
 
-                        // Botones de acción (bloqueados tras decidir)
-                        if (uiState.isLoadingAction) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(color = UgEmerald)
+                        // Solo se puede revisar una solicitud pendiente; tras
+                        // aprobar o rechazar la decisión ya no es reversible.
+                        if (uiState.isPending) {
+                            Spacer(Modifier.weight(1f))
+
+                            if (uiState.isLoadingAction) {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = UgEmerald)
+                                }
+                            } else {
+                                Button(
+                                    onClick = viewModel::onApproveClick,
+                                    colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp)
+                                ) {
+                                    Text("Aprobar solicitud", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                }
+                                OutlinedButton(
+                                    onClick = viewModel::onRejectClick,
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = UgErrorText),
+                                    border = BorderStroke(1.dp, UgErrorText),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp)
+                                ) {
+                                    Text("Rechazar solicitud", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                }
                             }
-                        } else {
-                            Button(
-                                onClick = viewModel::onApproveClick,
-                                enabled = uiState.isActionEnabled,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = UgEmerald,
-                                    disabledContainerColor = UgSuccessBg
-                                ),
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp)
-                            ) {
-                                Text("Aprobar solicitud", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                            }
-                            OutlinedButton(
-                                onClick = viewModel::onRejectClick,
-                                enabled = uiState.isActionEnabled,
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = UgErrorText,
-                                    disabledContentColor = UgErrorBorder
-                                ),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, if (uiState.isActionEnabled) UgErrorText else UgErrorBorder),
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp)
-                            ) {
-                                Text("Rechazar solicitud", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                            }
+                        }
+                    }
+                } else {
+                    // Sin detalle que mostrar (no existe o no se pudo cargar).
+                    // El error es lo único relevante y no se puede cerrar: la
+                    // única salida es la flecha del top bar.
+                    uiState.errorMessage?.let { message ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            DetailMessageBanner(
+                                text = message,
+                                textColor = UgErrorText,
+                                backgroundColor = UgErrorBg,
+                                onDismiss = null
+                            )
                         }
                     }
                 }
@@ -261,6 +258,42 @@ fun LinkRequestDetailScreen(
 }
 
 // ─────────────────────────────────────────────
+// Avisos de resultado (éxito / error) — mismo estilo
+// que el banner de PendingRequestsScreen
+// ─────────────────────────────────────────────
+
+@Composable
+private fun DetailMessageBanner(
+    text: String,
+    textColor: Color,
+    backgroundColor: Color,
+    onDismiss: (() -> Unit)?
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(backgroundColor, RoundedCornerShape(10.dp))
+            .then(if (onDismiss != null) Modifier.clickable(onClick = onDismiss) else Modifier)
+            .padding(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = if (textColor == UgErrorText) Icons.Filled.Warning else Icons.Filled.CheckCircle,
+            contentDescription = null,
+            tint = textColor,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = text,
+            color = textColor,
+            fontSize = 13.sp,
+            lineHeight = 19.sp
+        )
+    }
+}
+
+// ─────────────────────────────────────────────
 // Cabecera: avatar grande + nombre + email + badge
 // ─────────────────────────────────────────────
 
@@ -274,42 +307,46 @@ private fun RequestHeaderCard(request: LinkRequest) {
         .joinToString("")
         .uppercase()
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(14.dp))
-            .border(1.dp, UgBorder, RoundedCornerShape(14.dp))
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    androidx.compose.material3.Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(68.dp)
-                .clip(CircleShape)
-                .background(UgEmerald),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier.padding(24.dp).fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = initials,
-                color = Color.White,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(UgEmerald),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = initials,
+                    color = Color.White,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = request.nombreSolicitante,
+                    color = UgNavy,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = request.emailSolicitante,
+                    color = UgTextSecondary,
+                    fontSize = 14.sp
+                )
+            }
+            DetailStatusBadge(status = LinkRequestState.fromString(request.estado))
         }
-        Text(
-            text = request.nombreSolicitante,
-            color = UgNavy,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium
-        )
-        Text(
-            text = request.emailSolicitante,
-            color = UgTextSecondary,
-            fontSize = 12.sp
-        )
-        Spacer(Modifier.height(2.dp))
-        DetailStatusBadge(status = LinkRequestState.fromString(request.estado))
     }
 }
 
@@ -322,9 +359,9 @@ private fun DetailStatusBadge(status: LinkRequestState) {
     }
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(bg)
-            .padding(horizontal = 14.dp, vertical = 6.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
             text = when (status) {
@@ -332,8 +369,8 @@ private fun DetailStatusBadge(status: LinkRequestState) {
                 LinkRequestState.APROBADA -> "Solicitud aprobada"
                 LinkRequestState.RECHAZADA -> "Solicitud rechazada"
             },
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
             color = content
         )
     }
@@ -345,42 +382,52 @@ private fun DetailStatusBadge(status: LinkRequestState) {
 
 @Composable
 private fun InfoCard(request: LinkRequest) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(14.dp))
-            .border(1.dp, UgBorder, RoundedCornerShape(14.dp))
-            .padding(vertical = 4.dp)
+    androidx.compose.material3.Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        InfoRow(label = "Conjunto", value = request.conjuntoNombre)
-        CardDivider()
-        InfoRow(label = "Fecha de solicitud", value = request.fechaSolicitud)
-        CardDivider()
-        InfoRow(label = "Código usado", value = request.codigoVinculacion)
-        CardDivider()
-        InfoRow(label = "Unidad", value = request.unidad)
+        Column(
+            modifier = Modifier.padding(vertical = 8.dp)
+        ) {
+            InfoRow(label = "Conjunto", value = request.conjuntoNombre, icon = Icons.Default.CheckCircle)
+            CardDivider()
+            InfoRow(label = "Fecha de solicitud", value = request.fechaSolicitud.ifBlank { "Pendiente" }, icon = Icons.Default.CheckCircle)
+            CardDivider()
+            InfoRow(label = "Unidad", value = request.unidad, icon = Icons.Default.CheckCircle)
+        }
     }
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun InfoRow(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            color = UgTextSecondary
-        )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(
+                modifier = Modifier.size(32.dp).clip(CircleShape).background(UgBackground),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(imageVector = icon, contentDescription = null, tint = UgEmerald, modifier = Modifier.size(16.dp))
+            }
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                color = UgTextSecondary,
+                fontWeight = FontWeight.Medium
+            )
+        }
         Text(
             text = value,
-            fontSize = 13.sp,
-            color = UgTextPrimary,
-            fontWeight = FontWeight.Medium
+            fontSize = 15.sp,
+            color = UgNavy,
+            fontWeight = FontWeight.Bold
         )
     }
 }
@@ -388,7 +435,7 @@ private fun InfoRow(label: String, value: String) {
 @Composable
 private fun CardDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = Modifier.padding(horizontal = 24.dp),
         color = UgBorderSoft
     )
 }

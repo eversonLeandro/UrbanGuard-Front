@@ -30,7 +30,7 @@ import co.edu.unicauca.urbanguard.ui.theme.*
 @Composable
 fun GuardVisitantesScreen(
     navController: NavHostController,
-    onLogout: () -> Unit = {},
+    onNotificationsClick: (() -> Unit)? = null,
     onScanQr: () -> Unit = {},
     viewModel: GuardVisitantesViewModel = hiltViewModel()
 ) {
@@ -44,7 +44,7 @@ fun GuardVisitantesScreen(
     ) {
         UrbanGuardTopBar(
             title = "Control de Visitantes",
-            onLogout = onLogout
+            onNotificationsClick = onNotificationsClick
         )
 
         Column(
@@ -52,6 +52,7 @@ fun GuardVisitantesScreen(
                 .fillMaxSize()
                 .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(top = 18.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {

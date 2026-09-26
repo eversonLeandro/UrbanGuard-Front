@@ -70,8 +70,7 @@ fun GuardScanQrScreen(
     ) {
         UrbanGuardTopBar(
             title = "Escanear código QR",
-            onNavigateBack = onNavigateBack,
-            showMenu = false
+            onNavigateBack = onNavigateBack
         )
 
         when {
