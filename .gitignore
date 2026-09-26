@@ -17,3 +17,6 @@ local.properties
 echo ".vscode/" >> .gitignore
 decisiones.txt
 prompts/
+# Reportes de detekt (generados por la tarea :app:detekt)
+detekt-report.txt
+build/reports/detekt/
