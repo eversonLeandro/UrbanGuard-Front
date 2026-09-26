@@ -28,7 +28,11 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun signUp(email: String, password: String, name: String): Result<UserSession> {
+    override suspend fun signUp(
+        email: String,
+        password: String,
+        name: String
+    ): Result<UserSession> {
         return try {
             val session = auth0Manager.signUpEmbedded(email, password, name)
             sessionManager.saveSession(session)

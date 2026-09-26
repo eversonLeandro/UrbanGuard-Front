@@ -2,13 +2,23 @@ package co.edu.unicauca.urbanguard.ui.features.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Help
@@ -16,7 +26,12 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -33,9 +48,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.components.LogoutDialog
-import co.edu.unicauca.urbanguard.ui.theme.*
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
+import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBg
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
+import co.edu.unicauca.urbanguard.ui.theme.UgIconMuted
+import co.edu.unicauca.urbanguard.ui.theme.UgInputBg
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgNavyGradient
+import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 @Composable
 fun ProfileScreen(
@@ -67,7 +92,11 @@ fun ProfileScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(elevation = 6.dp, shape = RoundedCornerShape(24.dp), ambientColor = UgNavy.copy(alpha = 0.15f))
+                    .shadow(
+                        elevation = 6.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        ambientColor = UgNavy.copy(alpha = 0.15f)
+                    )
                     .clip(RoundedCornerShape(24.dp))
                     .background(Color.White)
                     .border(1.dp, UgBorder, RoundedCornerShape(24.dp))
@@ -85,7 +114,8 @@ fun ProfileScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = if (uiState.userName.isNotBlank()) uiState.userName.take(1).uppercase() else "U",
+                            text = if (uiState.userName.isNotBlank()) uiState.userName.take(1)
+                                .uppercase() else "U",
                             color = Color.White,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Bold
@@ -122,15 +152,35 @@ fun ProfileScreen(
 
             // ── Sección: Ajustes de Cuenta ────────────────────────────
             ProfileSectionCard(title = "Ajustes de Cuenta") {
-                ProfileOptionRow(icon = Icons.Default.Person, title = "Información Personal", subtitle = "Datos y contacto")
-                ProfileOptionRow(icon = Icons.Default.Lock, title = "Seguridad", subtitle = "Contraseña y acceso")
-                ProfileOptionRow(icon = Icons.Default.Notifications, title = "Notificaciones", subtitle = "Alertas y avisos")
+                ProfileOptionRow(
+                    icon = Icons.Default.Person,
+                    title = "Información Personal",
+                    subtitle = "Datos y contacto"
+                )
+                ProfileOptionRow(
+                    icon = Icons.Default.Lock,
+                    title = "Seguridad",
+                    subtitle = "Contraseña y acceso"
+                )
+                ProfileOptionRow(
+                    icon = Icons.Default.Notifications,
+                    title = "Notificaciones",
+                    subtitle = "Alertas y avisos"
+                )
             }
 
             // ── Sección: Soporte e Información ─────────────────────────
             ProfileSectionCard(title = "Soporte e Información") {
-                ProfileOptionRow(icon = Icons.Default.Shield, title = "Términos y Privacidad", subtitle = "Políticas del servicio")
-                ProfileOptionRow(icon = Icons.Default.Help, title = "Centro de Ayuda", subtitle = "Preguntas frecuentes")
+                ProfileOptionRow(
+                    icon = Icons.Default.Shield,
+                    title = "Términos y Privacidad",
+                    subtitle = "Políticas del servicio"
+                )
+                ProfileOptionRow(
+                    icon = Icons.Default.Help,
+                    title = "Centro de Ayuda",
+                    subtitle = "Preguntas frecuentes"
+                )
             }
 
             // ── Botón Destacado de Cerrar Sesión ───────────────────────
@@ -232,6 +282,11 @@ private fun ProfileOptionRow(
             Text(subtitle, fontSize = 12.sp, color = UgTextSecondary)
         }
 
-        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = UgIconMuted, modifier = Modifier.size(20.dp))
+        Icon(
+            Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = UgIconMuted,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }

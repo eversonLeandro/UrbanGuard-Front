@@ -64,7 +64,10 @@ fun UrbanGuardTopBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(elevation = 6.dp, shape = RoundedCornerShape(bottomStart = 22.dp, bottomEnd = 22.dp))
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(bottomStart = 22.dp, bottomEnd = 22.dp)
+            )
             .clip(RoundedCornerShape(bottomStart = 22.dp, bottomEnd = 22.dp))
             .background(UgNavyGradient)
             .padding(horizontal = 20.dp, vertical = 16.dp)
@@ -177,7 +180,13 @@ fun LogoutDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(22.dp),
         title = { Text("Cerrar sesión", fontWeight = FontWeight.Bold, color = UgNavy) },
-        text = { Text("¿Seguro que deseas cerrar la sesión actual?", color = UgTextSecondary, fontSize = 14.sp) },
+        text = {
+            Text(
+                "¿Seguro que deseas cerrar la sesión actual?",
+                color = UgTextSecondary,
+                fontSize = 14.sp
+            )
+        },
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text("Sí, cerrar sesión", color = UgErrorText, fontWeight = FontWeight.Bold)

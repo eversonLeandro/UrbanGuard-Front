@@ -14,23 +14,30 @@ sealed class AppError {
 
     /** Error de validación de un campo del formulario. */
     data class Validation(override val message: String) : AppError() {
-        companion object { const val MESSAGE = "Revisa los datos ingresados e intenta de nuevo." }
+        companion object {
+            const val MESSAGE = "Revisa los datos ingresados e intenta de nuevo."
+        }
     }
 
     /** El correo o la contraseña no coinciden. */
     data class InvalidCredentials(override val message: String) : AppError() {
-        companion object { const val MESSAGE = "Correo o contraseña incorrectos. Verifica tus datos." }
+        companion object {
+            const val MESSAGE = "Correo o contraseña incorrectos. Verifica tus datos."
+        }
     }
 
     /** El correo ya tiene una cuenta creada. */
     data class EmailAlreadyRegistered(override val message: String) : AppError() {
-        companion object { const val MESSAGE = "Ya existe una cuenta registrada con este correo electrónico." }
+        companion object {
+            const val MESSAGE = "Ya existe una cuenta registrada con este correo electrónico."
+        }
     }
 
     /** La cuenta existe pero el correo aún no fue verificado. */
     data class EmailNotVerified(override val message: String) : AppError() {
         companion object {
-            const val MESSAGE = "Tu cuenta aún no está verificada. Revisa el correo que enviamos y confirma tu cuenta."
+            const val MESSAGE =
+                "Tu cuenta aún no está verificada. Revisa el correo que enviamos y confirma tu cuenta."
         }
     }
 
@@ -50,62 +57,82 @@ sealed class AppError {
     /** Cuenta bloqueada por exceso de intentos fallidos. */
     data class AccountBlocked(override val message: String) : AppError() {
         companion object {
-            const val MESSAGE = "Tu cuenta está bloqueada temporalmente por demasiados intentos fallidos. Espera unos minutos e inténtalo de nuevo."
+            const val MESSAGE =
+                "Tu cuenta está bloqueada temporalmente por demasiados intentos fallidos. Espera unos minutos e inténtalo de nuevo."
         }
     }
 
     /** Cuenta inactiva o deshabilitada. */
     data class AccountDisabled(override val message: String) : AppError() {
         companion object {
-            const val MESSAGE = "Esta cuenta está deshabilitada. Contacta al administrador de tu conjunto."
+            const val MESSAGE =
+                "Esta cuenta está deshabilitada. Contacta al administrador de tu conjunto."
         }
     }
 
     /** Se requiere un segundo factor (MFA / Bot Protection). */
     data class ExtraVerificationRequired(override val message: String) : AppError() {
-        companion object { const val MESSAGE = "Se requiere una verificación adicional para continuar." }
+        companion object {
+            const val MESSAGE = "Se requiere una verificación adicional para continuar."
+        }
     }
 
     /** El token venció o fue revocado: hay que volver a iniciar sesión. */
     data class SessionExpired(override val message: String) : AppError() {
-        companion object { const val MESSAGE = "Tu sesión expiró por seguridad. Inicia sesión de nuevo." }
+        companion object {
+            const val MESSAGE = "Tu sesión expiró por seguridad. Inicia sesión de nuevo."
+        }
     }
 
     /** Autenticado pero sin permisos para esta acción. */
     data class Forbidden(override val message: String) : AppError() {
-        companion object { const val MESSAGE = "No tienes permiso para realizar esta acción." }
+        companion object {
+            const val MESSAGE = "No tienes permiso para realizar esta acción."
+        }
     }
 
     /** El recurso solicitado no existe. */
     data class NotFound(override val message: String) : AppError() {
-        companion object { const val MESSAGE = "No encontramos la información que buscas." }
+        companion object {
+            const val MESSAGE = "No encontramos la información que buscas."
+        }
     }
 
     /** Conflicto con el estado actual: ya existe, ya fue procesado. */
     data class Conflict(override val message: String) : AppError() {
-        companion object { const val MESSAGE = "No se puede completar la acción porque el estado ya cambió." }
+        companion object {
+            const val MESSAGE = "No se puede completar la acción porque el estado ya cambió."
+        }
     }
 
     /** Demasiadas solicitudes en poco tiempo. */
     data class RateLimited(override val message: String) : AppError() {
-        companion object { const val MESSAGE = "Demasiados intentos seguidos. Espera un momento e intenta de nuevo." }
+        companion object {
+            const val MESSAGE =
+                "Demasiados intentos seguidos. Espera un momento e intenta de nuevo."
+        }
     }
 
     /** Sin conexión a internet. */
     data class NoConnection(override val message: String) : AppError() {
-        companion object { const val MESSAGE = "Sin conexión a internet. Revisa tu red e intenta de nuevo." }
+        companion object {
+            const val MESSAGE = "Sin conexión a internet. Revisa tu red e intenta de nuevo."
+        }
     }
 
     /** Fallo del servidor o de un servicio intermedio. */
     data class ServerError(override val message: String) : AppError() {
         companion object {
-            const val MESSAGE = "El servicio no está disponible en este momento. Intenta de nuevo en unos segundos."
+            const val MESSAGE =
+                "El servicio no está disponible en este momento. Intenta de nuevo en unos segundos."
         }
     }
 
     /** Cualquier otro fallo, sin detalle técnico para el usuario. */
     data class Unexpected(override val message: String) : AppError() {
-        companion object { const val MESSAGE = "Ocurrió un error inesperado. Intenta de nuevo." }
+        companion object {
+            const val MESSAGE = "Ocurrió un error inesperado. Intenta de nuevo."
+        }
     }
 
     companion object {

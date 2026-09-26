@@ -1,10 +1,9 @@
 package co.edu.unicauca.urbanguard.ui.features.onboarding
 
-import co.edu.unicauca.urbanguard.domain.model.AppError
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GenerateConjuntoCodeUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GetConjuntoCodeUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.RegenerateConjuntoCodeUseCase
@@ -32,7 +31,7 @@ class ConjuntoCodeViewModel @Inject constructor(
     }
 
     private fun getTargetComplexId(): String? {
-        return sessionManager.getActiveConjunto()?.conjuntoId 
+        return sessionManager.getActiveConjunto()?.conjuntoId
             ?: sessionManager.session.value?.conjuntosAsociados?.firstOrNull()?.conjuntoId
     }
 

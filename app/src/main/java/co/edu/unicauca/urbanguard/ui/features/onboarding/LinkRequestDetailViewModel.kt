@@ -4,10 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
-import co.edu.unicauca.urbanguard.domain.repository.ConjuntoAssociationRepository
 import co.edu.unicauca.urbanguard.data.remote.api.service.CommunityApi
 import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.LinkRequest
+import co.edu.unicauca.urbanguard.domain.repository.ConjuntoAssociationRepository
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GetLinkRequestDetailUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.ReviewLinkRequestUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -84,13 +84,21 @@ class LinkRequestDetailViewModel @Inject constructor(
 
     fun onApproveConfirmed() {
         if (_uiState.value.isLoadingAction) return
-        _uiState.value = _uiState.value.copy(showApproveDialog = false, isLoadingAction = true, errorMessage = null)
+        _uiState.value = _uiState.value.copy(
+            showApproveDialog = false,
+            isLoadingAction = true,
+            errorMessage = null
+        )
         reviewRequest(approve = true)
     }
 
     fun onRejectConfirmed() {
         if (_uiState.value.isLoadingAction) return
-        _uiState.value = _uiState.value.copy(showRejectDialog = false, isLoadingAction = true, errorMessage = null)
+        _uiState.value = _uiState.value.copy(
+            showRejectDialog = false,
+            isLoadingAction = true,
+            errorMessage = null
+        )
         reviewRequest(approve = false)
     }
 

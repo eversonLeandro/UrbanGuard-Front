@@ -32,7 +32,8 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onPasswordChange(value: String) {
-        _uiState.value = _uiState.value.copy(password = value, passwordError = null, errorMessage = null)
+        _uiState.value =
+            _uiState.value.copy(password = value, passwordError = null, errorMessage = null)
     }
 
     fun onLoginHandled() {
@@ -72,7 +73,10 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             loginUseCase(state.email.trim(), state.password).fold(
                 onSuccess = { userSession ->
-                    Log.d(TAG, "Login correcto: userId=${userSession.userId}, role=${userSession.role}")
+                    Log.d(
+                        TAG,
+                        "Login correcto: userId=${userSession.userId}, role=${userSession.role}"
+                    )
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         loginSuccess = true,

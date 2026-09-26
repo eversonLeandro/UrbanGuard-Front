@@ -1,8 +1,7 @@
 package co.edu.unicauca.urbanguard.ui.features.onboarding
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,12 +13,11 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.GppGood
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
@@ -36,17 +34,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
-import co.edu.unicauca.urbanguard.ui.theme.*
 import co.edu.unicauca.urbanguard.R
-import androidx.compose.foundation.Image
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
+import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgDisabledText
+import co.edu.unicauca.urbanguard.ui.theme.UgDivider
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBright
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
+import co.edu.unicauca.urbanguard.ui.theme.UgInputBg
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgTextPrimary
+import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 @Composable
 fun ActivateConjuntoScreen(
@@ -243,7 +250,6 @@ fun ActivateConjuntoScreen(
         }
     }
 }
-
 
 
 /**

@@ -35,14 +35,14 @@ class Auth0Manager @Inject constructor(
          */
         private const val PASSWORD_POLICY_MESSAGE =
             "La contraseña no cumple la política de seguridad. " +
-                "Usa al menos 8 caracteres, con al menos una mayúscula y un número."
+                    "Usa al menos 8 caracteres, con al menos una mayúscula y un número."
 
         private const val APP_CONFIG_MESSAGE =
             "La aplicación no pudo autenticarte en este momento. Intenta de nuevo en unos minutos."
 
         private const val SIGNUP_DISABLED_MESSAGE =
             "El registro de cuentas nuevas no está disponible en este momento. " +
-                "Contacta al administrador de tu conjunto."
+                    "Contacta al administrador de tu conjunto."
     }
 
     suspend fun loginEmbedded(
@@ -89,7 +89,11 @@ class Auth0Manager @Inject constructor(
             }
 
             override fun onFailure(error: AuthenticationException) {
-                Log.e(TAG, "Error en registro de Auth0: code=${error.getCode()}, desc=${error.getDescription()}", error)
+                Log.e(
+                    TAG,
+                    "Error en registro de Auth0: code=${error.getCode()}, desc=${error.getDescription()}",
+                    error
+                )
                 continuation.resumeWithException(mapAuth0Error(error))
             }
         })
@@ -111,7 +115,11 @@ class Auth0Manager @Inject constructor(
                 }
 
                 override fun onFailure(error: AuthenticationException) {
-                    Log.e(TAG, "Error en login de Auth0: code=${error.getCode()}, desc=${error.getDescription()}", error)
+                    Log.e(
+                        TAG,
+                        "Error en login de Auth0: code=${error.getCode()}, desc=${error.getDescription()}",
+                        error
+                    )
                     continuation.resumeWithException(mapAuth0Error(error))
                 }
             })
@@ -125,7 +133,10 @@ class Auth0Manager @Inject constructor(
     private fun saveCredentials(credentials: Credentials) {
         try {
             credentialsManager.saveCredentials(credentials)
-            Log.d(TAG, "Credenciales persistidas de forma segura (refresh=${credentials.refreshToken != null})")
+            Log.d(
+                TAG,
+                "Credenciales persistidas de forma segura (refresh=${credentials.refreshToken != null})"
+            )
         } catch (e: Exception) {
             Log.w(TAG, "No se pudieron persistir las credenciales", e)
         }
@@ -256,13 +267,17 @@ class Auth0Manager @Inject constructor(
 
             // --- Credenciales incorrectas ------------------------------------------
             error.isInvalidCredentials ||
-                code in setOf("invalid_grant", "wrong_email_password", "invalid_user_password") ->
+                    code in setOf(
+                "invalid_grant",
+                "wrong_email_password",
+                "invalid_user_password"
+            ) ->
                 AppError.InvalidCredentials(AppError.InvalidCredentials.MESSAGE)
 
             // --- Cuenta creada pero correo sin verificar ---------------------------
             code == "requires_verification" || error.isVerificationRequired ||
-                description.contains("not confirmed", ignoreCase = true) ||
-                description.contains("not been verified", ignoreCase = true) ->
+                    description.contains("not confirmed", ignoreCase = true) ||
+                    description.contains("not been verified", ignoreCase = true) ->
                 AppError.EmailNotVerified(AppError.EmailNotVerified.MESSAGE)
 
             // --- Política de contraseña --------------------------------------------
@@ -270,25 +285,36 @@ class Auth0Manager @Inject constructor(
                 AppError.WeakPassword(
                     "Esa contraseña aparece en filtraciones de datos conocidas. Elige una nueva."
                 )
+
             error.isPasswordAlreadyUsed ->
                 AppError.WeakPassword("Esa contraseña ya la usaste antes. Elige una diferente.")
+
             error.isRuleError || error.isPasswordNotStrongEnough ||
-                code in setOf("invalid_password", "password_strength_error", "password_dictionary_error") ->
+                    code in setOf(
+                "invalid_password",
+                "password_strength_error",
+                "password_dictionary_error"
+            ) ->
                 AppError.WeakPassword(PASSWORD_POLICY_MESSAGE)
 
             // --- Sesión vencida ----------------------------------------------------
             error.isInvalidRefreshToken || error.isRefreshTokenDeleted ||
-                code in setOf("expired_token", "invalid_refresh_token", "login_required") ->
+                    code in setOf("expired_token", "invalid_refresh_token", "login_required") ->
                 AppError.SessionExpired(AppError.SessionExpired.MESSAGE)
 
             // --- Verificación adicional (MFA / Bot Protection) ----------------------
             error.isMultifactorRequired || error.isMultifactorEnrollRequired ||
-                code in setOf("mfa_required", "mfa_registration_required", "mfa_invalid_code") ->
+                    code in setOf(
+                "mfa_required",
+                "mfa_registration_required",
+                "mfa_invalid_code"
+            ) ->
                 AppError.ExtraVerificationRequired(AppError.ExtraVerificationRequired.MESSAGE)
 
             // --- Cuenta bloqueada o inactiva ---------------------------------------
             error.isTooManyAttempts || code == "too_many_attempts" ->
                 AppError.AccountBlocked(AppError.AccountBlocked.MESSAGE)
+
             error.isAccessDenied || code == "access_denied" ->
                 AppError.AccountDisabled(AppError.AccountDisabled.MESSAGE)
 
@@ -299,9 +325,17 @@ class Auth0Manager @Inject constructor(
             // --- Configuración incorrecta del lado del proyecto --------------------
             // No son culpa del usuario: se avisa de forma genérica y se deja traza.
             error.isInvalidConfiguration || error.isIdTokenValidationError ||
-                code in setOf("unauthorized_client", "invalid_request", "invalid_authorize_url") ->
+                    code in setOf(
+                "unauthorized_client",
+                "invalid_request",
+                "invalid_authorize_url"
+            ) ->
                 AppError.Unexpected(APP_CONFIG_MESSAGE)
-            code == "public signup is disabled" || description.contains("signup is disabled", ignoreCase = true) ->
+
+            code == "public signup is disabled" || description.contains(
+                "signup is disabled",
+                ignoreCase = true
+            ) ->
                 AppError.Unexpected(SIGNUP_DISABLED_MESSAGE)
 
             // --- Sin código reconocible --------------------------------------------

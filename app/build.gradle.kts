@@ -7,6 +7,56 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val detektVersion = "1.23.6"
+
+val detektCli: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
+// El plugin Gradle de detekt se ejecuta dentro del daemon (JDK 25) y su compilador
+// de Kotlin 1.9 embebido no soporta esa version de JVM, por eso se corre el CLI
+// de forma aislada en un toolchain JDK 21.
+val detektConfigFile = rootProject.file("reglas_detekt.yml")
+val detektReportDir = rootProject.file("build/reports/detekt")
+val detektTxtReport = rootProject.file("detekt-report.txt")
+val detektHtmlReport = detektReportDir.resolve("detekt-report.html")
+val detektXmlReport = detektReportDir.resolve("detekt-report.xml")
+val detektMdReport = detektReportDir.resolve("detekt-report.md")
+val detektSources = listOf("src/main/java", "src/test/java", "src/androidTest/java")
+
+val detektArgs: List<String> = listOf(
+    "--input", detektSources.joinToString(","),
+    "--config", detektConfigFile.absolutePath,
+    "--build-upon-default-config",
+    "--parallel",
+    "--jvm-target", "21",
+    "--report", "txt:${detektTxtReport.absolutePath}",
+    "--report", "html:${detektHtmlReport.absolutePath}",
+    "--report", "xml:${detektXmlReport.absolutePath}",
+    "--report", "md:${detektMdReport.absolutePath}",
+)
+
+tasks.register<JavaExec>("detekt") {
+    group = "verification"
+    description = "Ejecuta detekt sobre el modulo :app usando reglas_detekt.yml"
+
+    mainClass.set("io.gitlab.arturbosch.detekt.cli.Main")
+    classpath = detektCli
+    javaLauncher.set(
+        javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        }
+    )
+
+    args(detektArgs)
+
+    inputs.file(detektConfigFile).withPathSensitivity(PathSensitivity.RELATIVE)
+    detektSources.forEach { inputs.dir(it) }
+
+    isIgnoreExitValue = false
+}
+
 val localProperties = Properties().apply {
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
@@ -81,6 +131,7 @@ android {
 }
 
 dependencies {
+    detektCli("io.gitlab.arturbosch.detekt:detekt-cli:$detektVersion")
     implementation(libs.auth0.android)
     implementation(libs.auth0.jwtdecode)
     implementation(libs.hilt.android)

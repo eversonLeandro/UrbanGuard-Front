@@ -3,7 +3,17 @@ package co.edu.unicauca.urbanguard.ui.features.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +28,11 @@ import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,7 +49,15 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
-import co.edu.unicauca.urbanguard.ui.theme.*
+import co.edu.unicauca.urbanguard.ui.theme.UgAmber
+import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
+import co.edu.unicauca.urbanguard.ui.theme.UgEmeraldLight
+import co.edu.unicauca.urbanguard.ui.theme.UgHeroGradient
+import co.edu.unicauca.urbanguard.ui.theme.UgInfoIcon
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 @Composable
 fun HomeScreen(
@@ -69,7 +91,12 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), ambientColor = UgNavy.copy(alpha = 0.3f), spotColor = UgNavy.copy(alpha = 0.3f))
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        ambientColor = UgNavy.copy(alpha = 0.3f),
+                        spotColor = UgNavy.copy(alpha = 0.3f)
+                    )
                     .clip(RoundedCornerShape(24.dp))
                     .background(UgHeroGradient)
                     .padding(22.dp)
@@ -88,7 +115,8 @@ fun HomeScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = if (uiState.userName.isNotBlank()) uiState.userName.take(1).uppercase() else "U",
+                                text = if (uiState.userName.isNotBlank()) uiState.userName.take(1)
+                                    .uppercase() else "U",
                                 color = Color.White,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold
@@ -113,7 +141,11 @@ fun HomeScreen(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(UgEmerald.copy(alpha = 0.25f))
-                                        .border(1.dp, UgEmerald.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                        .border(
+                                            1.dp,
+                                            UgEmerald.copy(alpha = 0.5f),
+                                            RoundedCornerShape(8.dp)
+                                        )
                                         .padding(horizontal = 9.dp, vertical = 3.dp)
                                 ) {
                                     Text(
@@ -133,7 +165,11 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        HeroStatItem(label = "Estado", value = "Activo", icon = Icons.Default.Shield)
+                        HeroStatItem(
+                            label = "Estado",
+                            value = "Activo",
+                            icon = Icons.Default.Shield
+                        )
                         HeroStatItem(
                             label = "Conjunto",
                             value = uiState.conjuntoName.ifBlank { "Sin conjunto" },
@@ -255,7 +291,12 @@ fun HomeScreen(
                     }
                     Spacer(Modifier.width(14.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Seleccionar conjunto", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = UgNavy)
+                        Text(
+                            "Seleccionar conjunto",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = UgNavy
+                        )
                         Text(
                             text = if (uiState.conjuntoName.isNotBlank()) {
                                 uiState.conjuntoName
@@ -284,7 +325,12 @@ fun HomeScreen(
 @Composable
 private fun HeroStatItem(label: String, value: String, icon: ImageVector) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, contentDescription = null, tint = UgEmeraldLight, modifier = Modifier.size(16.dp))
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = UgEmeraldLight,
+            modifier = Modifier.size(16.dp)
+        )
         Spacer(Modifier.width(6.dp))
         // weight + ellipsis: los nombres de conjunto reales son largos y sin limite
         // romperian el reparto de la fila contra el stat de "Estado".
@@ -329,7 +375,12 @@ private fun HomeActionCard(
                     .background(badgeColor.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = badgeColor, modifier = Modifier.size(22.dp))
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = badgeColor,
+                    modifier = Modifier.size(22.dp)
+                )
             }
             Column {
                 Text(title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = UgNavy)
@@ -351,7 +402,9 @@ private fun AdminQuickActionCard(
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = UgNavy),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        modifier = modifier.height(80.dp).clickable { onClick() }
+        modifier = modifier
+            .height(80.dp)
+            .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
@@ -366,7 +419,12 @@ private fun AdminQuickActionCard(
                     .background(UgEmerald.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = UgEmerald, modifier = Modifier.size(18.dp))
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = UgEmerald,
+                    modifier = Modifier.size(18.dp)
+                )
             }
             Spacer(Modifier.width(10.dp))
             Column {

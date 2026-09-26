@@ -1,13 +1,13 @@
 package co.edu.unicauca.urbanguard.data.remote.api.service
+
 import co.edu.unicauca.urbanguard.data.remote.api.dto.ActivationRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.ConjuntoCodeResponseDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.CreateComplexRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.CreateComplexResponseDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.OnboardingStatusDto
 import retrofit2.http.Body
-import retrofit2.http.POST
 import retrofit2.http.GET
-import retrofit2.http.PUT
+import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 

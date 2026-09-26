@@ -6,7 +6,17 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,21 +24,27 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -38,7 +54,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
-import co.edu.unicauca.urbanguard.ui.theme.*
+import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgBorderSoft
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBg
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBright
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgSuccessBg
+import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
+import co.edu.unicauca.urbanguard.ui.theme.UgWarningBg
+import co.edu.unicauca.urbanguard.ui.theme.UgWarningBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgWarningText
 
 @Composable
 fun LinkByCodeScreen(
@@ -98,7 +126,13 @@ fun LinkByCodeScreen(
                     value = uiState.code,
                     onValueChange = viewModel::onCodeChange,
                     label = { Text("Código de vinculación") },
-                    placeholder = { Text("Ingresa el código que te dio tu administrador", color = UgEmerald, fontSize = 13.sp) },
+                    placeholder = {
+                        Text(
+                            "Ingresa el código que te dio tu administrador",
+                            color = UgEmerald,
+                            fontSize = 13.sp
+                        )
+                    },
                     singleLine = true,
                     isError = uiState.codeError != null || uiState.searchError != null,
                     shape = RoundedCornerShape(8.dp),
@@ -245,7 +279,7 @@ fun LinkByCodeScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(Color.White, RoundedCornerShape(12.dp))
-.border(1.dp, UgBorder, RoundedCornerShape(12.dp))
+                                .border(1.dp, UgBorder, RoundedCornerShape(12.dp))
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
@@ -317,7 +351,13 @@ fun LinkByCodeScreen(
                                     value = uiState.apartamento,
                                     onValueChange = viewModel::onApartamentoChange,
                                     label = { Text("Número de apartamento") },
-                                    placeholder = { Text("Ej: 302", color = UgEmerald, fontSize = 13.sp) },
+                                    placeholder = {
+                                        Text(
+                                            "Ej: 302",
+                                            color = UgEmerald,
+                                            fontSize = 13.sp
+                                        )
+                                    },
                                     singleLine = true,
                                     isError = uiState.apartamentoError != null,
                                     shape = RoundedCornerShape(8.dp),
@@ -540,7 +580,9 @@ private fun LinkSuccessScreen(
                 imageVector = Icons.Default.Shield,
                 contentDescription = null,
                 tint = UgWarningText,
-                modifier = Modifier.size(16.dp).padding(top = 1.dp)
+                modifier = Modifier
+                    .size(16.dp)
+                    .padding(top = 1.dp)
             )
             Text(
                 text = "El administrador revisará tu solicitud. Recibirás una notificación con el resultado.",

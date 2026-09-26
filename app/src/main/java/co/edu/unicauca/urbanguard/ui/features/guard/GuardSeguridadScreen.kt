@@ -1,24 +1,35 @@
 package co.edu.unicauca.urbanguard.ui.features.guard
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocalPolice
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,7 +37,18 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
-import co.edu.unicauca.urbanguard.ui.theme.*
+import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgBorderSoft
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
+import co.edu.unicauca.urbanguard.ui.theme.UgEmeraldLight
+import co.edu.unicauca.urbanguard.ui.theme.UgInfoBg
+import co.edu.unicauca.urbanguard.ui.theme.UgInfoIcon
+import co.edu.unicauca.urbanguard.ui.theme.UgInputBg
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgNavyGradient
+import co.edu.unicauca.urbanguard.ui.theme.UgSuccessBg
+import co.edu.unicauca.urbanguard.ui.theme.UgSuccessText
+import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 @Composable
 fun GuardSeguridadScreen(
@@ -71,19 +93,34 @@ fun GuardSeguridadScreen(
                                 .background(UgNavyGradient),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.LocalPolice, contentDescription = null, tint = UgEmeraldLight, modifier = Modifier.size(22.dp))
+                            Icon(
+                                Icons.Default.LocalPolice,
+                                contentDescription = null,
+                                tint = UgEmeraldLight,
+                                modifier = Modifier.size(22.dp)
+                            )
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text("Ruta Programada", fontSize = 12.sp, color = UgTextSecondary)
-                            Text("Patrulla Perimetral Norte", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = UgNavy)
+                            Text(
+                                "Patrulla Perimetral Norte",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = UgNavy
+                            )
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(UgInfoBg)
                                     .padding(horizontal = 9.dp, vertical = 4.dp)
                             ) {
-                                Text("Hora: 11:30 AM", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = UgInfoIcon)
+                                Text(
+                                    "Hora: 11:30 AM",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = UgInfoIcon
+                                )
                             }
                         }
                     }
@@ -95,24 +132,45 @@ fun GuardSeguridadScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("4 Puntos de Control NFC", fontSize = 12.5.sp, color = UgTextSecondary)
-                        Text("Duración estimada: 25 min", fontSize = 12.5.sp, fontWeight = FontWeight.Medium, color = UgNavy)
+                        Text(
+                            "Duración estimada: 25 min",
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = UgNavy
+                        )
                     }
 
                     Button(
                         onClick = {},
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
-                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = UgEmerald, modifier = Modifier.size(22.dp))
+                        Icon(
+                            Icons.Default.PlayArrow,
+                            contentDescription = null,
+                            tint = UgEmerald,
+                            modifier = Modifier.size(22.dp)
+                        )
                         Spacer(Modifier.width(8.dp))
-                        Text("Iniciar Ronda de Patrullaje", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Iniciar Ronda de Patrullaje",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
 
             // ── Puntos de Control de la Ronda ──────────────────────
-            Text("Puntos de Verificación de Ruta", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = UgNavy)
+            Text(
+                "Puntos de Verificación de Ruta",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = UgNavy
+            )
 
             Card(
                 shape = RoundedCornerShape(20.dp),
@@ -124,13 +182,33 @@ fun GuardSeguridadScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    PatrolCheckpointItem(number = "1", name = "Estacionamiento Visitantes Norte", isDone = true, time = "09:05 AM")
+                    PatrolCheckpointItem(
+                        number = "1",
+                        name = "Estacionamiento Visitantes Norte",
+                        isDone = true,
+                        time = "09:05 AM"
+                    )
                     HorizontalDivider(color = UgBorderSoft)
-                    PatrolCheckpointItem(number = "2", name = "Piscina y Zonas Húmedas", isDone = true, time = "09:14 AM")
+                    PatrolCheckpointItem(
+                        number = "2",
+                        name = "Piscina y Zonas Húmedas",
+                        isDone = true,
+                        time = "09:14 AM"
+                    )
                     HorizontalDivider(color = UgBorderSoft)
-                    PatrolCheckpointItem(number = "3", name = "Puerta Peatonal Auxiliar Sur", isDone = false, time = "Pendiente")
+                    PatrolCheckpointItem(
+                        number = "3",
+                        name = "Puerta Peatonal Auxiliar Sur",
+                        isDone = false,
+                        time = "Pendiente"
+                    )
                     HorizontalDivider(color = UgBorderSoft)
-                    PatrolCheckpointItem(number = "4", name = "Subestación Eléctrica y Cuarto de Bombas", isDone = false, time = "Pendiente")
+                    PatrolCheckpointItem(
+                        number = "4",
+                        name = "Subestación Eléctrica y Cuarto de Bombas",
+                        isDone = false,
+                        time = "Pendiente"
+                    )
                 }
             }
         }
@@ -156,7 +234,12 @@ private fun PatrolCheckpointItem(
             contentAlignment = Alignment.Center
         ) {
             if (isDone) {
-                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = UgSuccessText, modifier = Modifier.size(18.dp))
+                Icon(
+                    Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = UgSuccessText,
+                    modifier = Modifier.size(18.dp)
+                )
             } else {
                 Text(number, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = UgNavy)
             }

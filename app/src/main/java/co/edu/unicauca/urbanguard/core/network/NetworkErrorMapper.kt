@@ -7,6 +7,7 @@ import co.edu.unicauca.urbanguard.domain.model.AppException
 import com.google.gson.Gson
 import retrofit2.HttpException
 import java.io.IOException
+
 /**
  * Punto único donde se traduce cualquier error de red a un [AppError] legible.
  *
@@ -49,7 +50,11 @@ object NetworkErrorMapper {
             is HttpException -> fromHttpException(throwable)
             is IOException -> AppError.NoConnection(AppError.NoConnection.MESSAGE)
             else -> {
-                Log.e(TAG, "Error no mapeado: ${throwable.javaClass.simpleName} - ${throwable.message}", throwable)
+                Log.e(
+                    TAG,
+                    "Error no mapeado: ${throwable.javaClass.simpleName} - ${throwable.message}",
+                    throwable
+                )
                 AppError.Unexpected(AppError.Unexpected.MESSAGE)
             }
         }
@@ -78,13 +83,19 @@ object NetworkErrorMapper {
         val bodyMessage = body?.message?.trim().orEmpty()
 
         if (bodyMessage.isNotEmpty() && isUsable(bodyMessage)) {
-            Log.w(TAG, "HTTP ${exception.code()} con mensaje de negocio: $bodyMessage (ref: ${body?.correlationId ?: "sin ref"})")
+            Log.w(
+                TAG,
+                "HTTP ${exception.code()} con mensaje de negocio: $bodyMessage (ref: ${body?.correlationId ?: "sin ref"})"
+            )
             return forCode(exception.code(), bodyMessage)
         }
 
         // Sin mensaje utilizable: se responde con el texto del código HTTP.
         if (bodyMessage.isNotEmpty()) {
-            Log.w(TAG, "HTTP ${exception.code()} con mensaje no utilizable: \"$bodyMessage\" (ref: ${body?.correlationId ?: "sin ref"})")
+            Log.w(
+                TAG,
+                "HTTP ${exception.code()} con mensaje no utilizable: \"$bodyMessage\" (ref: ${body?.correlationId ?: "sin ref"})"
+            )
         }
         return forCode(exception.code(), null)
     }

@@ -74,7 +74,7 @@ class RegisterViewModel @Inject constructor(
         val confirmPasswordError = confirmPasswordErrorFor(state.confirmPassword)
 
         val hasErrors = nameError != null || emailError != null ||
-            passwordError != null || confirmPasswordError != null
+                passwordError != null || confirmPasswordError != null
 
         if (hasErrors) {
             _uiState.value = state.copy(

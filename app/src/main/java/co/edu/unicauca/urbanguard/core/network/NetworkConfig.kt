@@ -1,5 +1,7 @@
 package co.edu.unicauca.urbanguard.core.network
+
 import co.edu.unicauca.urbanguard.BuildConfig
+
 object NetworkConfig {
     // Apunta al API Gateway, no a un microservicio directamente.
     // El Gateway enruta por path: /auth/**, /residential/**, /visitors/**, etc.

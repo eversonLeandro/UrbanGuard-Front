@@ -1,16 +1,19 @@
 package co.edu.unicauca.urbanguard.ui.navigation
+
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apartment
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,9 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -34,37 +35,27 @@ import androidx.navigation.navArgument
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.components.PlaceholderScreen
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
+import co.edu.unicauca.urbanguard.ui.features.admin.AdminSecurityMenuScreen
+import co.edu.unicauca.urbanguard.ui.features.admin.RegisterGuardScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.SuperAdminScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.LoginScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.RegisterScreen
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Apartment
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.SupportAgent
+import co.edu.unicauca.urbanguard.ui.features.guard.GuardHomeScreen
+import co.edu.unicauca.urbanguard.ui.features.guard.GuardScanQrScreen
+import co.edu.unicauca.urbanguard.ui.features.guard.GuardSeguridadScreen
+import co.edu.unicauca.urbanguard.ui.features.guard.GuardVisitantesScreen
 import co.edu.unicauca.urbanguard.ui.features.home.HomeScreen
 import co.edu.unicauca.urbanguard.ui.features.news.NewsFeedScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ActivateConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoCodeScreen
+import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoSelectionScreen
+import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkByCodeScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkRequestDetailScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.PendingRequestsScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.RegisterConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolHistoryScreen
 import co.edu.unicauca.urbanguard.ui.features.profile.ProfileScreen
-import co.edu.unicauca.urbanguard.ui.features.guard.GuardHomeScreen
-import co.edu.unicauca.urbanguard.ui.features.guard.GuardSeguridadScreen
-import co.edu.unicauca.urbanguard.ui.features.guard.GuardVisitantesScreen
-import co.edu.unicauca.urbanguard.ui.features.guard.GuardScanQrScreen
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
-import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
-import co.edu.unicauca.urbanguard.ui.theme.UgNavy
-import kotlinx.coroutines.launch
-import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoSelectionScreen
-import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkByCodeScreen
-import co.edu.unicauca.urbanguard.ui.features.admin.RegisterGuardScreen
-import co.edu.unicauca.urbanguard.ui.features.admin.AdminSecurityMenuScreen
 
 // Rutas de navegación — una constante por pantalla
 object Routes {
@@ -85,6 +76,7 @@ object Routes {
     const val RESERVATIONS = "reservations"
     const val PACKAGES = "packages"
     const val NOTIFICATIONS = "notifications"
+
     // TODO: agregar el resto de rutas aquí a medida que se implementen:
     const val LINK_BY_CODE = "link_by_code"
     const val REGISTER = "register"
@@ -172,7 +164,10 @@ fun AppNavGraph(
                     // ADMIN / RESIDENT / GUARD ya tienen conjunto activo en Auth0 → Home.
                     // La carga real de conjuntos ocurre en ConjuntoSelectionViewModel.
                     val destination = roleToDestination(role)
-                    Log.d("NavGraph", "=== [LOGIN NAVIGATION] role: $role -> destino: $destination ===")
+                    Log.d(
+                        "NavGraph",
+                        "=== [LOGIN NAVIGATION] role: $role -> destino: $destination ==="
+                    )
                     navController.navigate(destination) {
                         // Elimina el Login del backstack — el usuario
                         // no puede volver atrás con el botón físico

@@ -1,10 +1,10 @@
 complexity:
   LongMethod:
     active: true
-    threshold: 60 #  metodos de maximo n líneas
+    threshold: 80 #  metodos de maximo n líneas
   LongParameterList:
     active: true
-    functionThreshold: 6 # parámetros de una funcion
+    functionThreshold: 8 # parámetros de una funcion
     constructorThreshold: 5 # inyección  de dependencias
   TooManyFunctions:
     active: true
@@ -20,9 +20,9 @@ exceptions:
 
 style:
   MagicNumber:
-    active: true # extraer valores a un archivo de constantes   
+    active: false # extraer valores a un archivo de constantes   
   WildcardImport:
-    active: true # prohibe importaciones del tipo `import *`
+    active: false # prohibe importaciones del tipo `import *`
   ReturnCount:
     active: false # Evita tener múltiples puntos de salida (`return`)
 

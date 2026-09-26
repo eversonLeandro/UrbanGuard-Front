@@ -14,7 +14,8 @@ class LinkRequestRepositoryImpl @Inject constructor(
 ) : LinkRequestRepository {
 
     private companion object {
-        const val REQUEST_NOT_FOUND_MESSAGE = "Esta solicitud de vinculación ya no existe o fue retirada."
+        const val REQUEST_NOT_FOUND_MESSAGE =
+            "Esta solicitud de vinculación ya no existe o fue retirada."
     }
 
     override suspend fun getRequests(): Result<List<LinkRequest>> = try {

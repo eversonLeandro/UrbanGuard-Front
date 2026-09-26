@@ -1,11 +1,10 @@
 package co.edu.unicauca.urbanguard.ui.features.onboarding
 
-import co.edu.unicauca.urbanguard.domain.model.AppError
-
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoUserAssociation
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.ConfigureConjuntoUseCase

@@ -22,7 +22,8 @@ object InputValidators {
      * unitarias de JVM, y porque su patrón acepta `a@b` (dominio sin punto), que es
      * justo uno de los casos que se quería rechazar.
      */
-    private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*\\.[A-Za-z]{2,}$")
+    private val EMAIL_REGEX =
+        Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*\\.[A-Za-z]{2,}$")
 
     /**
      * Valida el formato de un correo.

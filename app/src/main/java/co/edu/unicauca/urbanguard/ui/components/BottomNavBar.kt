@@ -38,7 +38,12 @@ fun BottomNavBar(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 10.dp)
-            .shadow(elevation = 10.dp, shape = RoundedCornerShape(26.dp), ambientColor = UgNavy.copy(alpha = 0.2f), spotColor = UgNavy.copy(alpha = 0.2f))
+            .shadow(
+                elevation = 10.dp,
+                shape = RoundedCornerShape(26.dp),
+                ambientColor = UgNavy.copy(alpha = 0.2f),
+                spotColor = UgNavy.copy(alpha = 0.2f)
+            )
             .clip(RoundedCornerShape(26.dp))
             .background(Color.White)
             .border(1.dp, UgCardGlassBorder, RoundedCornerShape(26.dp))

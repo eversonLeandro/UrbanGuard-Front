@@ -2,7 +2,17 @@ package co.edu.unicauca.urbanguard.ui.features.admin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,8 +23,13 @@ import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Apartment
 import androidx.compose.material.icons.filled.Construction
 import androidx.compose.material.icons.filled.Insights
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,11 +37,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
-import co.edu.unicauca.urbanguard.ui.theme.*
+import co.edu.unicauca.urbanguard.ui.theme.UgAmber
+import co.edu.unicauca.urbanguard.ui.theme.UgAmberSoft
+import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBg
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
+import co.edu.unicauca.urbanguard.ui.theme.UgHeroGradient
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 @Composable
 fun SuperAdminScreen(
@@ -54,7 +77,11 @@ fun SuperAdminScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), ambientColor = UgNavy.copy(alpha = 0.3f))
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        ambientColor = UgNavy.copy(alpha = 0.3f)
+                    )
                     .clip(RoundedCornerShape(24.dp))
                     .background(UgHeroGradient)
                     .padding(22.dp)
@@ -74,12 +101,26 @@ fun SuperAdminScreen(
                                     .border(1.5.dp, UgAmber, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(Icons.Default.AdminPanelSettings, contentDescription = null, tint = UgAmber, modifier = Modifier.size(24.dp))
+                                Icon(
+                                    Icons.Default.AdminPanelSettings,
+                                    contentDescription = null,
+                                    tint = UgAmber,
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
                             Spacer(Modifier.width(12.dp))
                             Column {
-                                Text("Consola Global", fontSize = 12.sp, color = Color.White.copy(alpha = 0.7f))
-                                Text("Superadministrador", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(
+                                    "Consola Global",
+                                    fontSize = 12.sp,
+                                    color = Color.White.copy(alpha = 0.7f)
+                                )
+                                Text(
+                                    "Superadministrador",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
                             }
                         }
 
@@ -90,7 +131,12 @@ fun SuperAdminScreen(
                                 .border(1.dp, UgAmber.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
                                 .padding(horizontal = 10.dp, vertical = 5.dp)
                         ) {
-                            Text("SUPERADMIN", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = UgAmber)
+                            Text(
+                                "SUPERADMIN",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = UgAmber
+                            )
                         }
                     }
 
@@ -115,8 +161,16 @@ fun SuperAdminScreen(
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Icon(Icons.Default.Apartment, contentDescription = null, tint = UgNavy, modifier = Modifier.size(22.dp))
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Apartment,
+                            contentDescription = null,
+                            tint = UgNavy,
+                            modifier = Modifier.size(22.dp)
+                        )
                         Text("12", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = UgNavy)
                         Text("Conjuntos Activos", fontSize = 11.5.sp, color = UgTextSecondary)
                     }
@@ -128,9 +182,22 @@ fun SuperAdminScreen(
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Icon(Icons.Default.Insights, contentDescription = null, tint = UgEmerald, modifier = Modifier.size(22.dp))
-                        Text("99.9%", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = UgNavy)
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Insights,
+                            contentDescription = null,
+                            tint = UgEmerald,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Text(
+                            "99.9%",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = UgNavy
+                        )
                         Text("Disponibilidad API", fontSize = 11.5.sp, color = UgTextSecondary)
                     }
                 }
@@ -155,10 +222,20 @@ fun SuperAdminScreen(
                                 .background(UgAmberSoft),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Construction, contentDescription = null, tint = UgAmber, modifier = Modifier.size(20.dp))
+                            Icon(
+                                Icons.Default.Construction,
+                                contentDescription = null,
+                                tint = UgAmber,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                         Spacer(Modifier.width(10.dp))
-                        Text("Próximos Módulos de Control", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = UgNavy)
+                        Text(
+                            "Próximos Módulos de Control",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = UgNavy
+                        )
                     }
 
                     Text(
@@ -179,13 +256,21 @@ fun SuperAdminScreen(
             Button(
                 onClick = onLogout,
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = UgErrorBg, contentColor = UgErrorText),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = UgErrorBg,
+                    contentColor = UgErrorText
+                ),
                 border = androidx.compose.foundation.BorderStroke(1.dp, UgErrorBorder),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, tint = UgErrorText, modifier = Modifier.size(20.dp))
+                Icon(
+                    Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = null,
+                    tint = UgErrorText,
+                    modifier = Modifier.size(20.dp)
+                )
                 Spacer(Modifier.width(8.dp))
                 Text("Cerrar Sesión Global", fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }

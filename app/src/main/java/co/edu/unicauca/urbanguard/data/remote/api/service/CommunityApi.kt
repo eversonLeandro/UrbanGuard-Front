@@ -1,8 +1,8 @@
 package co.edu.unicauca.urbanguard.data.remote.api.service
 
 import co.edu.unicauca.urbanguard.data.remote.api.dto.ComplexSummaryDto
-import retrofit2.http.GET
 import retrofit2.Response
+import retrofit2.http.GET
 
 /**
  * Interfaz Retrofit para el Community Service (vía API Gateway).

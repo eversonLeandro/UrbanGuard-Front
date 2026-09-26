@@ -1,11 +1,10 @@
 package co.edu.unicauca.urbanguard.ui.features.onboarding
 
-import co.edu.unicauca.urbanguard.domain.model.AppError
-
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GetMyConjuntosUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -66,4 +65,4 @@ class ConjuntoSelectionViewModel @Inject constructor(
     }
 
     fun currentRole(): UserRole? = sessionManager.currentRole()
-}
+}

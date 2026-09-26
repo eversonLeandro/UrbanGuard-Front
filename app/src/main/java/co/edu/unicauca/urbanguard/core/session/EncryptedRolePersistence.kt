@@ -49,7 +49,8 @@ class EncryptedRolePersistence @Inject constructor(
 
     override fun read(): PersistedRole? {
         return try {
-            val userId = storage.retrieveString(KEY_USER_ID)?.takeIf { it.isNotBlank() } ?: return null
+            val userId =
+                storage.retrieveString(KEY_USER_ID)?.takeIf { it.isNotBlank() } ?: return null
             val role = storage.retrieveString(KEY_ROLE)
                 ?.let { raw -> UserRole.entries.firstOrNull { it.name == raw } }
                 ?: return null

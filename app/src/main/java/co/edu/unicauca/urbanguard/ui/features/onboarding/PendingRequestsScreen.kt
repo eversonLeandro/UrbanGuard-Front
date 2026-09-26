@@ -20,13 +20,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,6 +41,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.domain.model.LinkRequest
 import co.edu.unicauca.urbanguard.domain.model.LinkRequestState
+import co.edu.unicauca.urbanguard.ui.components.ErrorView
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgAmber
 import co.edu.unicauca.urbanguard.ui.theme.UgAmberSoft
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
@@ -52,13 +51,10 @@ import co.edu.unicauca.urbanguard.ui.theme.UgDivider
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorBg
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
-import co.edu.unicauca.urbanguard.ui.theme.UgIconFaint
 import co.edu.unicauca.urbanguard.ui.theme.UgIconMuted
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 import co.edu.unicauca.urbanguard.ui.theme.UgSuccessBg
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
-import co.edu.unicauca.urbanguard.ui.components.ErrorView
-import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 
 // Vista 1 de UG-49: lista de solicitudes de vinculación con filtros y estado.
 @Composable
@@ -99,7 +95,11 @@ fun PendingRequestsScreen(
             onNavigateBack = onNavigateBack
         )
 
-        var searchQuery by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
+        var searchQuery by androidx.compose.runtime.remember {
+            androidx.compose.runtime.mutableStateOf(
+                ""
+            )
+        }
 
         // Filtros por estado
         FilterChips(
@@ -119,7 +119,13 @@ fun PendingRequestsScreen(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Buscar por nombre o correo...", color = UgTextSecondary, fontSize = 14.sp) },
+                placeholder = {
+                    Text(
+                        "Buscar por nombre o correo...",
+                        color = UgTextSecondary,
+                        fontSize = 14.sp
+                    )
+                },
                 singleLine = true,
                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Transparent,
@@ -162,7 +168,7 @@ fun PendingRequestsScreen(
         val loadError = uiState.error
         val finalRequests = uiState.filteredRequests.filter {
             it.nombreSolicitante.contains(searchQuery, ignoreCase = true) ||
-            it.emailSolicitante.contains(searchQuery, ignoreCase = true)
+                    it.emailSolicitante.contains(searchQuery, ignoreCase = true)
         }
 
         when {
@@ -324,7 +330,10 @@ private fun LinkRequestCard(
                         color = UgNavy
                     )
                 }
-                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Text(
                         text = "Fecha",
                         fontSize = 11.sp,

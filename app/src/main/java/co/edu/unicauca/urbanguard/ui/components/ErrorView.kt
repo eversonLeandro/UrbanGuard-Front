@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SearchOff
@@ -108,7 +107,11 @@ fun ErrorView(
                 colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
                 Spacer(Modifier.width(8.dp))
                 Text("Reintentar", fontWeight = FontWeight.Medium)
             }
@@ -146,7 +149,10 @@ fun ErrorBanner(
             OutlinedButton(
                 onClick = onRetry,
                 shape = RoundedCornerShape(6.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 0.dp)
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    horizontal = 10.dp,
+                    vertical = 0.dp
+                )
             ) {
                 Text("Reintentar", fontSize = 12.sp, fontWeight = FontWeight.Medium)
             }

@@ -2,7 +2,6 @@ package co.edu.unicauca.urbanguard.ui.features.onboarding
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -43,20 +41,18 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.domain.model.LinkRequest
 import co.edu.unicauca.urbanguard.domain.model.LinkRequestState
-import kotlinx.coroutines.delay
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgAmber
 import co.edu.unicauca.urbanguard.ui.theme.UgAmberSoft
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
-import co.edu.unicauca.urbanguard.ui.theme.UgBorder
 import co.edu.unicauca.urbanguard.ui.theme.UgBorderSoft
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorBg
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 import co.edu.unicauca.urbanguard.ui.theme.UgSuccessBg
-import co.edu.unicauca.urbanguard.ui.theme.UgTextPrimary
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
+import kotlinx.coroutines.delay
 
 // Vista 2 de UG-49: detalle de una solicitud con aprobación/rechazo.
 @Composable
@@ -150,7 +146,11 @@ fun LinkRequestDetailScreen(
                                         .fillMaxWidth()
                                         .height(48.dp)
                                 ) {
-                                    Text("Aprobar solicitud", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                    Text(
+                                        "Aprobar solicitud",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
                                 }
                                 OutlinedButton(
                                     onClick = viewModel::onRejectClick,
@@ -161,7 +161,11 @@ fun LinkRequestDetailScreen(
                                         .fillMaxWidth()
                                         .height(48.dp)
                                 ) {
-                                    Text("Rechazar solicitud", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                    Text(
+                                        "Rechazar solicitud",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
                                 }
                             }
                         }
@@ -314,7 +318,9 @@ private fun RequestHeaderCard(request: LinkRequest) {
         elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(24.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(24.dp)
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -391,9 +397,17 @@ private fun InfoCard(request: LinkRequest) {
         Column(
             modifier = Modifier.padding(vertical = 8.dp)
         ) {
-            InfoRow(label = "Conjunto", value = request.conjuntoNombre, icon = Icons.Default.CheckCircle)
+            InfoRow(
+                label = "Conjunto",
+                value = request.conjuntoNombre,
+                icon = Icons.Default.CheckCircle
+            )
             CardDivider()
-            InfoRow(label = "Fecha de solicitud", value = request.fechaSolicitud.ifBlank { "Pendiente" }, icon = Icons.Default.CheckCircle)
+            InfoRow(
+                label = "Fecha de solicitud",
+                value = request.fechaSolicitud.ifBlank { "Pendiente" },
+                icon = Icons.Default.CheckCircle
+            )
             CardDivider()
             InfoRow(label = "Unidad", value = request.unidad, icon = Icons.Default.CheckCircle)
         }
@@ -401,7 +415,11 @@ private fun InfoCard(request: LinkRequest) {
 }
 
 @Composable
-private fun InfoRow(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+private fun InfoRow(
+    label: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -409,12 +427,23 @@ private fun InfoRow(label: String, value: String, icon: androidx.compose.ui.grap
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             Box(
-                modifier = Modifier.size(32.dp).clip(CircleShape).background(UgBackground),
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(UgBackground),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(imageVector = icon, contentDescription = null, tint = UgEmerald, modifier = Modifier.size(16.dp))
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = UgEmerald,
+                    modifier = Modifier.size(16.dp)
+                )
             }
             Text(
                 text = label,
