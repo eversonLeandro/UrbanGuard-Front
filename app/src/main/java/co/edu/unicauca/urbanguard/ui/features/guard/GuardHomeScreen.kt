@@ -44,7 +44,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgAmber
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
@@ -58,7 +57,6 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 @Composable
 fun GuardHomeScreen(
-    navController: NavHostController,
     onNotificationsClick: (() -> Unit)? = null,
     onScanQr: () -> Unit = {},
     viewModel: GuardHomeViewModel = hiltViewModel()

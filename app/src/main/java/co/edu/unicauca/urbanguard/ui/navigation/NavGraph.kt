@@ -463,7 +463,6 @@ fun AppNavGraph(
         // ── Vigilante (rol GUARD) ─────────────────────────────────────
         composable(Routes.GUARD_HOME) {
             GuardHomeScreen(
-                navController = navController,
                 onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
                 onScanQr = {
                     navController.navigate(Routes.GUARD_SCAN_QR)
@@ -473,7 +472,6 @@ fun AppNavGraph(
 
         composable(Routes.GUARD_VISITANTES) {
             GuardVisitantesScreen(
-                navController = navController,
                 onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
                 onScanQr = {
                     navController.navigate(Routes.GUARD_SCAN_QR)
@@ -483,7 +481,6 @@ fun AppNavGraph(
 
         composable(Routes.GUARD_SEGURIDAD) {
             GuardSeguridadScreen(
-                navController = navController,
                 onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) }
             )
         }

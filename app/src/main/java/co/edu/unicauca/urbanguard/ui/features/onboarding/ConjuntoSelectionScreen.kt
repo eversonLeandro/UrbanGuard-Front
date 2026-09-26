@@ -16,26 +16,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -113,47 +104,6 @@ fun ConjuntoSelectionScreen(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun MenuButton(
-    onLogoutClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var menuExpanded by remember { mutableStateOf(false) }
-
-    Box(modifier = modifier) {
-        IconButton(onClick = { menuExpanded = true }) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = "Menú",
-                tint = UgEmerald
-            )
-        }
-        DropdownMenu(
-            expanded = menuExpanded,
-            onDismissRequest = { menuExpanded = false },
-            containerColor = Color.White
-        ) {
-            DropdownMenuItem(
-                text = {
-                    Text("Cerrar sesión", fontSize = 14.sp, color = UgNavy)
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = null,
-                        tint = UgErrorText,
-                        modifier = Modifier.size(20.dp)
-                    )
-                },
-                onClick = {
-                    menuExpanded = false
-                    onLogoutClick()
-                }
-            )
         }
     }
 }
@@ -404,27 +354,4 @@ private fun ErrorState(
             Text("Reintentar", fontWeight = FontWeight.Medium)
         }
     }
-}
-
-@Composable
-private fun LogoutDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Cerrar sesión", fontWeight = FontWeight.Bold, color = UgNavy) },
-        text = { Text("¿Seguro que deseas cerrar sesión?", color = UgTextSecondary) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Sí, cerrar sesión", color = UgErrorText, fontWeight = FontWeight.Medium)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = UgTextSecondary)
-            }
-        },
-        containerColor = Color.White
-    )
 }

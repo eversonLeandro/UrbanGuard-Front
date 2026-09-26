@@ -46,7 +46,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
 import co.edu.unicauca.urbanguard.ui.theme.UgBorder
@@ -60,9 +59,17 @@ import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 import co.edu.unicauca.urbanguard.ui.theme.UgNavyLight
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
+/**
+ * Pantalla de control de visitantes.
+ *
+ * La interfaz actual es un mock estatico: [GuardVisitantesViewModel] todavia no
+ * carga datos, asi que aqui no se observa su `uiState`. El parametro se conserva
+ * a proposito para que la pantalla pueda engancharse al ViewModel cuando la
+ * feature se implemente.
+ */
+@Suppress("UnusedParameter")
 @Composable
 fun GuardVisitantesScreen(
-    navController: NavHostController,
     onNotificationsClick: (() -> Unit)? = null,
     onScanQr: () -> Unit = {},
     viewModel: GuardVisitantesViewModel = hiltViewModel()

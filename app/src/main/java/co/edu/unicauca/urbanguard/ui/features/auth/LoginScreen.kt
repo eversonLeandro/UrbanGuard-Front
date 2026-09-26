@@ -212,7 +212,6 @@ fun LoginScreen(
                         isError = uiState.emailError != null,
                         errorText = uiState.emailError,
                         inputBg = inputBg,
-                        textPrimary = textPrimary,
                         textSecondary = textSecondary,
                         borderColor = borderColor
                     )
@@ -260,7 +259,6 @@ fun LoginScreen(
                         imeAction = ImeAction.Done,
                         onImeDone = { viewModel.onLoginClick() },
                         inputBg = inputBg,
-                        textPrimary = textPrimary,
                         textSecondary = textSecondary,
                         borderColor = borderColor
                     )
@@ -320,8 +318,7 @@ fun LoginScreen(
                     // Botón principal con pulso durante la carga
                     LoginPrimaryButton(
                         isLoading = uiState.isLoading,
-                        onClick = viewModel::onLoginClick,
-                        textPrimary = textPrimary
+                        onClick = viewModel::onLoginClick
                     )
                 }
             }
@@ -387,7 +384,6 @@ private fun LoginTextField(
     leadingIcon: @Composable () -> Unit,
     isError: Boolean,
     inputBg: Color,
-    textPrimary: Color,
     textSecondary: Color,
     borderColor: Color,
     trailingIcon: @Composable () -> Unit = {},
@@ -489,8 +485,7 @@ private fun AnimatedUnderlineText(
 @Composable
 private fun LoginPrimaryButton(
     isLoading: Boolean,
-    onClick: () -> Unit,
-    textPrimary: Color
+    onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()

@@ -35,7 +35,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
 import co.edu.unicauca.urbanguard.ui.theme.UgBorderSoft
@@ -50,9 +49,17 @@ import co.edu.unicauca.urbanguard.ui.theme.UgSuccessBg
 import co.edu.unicauca.urbanguard.ui.theme.UgSuccessText
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
+/**
+ * Pantalla de rondas y patrullaje.
+ *
+ * La interfaz actual es un mock estatico: [GuardSeguridadViewModel] todavia no
+ * carga datos, asi que aqui no se observa su `uiState`. El parametro se conserva
+ * a proposito para que la pantalla pueda engancharse al ViewModel cuando la
+ * feature se implemente.
+ */
+@Suppress("UnusedParameter")
 @Composable
 fun GuardSeguridadScreen(
-    navController: NavHostController,
     onNotificationsClick: (() -> Unit)? = null,
     viewModel: GuardSeguridadViewModel = hiltViewModel()
 ) {
