@@ -15,11 +15,6 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object OnboardingModule {
-}
-
-@Module
-@InstallIn(SingletonComponent::class)
 object OnboardingProvideModule {
 
     @Provides
