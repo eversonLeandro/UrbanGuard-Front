@@ -117,6 +117,16 @@ fun roleToDestination(role: UserRole?): String = when (role) {
     else -> Routes.LOGIN
 }
 
+/**
+ * Mapa de navegacion completo de la app: decide la pantalla de entrada segun el rol
+ * y registra cada destino.
+ *
+ * Suprimido de LongMethod a proposito. Partir este archivo por rol pierde la vista
+ * unica de las rutas, que es lo que lo hace legible y revisable, y ademas NavHost
+ * quedaria repartido en varios grafos sin tipado de destinos. Si alguna vez se supera
+ * la vista por rol con un unico NavHost en AppNavGraph, la supresion debe retirarse.
+ */
+@Suppress("LongMethod")
 @Composable
 fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
