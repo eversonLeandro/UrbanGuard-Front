@@ -85,7 +85,8 @@ object NetworkErrorMapper {
         if (bodyMessage.isNotEmpty() && isUsable(bodyMessage)) {
             Log.w(
                 TAG,
-                "HTTP ${exception.code()} con mensaje de negocio: $bodyMessage (ref: ${body?.correlationId ?: "sin ref"})"
+                "HTTP ${exception.code()} con mensaje de negocio: $bodyMessage " +
+                    "(ref: ${body?.correlationId ?: "sin ref"})"
             )
             return forCode(exception.code(), bodyMessage)
         }
@@ -94,7 +95,8 @@ object NetworkErrorMapper {
         if (bodyMessage.isNotEmpty()) {
             Log.w(
                 TAG,
-                "HTTP ${exception.code()} con mensaje no utilizable: \"$bodyMessage\" (ref: ${body?.correlationId ?: "sin ref"})"
+                "HTTP ${exception.code()} con mensaje no utilizable: \"$bodyMessage\" " +
+                    "(ref: ${body?.correlationId ?: "sin ref"})"
             )
         }
         return forCode(exception.code(), null)

@@ -40,7 +40,8 @@ class InputValidatorsTest {
 
         assertEquals(3, violations.size)
         assertEquals(
-            "La contraseña debe tener al menos 8 caracteres y debe incluir al menos una letra mayúscula y debe incluir al menos un número.",
+            "La contraseña debe tener al menos 8 caracteres y debe incluir al menos una letra mayúscula " +
+                "y debe incluir al menos un número.",
             InputValidators.passwordPolicyMessage("corta")
         )
     }

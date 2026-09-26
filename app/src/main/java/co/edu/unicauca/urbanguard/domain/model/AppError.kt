@@ -58,7 +58,8 @@ sealed class AppError {
     data class AccountBlocked(override val message: String) : AppError() {
         companion object {
             const val MESSAGE =
-                "Tu cuenta está bloqueada temporalmente por demasiados intentos fallidos. Espera unos minutos e inténtalo de nuevo."
+                "Tu cuenta está bloqueada temporalmente por demasiados intentos fallidos. " +
+                    "Espera unos minutos e inténtalo de nuevo."
         }
     }
 

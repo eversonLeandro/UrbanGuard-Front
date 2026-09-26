@@ -236,13 +236,25 @@ fun LoginScreen(
                                 modifier = Modifier.size(48.dp)
                             ) {
                                 Icon(
-                                    if (uiState.isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = if (uiState.isPasswordVisible) "Ocultar contraseña" else "Mostrar contraseña",
+                                    if (uiState.isPasswordVisible) {
+                                        Icons.Default.VisibilityOff
+                                    } else {
+                                        Icons.Default.Visibility
+                                    },
+                                    contentDescription = if (uiState.isPasswordVisible) {
+                                        "Ocultar contraseña"
+                                    } else {
+                                        "Mostrar contraseña"
+                                    },
                                     tint = textSecondary
                                 )
                             }
                         },
-                        visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        visualTransformation = if (uiState.isPasswordVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
                         isError = uiState.passwordError != null,
                         errorText = uiState.passwordError,
                         imeAction = ImeAction.Done,

@@ -194,13 +194,25 @@ fun RegisterScreen(
             trailingIcon = {
                 IconButton(onClick = viewModel::togglePasswordVisibility) {
                     Icon(
-                        if (uiState.isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (uiState.isPasswordVisible) "Ocultar contraseña" else "Mostrar contraseña",
+                        if (uiState.isPasswordVisible) {
+                            Icons.Default.VisibilityOff
+                        } else {
+                            Icons.Default.Visibility
+                        },
+                        contentDescription = if (uiState.isPasswordVisible) {
+                            "Ocultar contraseña"
+                        } else {
+                            "Mostrar contraseña"
+                        },
                         tint = UgTextSecondary
                     )
                 }
             },
-            visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            visualTransformation = if (uiState.isPasswordVisible) {
+                VisualTransformation.None
+            } else {
+                PasswordVisualTransformation()
+            },
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
@@ -231,13 +243,25 @@ fun RegisterScreen(
             trailingIcon = {
                 IconButton(onClick = viewModel::toggleConfirmPasswordVisibility) {
                     Icon(
-                        if (uiState.isConfirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (uiState.isConfirmPasswordVisible) "Ocultar contraseña" else "Mostrar contraseña",
+                        if (uiState.isConfirmPasswordVisible) {
+                            Icons.Default.VisibilityOff
+                        } else {
+                            Icons.Default.Visibility
+                        },
+                        contentDescription = if (uiState.isConfirmPasswordVisible) {
+                            "Ocultar contraseña"
+                        } else {
+                            "Mostrar contraseña"
+                        },
                         tint = UgTextSecondary
                     )
                 }
             },
-            visualTransformation = if (uiState.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            visualTransformation = if (uiState.isConfirmPasswordVisible) {
+                VisualTransformation.None
+            } else {
+                PasswordVisualTransformation()
+            },
             singleLine = true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,

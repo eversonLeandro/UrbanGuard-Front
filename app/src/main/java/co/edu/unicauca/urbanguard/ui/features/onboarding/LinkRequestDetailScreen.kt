@@ -204,7 +204,8 @@ fun LinkRequestDetailScreen(
             },
             text = {
                 Text(
-                    "El residente ${uiState.request?.nombreSolicitante ?: ""} será vinculado a ${uiState.request?.conjuntoNombre ?: "su conjunto"}.",
+                    "El residente ${uiState.request?.nombreSolicitante ?: ""} será vinculado a " +
+                        "${uiState.request?.conjuntoNombre ?: "su conjunto"}.",
                     fontSize = 13.sp,
                     color = UgTextSecondary,
                     lineHeight = 19.sp

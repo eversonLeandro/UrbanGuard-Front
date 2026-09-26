@@ -74,7 +74,8 @@ class SessionManager @Inject constructor(
             ?.let { activeId -> conjuntos.firstOrNull { it.conjuntoId == activeId } }
         Log.d(
             TAG,
-            "setAssociations: ${conjuntos.size} items, activeId=${current.conjuntoActivoId} -> ${stillActive?.conjuntoId}"
+            "setAssociations: ${conjuntos.size} items, " +
+                "activeId=${current.conjuntoActivoId} -> ${stillActive?.conjuntoId}"
         )
         val updated = current.copy(
             conjuntosAsociados = conjuntos,

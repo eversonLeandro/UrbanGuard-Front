@@ -252,7 +252,10 @@ private fun EmptyCodeContent(onGenerateClick: () -> Unit) {
         }
     }
 
-    InfoBanner(text = "El código se genera una sola vez. Podrás regenerarlo si es necesario, pero el anterior quedará inválido.")
+    InfoBanner(
+        text = "El código se genera una sola vez. Podrás regenerarlo si es necesario, " +
+            "pero el anterior quedará inválido."
+    )
 
     Button(
         onClick = onGenerateClick,
@@ -468,7 +471,8 @@ private fun CodeAvailableContent(
                 )
             }
             Text(
-                text = "El código actual quedará inválido. Los residentes que aún no se han vinculado deberán usar el nuevo código.",
+                text = "El código actual quedará inválido. " +
+                    "Los residentes que aún no se han vinculado deberán usar el nuevo código.",
                 fontSize = 12.sp,
                 color = UgTextSecondary,
                 lineHeight = 18.sp

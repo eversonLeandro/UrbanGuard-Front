@@ -129,7 +129,11 @@ fun GuardHomeScreen(
                                 color = Color.White.copy(alpha = 0.75f)
                             )
                             Text(
-                                text = if (uiState.userName.isNotBlank()) uiState.userName else "guardia@urbanguard.com",
+                                text = if (uiState.userName.isNotBlank()) {
+                                    uiState.userName
+                                } else {
+                                    "guardia@urbanguard.com"
+                                },
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
