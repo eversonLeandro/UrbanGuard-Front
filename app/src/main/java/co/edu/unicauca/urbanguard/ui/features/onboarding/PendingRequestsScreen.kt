@@ -67,20 +67,21 @@ fun PendingRequestsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // El remember no emite nodos, asi que puede vivir en el cuerpo de la
+    // pantalla en vez de dentro de la Column: mismo alcance de recomposicion
+    // y mismo orden de hijos.
+    var searchQuery by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf(
+            ""
+        )
+    }
+
     // Al volver del detalle tras aprobar/rechazar, muestra la confirmación,
     // recarga la lista (para que el nuevo estado se refleje de inmediato)
     // y limpia el resultado para que solo se muestre una vez.
     LaunchedEffect(reviewResult) {
         if (reviewResult != null) {
-            viewModel.showMessage(
-                if (reviewResult.equals("APROBADA", ignoreCase = true)) {
-                    "Solicitud aceptada correctamente. El usuario fue agregado como residente."
-                } else {
-                    "Solicitud rechazada correctamente."
-                }
-            )
-            viewModel.reloadRequests()
-            onReviewResultHandled()
+            showReviewOutcome(reviewResult, viewModel, onReviewResultHandled)
         }
     }
 
@@ -95,12 +96,6 @@ fun PendingRequestsScreen(
             onNavigateBack = onNavigateBack
         )
 
-        var searchQuery by androidx.compose.runtime.remember {
-            androidx.compose.runtime.mutableStateOf(
-                ""
-            )
-        }
-
         // Filtros por estado
         FilterChips(
             activeFilter = uiState.activeFilter,
@@ -108,61 +103,17 @@ fun PendingRequestsScreen(
         )
 
         // Buscador
-        androidx.compose.foundation.layout.Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .background(Color.White, RoundedCornerShape(12.dp))
-                .border(1.dp, UgBorder, RoundedCornerShape(12.dp))
-        ) {
-            androidx.compose.material3.OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = {
-                    Text(
-                        "Buscar por nombre o correo...",
-                        color = UgTextSecondary,
-                        fontSize = 14.sp
-                    )
-                },
-                singleLine = true,
-                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    cursorColor = UgEmerald
-                )
-            )
-        }
+        RequestSearchField(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it }
+        )
 
         // Confirmación de la acción realizada en el detalle (aprobar/rechazar)
         uiState.message?.let { message ->
-            val isApproved = message.contains("aceptada", ignoreCase = true)
-            val textColor = if (isApproved) UgEmerald else UgErrorText
-            val bgColor = if (isApproved) UgSuccessBg else UgErrorBg
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .background(bgColor, RoundedCornerShape(10.dp))
-                    .clickable { viewModel.clearMessage() }
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = if (isApproved) Icons.Filled.CheckCircle else Icons.Filled.Warning,
-                    contentDescription = null,
-                    tint = textColor,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = message,
-                    fontSize = 13.sp,
-                    color = textColor,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            ReviewResultBanner(
+                message = message,
+                onDismiss = viewModel::clearMessage
+            )
         }
 
         val loadError = uiState.error
@@ -210,6 +161,101 @@ fun PendingRequestsScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * Traduce el resultado devuelto por la pantalla de detalle a un mensaje, recarga
+ * la lista y limpia el resultado para que la confirmacion solo se vea una vez.
+ * No es suspend: la invoca un [LaunchedEffect], pero ninguna de las llamadas
+ * necesita suspension.
+ */
+private fun showReviewOutcome(
+    reviewResult: String,
+    viewModel: PendingRequestsViewModel,
+    onHandled: () -> Unit
+) {
+    viewModel.showMessage(
+        if (reviewResult.equals("APROBADA", ignoreCase = true)) {
+            "Solicitud aceptada correctamente. El usuario fue agregado como residente."
+        } else {
+            "Solicitud rechazada correctamente."
+        }
+    )
+    viewModel.reloadRequests()
+    onHandled()
+}
+
+/** Buscador por nombre o correo. El [Box] esta a propósito sin alias para no chocar con el de material3. */
+@Composable
+private fun RequestSearchField(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(Color.White, RoundedCornerShape(12.dp))
+            .border(1.dp, UgBorder, RoundedCornerShape(12.dp))
+    ) {
+        androidx.compose.material3.OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = {
+                Text(
+                    "Buscar por nombre o correo...",
+                    color = UgTextSecondary,
+                    fontSize = 14.sp
+                )
+            },
+            singleLine = true,
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
+                cursorColor = UgEmerald
+            )
+        )
+    }
+}
+
+/**
+ * Aviso de exito o error tras aprobar o rechazar. Se descarta al tocarlo.
+ *
+ * El `weight` del texto vive dentro de la Row que emite este composable, asi que
+ * sigue resolviendo contra el mismo [RowScope] que antes.
+ */
+@Composable
+private fun ReviewResultBanner(
+    message: String,
+    onDismiss: () -> Unit
+) {
+    val isApproved = message.contains("aceptada", ignoreCase = true)
+    val textColor = if (isApproved) UgEmerald else UgErrorText
+    val bgColor = if (isApproved) UgSuccessBg else UgErrorBg
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(bgColor, RoundedCornerShape(10.dp))
+            .clickable { onDismiss() }
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = if (isApproved) Icons.Filled.CheckCircle else Icons.Filled.Warning,
+            contentDescription = null,
+            tint = textColor,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = message,
+            fontSize = 13.sp,
+            color = textColor,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
