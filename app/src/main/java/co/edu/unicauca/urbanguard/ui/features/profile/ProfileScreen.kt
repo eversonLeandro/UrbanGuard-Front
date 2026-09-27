@@ -89,66 +89,10 @@ fun ProfileScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // ── Card de Perfil de Usuario ─────────────────────────────
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(
-                        elevation = 6.dp,
-                        shape = RoundedCornerShape(24.dp),
-                        ambientColor = UgNavy.copy(alpha = 0.15f)
-                    )
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White)
-                    .border(1.dp, UgBorder, RoundedCornerShape(24.dp))
-                    .padding(22.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                            .background(UgNavyGradient)
-                            .border(2.dp, UgEmerald, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = if (uiState.userName.isNotBlank()) uiState.userName.take(1)
-                                .uppercase() else "U",
-                            color = Color.White,
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Spacer(Modifier.width(16.dp))
-
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(
-                            text = if (uiState.userName.isNotBlank()) uiState.userName else "Usuario UrbanGuard",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = UgNavy
-                        )
-                        if (uiState.userRole.isNotBlank()) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(UgEmerald.copy(alpha = 0.12f))
-                                    .padding(horizontal = 10.dp, vertical = 4.dp)
-                            ) {
-                                Text(
-                                    text = uiState.userRole,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = UgEmerald
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            UserProfileCard(
+                userName = uiState.userName,
+                userRole = uiState.userRole
+            )
 
             // ── Sección: Ajustes de Cuenta ────────────────────────────
             ProfileSectionCard(title = "Ajustes de Cuenta") {
@@ -184,32 +128,7 @@ fun ProfileScreen(
             }
 
             // ── Botón Destacado de Cerrar Sesión ───────────────────────
-            Button(
-                onClick = { showLogoutDialog = true },
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = UgErrorBg,
-                    contentColor = UgErrorText
-                ),
-                border = androidx.compose.foundation.BorderStroke(1.dp, UgErrorBorder),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Logout,
-                    contentDescription = null,
-                    tint = UgErrorText,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    text = "Cerrar Sesión",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = UgErrorText
-                )
-            }
+            LogoutButton(onClick = { showLogoutDialog = true })
         }
     }
 
@@ -220,6 +139,111 @@ fun ProfileScreen(
                 onLogout()
             },
             onDismiss = { showLogoutDialog = false }
+        )
+    }
+}
+
+/**
+ * Card con la foto inicial, el nombre y el rol.
+ *
+ * El `Box` que emite este composable sigue siendo hijo directo de la Column
+ * desplazable, asi que la tarjeta conserva su sitio en el `spacedBy(20.dp)`.
+ * El badge de rol se oculta cuando [userRole] viene vacio, igual que antes.
+ */
+@Composable
+private fun UserProfileCard(
+    userName: String,
+    userRole: String
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(24.dp),
+                ambientColor = UgNavy.copy(alpha = 0.15f)
+            )
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .border(1.dp, UgBorder, RoundedCornerShape(24.dp))
+            .padding(22.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(UgNavyGradient)
+                    .border(2.dp, UgEmerald, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (userName.isNotBlank()) userName.take(1)
+                        .uppercase() else "U",
+                    color = Color.White,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(Modifier.width(16.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = if (userName.isNotBlank()) userName else "Usuario UrbanGuard",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UgNavy
+                )
+                if (userRole.isNotBlank()) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(UgEmerald.copy(alpha = 0.12f))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = userRole,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = UgEmerald
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Boton destacado de cierre de sesion. Solo abre el dialogo, no ejecuta la salida. */
+@Composable
+private fun LogoutButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = UgErrorBg,
+            contentColor = UgErrorText
+        ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, UgErrorBorder),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp)
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.Logout,
+            contentDescription = null,
+            tint = UgErrorText,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = "Cerrar Sesión",
+            fontWeight = FontWeight.Bold,
+            fontSize = 15.sp,
+            color = UgErrorText
         )
     }
 }
