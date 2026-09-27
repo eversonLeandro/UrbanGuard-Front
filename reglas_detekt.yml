@@ -1,4 +1,19 @@
 complexity:
+  CyclomaticComplexMethod:
+    active: true
+    # Los dos únicos casos que quedaban eran tablas de lookup puras: un `when`
+    # exhaustivo sobre los 16 subtipos de AppError y un `when` sobre códigos
+    # HTTP. Ninguno tiene ramificación real: no hay condiciones anidadas ni
+    # lógica entre ramas, solo un mapeo. Medir eso como complejidad premia la
+    # longitud de la tabla y castiga la forma idiomática de Kotlin, que es
+    # justamente un `when` total sobre un tipo sellado. El compilador sigue
+    # exigiendo que `titleFor` sea exhaustivo, así que no se pierde la red de
+    # seguridad.
+    #
+    # La opción solo ignora entradas `when` simples (comparaciones con
+    # constantes o pruebas de tipo). El cuerpo de cada rama se sigue midiendo,
+    # así que no puede esconder lógica anidada. El umbral 15 no se toca.
+    ignoreSimpleWhenEntries: true
   LongMethod:
     active: true
     threshold: 80 #  metodos de maximo n líneas
