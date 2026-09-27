@@ -3,6 +3,7 @@ package co.edu.unicauca.urbanguard.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -72,92 +73,16 @@ fun UrbanGuardTopBar(
             .background(UgNavyGradient)
             .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.align(Alignment.CenterStart)
-        ) {
-            if (onNavigateBack != null) {
-                IconButton(
-                    onClick = onNavigateBack,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.12f))
-                ) {
-                    Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = UgEmerald,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Spacer(Modifier.width(12.dp))
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .shadow(
-                            elevation = 3.dp,
-                            shape = RoundedCornerShape(9.dp)
-                        )
-                        .clip(RoundedCornerShape(9.dp))
-                        .background(Color.White),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.logo_u),
-                        contentDescription = "Logo UrbanGuard",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-                Spacer(Modifier.width(12.dp))
-            }
-        }
+        TopBarLeading(onNavigateBack = onNavigateBack)
 
         // Título centrado
-        Text(
-            text = title,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            fontSize = 17.sp,
-            letterSpacing = 0.3.sp,
-            modifier = Modifier.align(Alignment.Center)
+        TopBarTitle(title)
+
+        TopBarActions(
+            onNotificationsClick = onNotificationsClick,
+            onLogout = onLogout,
+            onShowLogoutDialog = { showLogoutDialog = true }
         )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.align(Alignment.CenterEnd)
-        ) {
-            if (onNotificationsClick != null) {
-                IconButton(
-                    onClick = onNotificationsClick,
-                    modifier = Modifier.size(38.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notificaciones",
-                        tint = UgEmerald,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-
-            if (onLogout != null) {
-                if (onNotificationsClick != null) Spacer(Modifier.width(8.dp))
-                IconButton(
-                    onClick = { showLogoutDialog = true },
-                    modifier = Modifier.size(38.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = "Cerrar sesión",
-                        tint = UgEmerald,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-        }
     }
 
     if (showLogoutDialog) {
@@ -168,6 +93,117 @@ fun UrbanGuardTopBar(
             },
             onDismiss = { showLogoutDialog = false }
         )
+    }
+}
+
+/**
+ * Lado izquierdo: botón de volver donde hay navegación, logo donde no la hay.
+ *
+ * Es extensión de [BoxScope] porque se posiciona con `Modifier.align`, que solo
+ * existe dentro del ámbito del Box que la contiene. Lo mismo aplica a
+ * [TopBarTitle] y [TopBarActions].
+ */
+@Composable
+private fun BoxScope.TopBarLeading(onNavigateBack: (() -> Unit)?) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.align(Alignment.CenterStart)
+    ) {
+        if (onNavigateBack != null) {
+            IconButton(
+                onClick = onNavigateBack,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.12f))
+            ) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.ArrowBack,
+                    contentDescription = "Volver",
+                    tint = UgEmerald,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .shadow(
+                        elevation = 3.dp,
+                        shape = RoundedCornerShape(9.dp)
+                    )
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.logo_u),
+                    contentDescription = "Logo UrbanGuard",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+        }
+    }
+}
+
+/** Título centrado sobre el degradado. */
+@Composable
+private fun BoxScope.TopBarTitle(title: String) {
+    Text(
+        text = title,
+        color = Color.White,
+        fontWeight = FontWeight.Bold,
+        fontSize = 17.sp,
+        letterSpacing = 0.3.sp,
+        modifier = Modifier.align(Alignment.Center)
+    )
+}
+
+/**
+ * Lado derecho: campana y salida. El separador entre ambas solo aparece cuando
+ * las dos están presentes, para que la salida no quede pegada a la campana.
+ */
+@Composable
+private fun BoxScope.TopBarActions(
+    onNotificationsClick: (() -> Unit)?,
+    onLogout: (() -> Unit)?,
+    onShowLogoutDialog: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.align(Alignment.CenterEnd)
+    ) {
+        if (onNotificationsClick != null) {
+            IconButton(
+                onClick = onNotificationsClick,
+                modifier = Modifier.size(38.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "Notificaciones",
+                    tint = UgEmerald,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        if (onLogout != null) {
+            if (onNotificationsClick != null) Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = onShowLogoutDialog,
+                modifier = Modifier.size(38.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = "Cerrar sesión",
+                    tint = UgEmerald,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
     }
 }
 
