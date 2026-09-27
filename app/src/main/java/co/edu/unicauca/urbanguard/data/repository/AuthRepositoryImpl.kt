@@ -7,6 +7,7 @@ import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
 import co.edu.unicauca.urbanguard.domain.repository.AuthRepository
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
@@ -14,11 +15,19 @@ class AuthRepositoryImpl @Inject constructor(
     private val sessionManager: SessionManager
 ) : AuthRepository {
 
+    /**
+     * No usa [apiCall] porque el `catch` hace una limpieza de sesion antes de
+     * convertir el error, y eso no se puede expresar en el bloque. El catch amplio
+     * conserva la justificacion de [apiCall].
+     */
+    @Suppress("TooGenericExceptionCaught")
     override suspend fun login(email: String, password: String): Result<UserSession> {
         return try {
             val session = auth0Manager.loginEmbedded(email, password)
             sessionManager.saveSession(session)
             Result.success(session)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             // Si el intento falla no se conserva ninguna sesión previa: así el usuario
             // no queda con la sesión de otra cuenta mientras cree haber entrado.
@@ -28,6 +37,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught")
     override suspend fun signUp(
         email: String,
         password: String,
@@ -37,6 +47,8 @@ class AuthRepositoryImpl @Inject constructor(
             val session = auth0Manager.signUpEmbedded(email, password, name)
             sessionManager.saveSession(session)
             Result.success(session)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(toAppException(e))
         }

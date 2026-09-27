@@ -25,6 +25,14 @@ class EncryptedRolePersistence @Inject constructor(
         SharedPreferencesStorage(context, PREFS_NAME)
     }
 
+    /**
+     * El catch amplio cubre la superficie de excepciones de Android Keystore y de
+     * AndroidX Security (GeneralSecurityException, IOException, IllegalStateException,
+     * SecurityException), que no es enumerable ni estable entre versiones de Android.
+     * El rol persistido es una copia cacheada: si falla, la sesion sigue viva en
+     * memoria y solo se pierde la restauracion del rol al reabrir la app.
+     */
+    @Suppress("TooGenericExceptionCaught")
     override fun save(persisted: PersistedRole) {
         try {
             storage.store(KEY_USER_ID, persisted.userId)
@@ -47,6 +55,10 @@ class EncryptedRolePersistence @Inject constructor(
         }
     }
 
+    /**
+     * @see save para la justificacion del catch amplio.
+     */
+    @Suppress("TooGenericExceptionCaught")
     override fun read(): PersistedRole? {
         return try {
             val userId =
@@ -67,6 +79,10 @@ class EncryptedRolePersistence @Inject constructor(
         }
     }
 
+    /**
+     * @see save para la justificacion del catch amplio.
+     */
+    @Suppress("TooGenericExceptionCaught")
     override fun clear() {
         try {
             storage.remove(KEY_USER_ID)

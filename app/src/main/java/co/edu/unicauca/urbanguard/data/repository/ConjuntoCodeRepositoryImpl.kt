@@ -1,6 +1,6 @@
 package co.edu.unicauca.urbanguard.data.repository
 
-import co.edu.unicauca.urbanguard.core.network.NetworkErrorMapper
+import co.edu.unicauca.urbanguard.core.network.apiCall
 import co.edu.unicauca.urbanguard.data.mapper.toCreateComplexRequestDto
 import co.edu.unicauca.urbanguard.data.mapper.toDomain
 import co.edu.unicauca.urbanguard.data.remote.api.service.OnboardingApi
@@ -13,31 +13,16 @@ class ConjuntoCodeRepositoryImpl @Inject constructor(
     private val onboardingApi: OnboardingApi
 ) : ConjuntoCodeRepository {
 
-    override suspend fun getCode(conjuntoId: String?): Result<ConjuntoCode> {
-        return try {
-            val response = onboardingApi.getCode(conjuntoId)
-            Result.success(response.toDomain())
-        } catch (e: Exception) {
-            Result.failure(NetworkErrorMapper.toAppException(e))
-        }
+    override suspend fun getCode(conjuntoId: String?): Result<ConjuntoCode> = apiCall {
+        onboardingApi.getCode(conjuntoId).toDomain()
     }
 
-    override suspend fun generateCode(conjuntoId: String): Result<ConjuntoCode> {
-        return try {
-            val response = onboardingApi.generateCode(conjuntoId)
-            Result.success(response.toDomain())
-        } catch (e: Exception) {
-            Result.failure(NetworkErrorMapper.toAppException(e))
-        }
+    override suspend fun generateCode(conjuntoId: String): Result<ConjuntoCode> = apiCall {
+        onboardingApi.generateCode(conjuntoId).toDomain()
     }
 
-    override suspend fun regenerateCode(conjuntoId: String): Result<ConjuntoCode> {
-        return try {
-            val response = onboardingApi.regenerateCode(conjuntoId)
-            Result.success(response.toDomain())
-        } catch (e: Exception) {
-            Result.failure(NetworkErrorMapper.toAppException(e))
-        }
+    override suspend fun regenerateCode(conjuntoId: String): Result<ConjuntoCode> = apiCall {
+        onboardingApi.regenerateCode(conjuntoId).toDomain()
     }
 
     override suspend fun createConjunto(
@@ -46,19 +31,14 @@ class ConjuntoCodeRepositoryImpl @Inject constructor(
         direccion: String,
         ciudad: String,
         totalUnidades: Int
-    ): Result<CreatedComplex> {
-        return try {
-            val request = toCreateComplexRequestDto(
-                activationCode = activationCode,
-                name = nombre,
-                address = direccion,
-                city = ciudad,
-                numberOfUnits = totalUnidades
-            )
-            val response = onboardingApi.createConjunto(request)
-            Result.success(response.toDomain())
-        } catch (e: Exception) {
-            Result.failure(NetworkErrorMapper.toAppException(e))
-        }
+    ): Result<CreatedComplex> = apiCall {
+        val request = toCreateComplexRequestDto(
+            activationCode = activationCode,
+            name = nombre,
+            address = direccion,
+            city = ciudad,
+            numberOfUnits = totalUnidades
+        )
+        onboardingApi.createConjunto(request).toDomain()
     }
 }

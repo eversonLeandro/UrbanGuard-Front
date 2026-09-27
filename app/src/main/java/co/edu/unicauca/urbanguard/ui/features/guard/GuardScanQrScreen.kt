@@ -130,6 +130,7 @@ fun GuardScanQrScreen(
     }
 }
 
+@Suppress("TooGenericExceptionCaught")
 @Composable
 private fun CameraPreviewContent(
     onCodeScanned: (String) -> Unit
@@ -192,6 +193,12 @@ private fun CameraPreviewContent(
                             imageAnalysis
                         )
                     } catch (e: Exception) {
+                        // El catch amplio cubre la superficie de CameraX
+                        // (CameraInfoUnavailableException, IllegalArgumentException,
+                        // SecurityException y otras unchecked). No esta en una
+                        // corrutina, asi que no corre riesgo de tragarse una
+                        // CancellationException. Si la camara no arranca, la pantalla
+                        // se queda sin previsualizacion y el vigilante lo ve en el log.
                         Log.e("GuardScanQr", "Error al iniciar cámara", e)
                     }
                 }, ContextCompat.getMainExecutor(ctx))

@@ -13,6 +13,7 @@ import com.auth0.android.callback.Callback
 import com.auth0.android.jwt.JWT
 import com.auth0.android.result.Credentials
 import com.auth0.android.result.DatabaseUser
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -129,7 +130,12 @@ class Auth0Manager @Inject constructor(
      * Persiste las credenciales de forma cifrada (Android Keystore). Si en la
      * respuesta viene un refresh_token (offline_access), la sesión podrá
      * restaurarse al reabrir la app.
+     *
+     * El catch amplio cubre la superficie de Android Keystore, que no es
+     * enumerable. Perder la persistencia no debe impedir el inicio de sesión en
+     * memoria, asi que se registra y se sigue.
      */
+    @Suppress("TooGenericExceptionCaught")
     private fun saveCredentials(credentials: Credentials) {
         try {
             credentialsManager.saveCredentials(credentials)
@@ -146,7 +152,14 @@ class Auth0Manager @Inject constructor(
      * Restaura la sesión persistida al arrancar la app. Si el access token
      * expiró y hay refresh_token, Auth0 emite uno nuevo (rotación automática).
      * Devuelve null cuando no hay credenciales o ya no son renovables.
+     *
+     * El catch amplio cubre la superficie de excepciones de
+     * `CredentialsManager` y de Android Keystore, que no es enumerable. La
+     * [CancellationException] se relanza aparte porque esta función es `suspend`:
+     * sin esa guarda una restauración cancelada se disfrazaría de "no hay
+     * sesión" y el usuario perdería el acceso sin motivo.
      */
+    @Suppress("TooGenericExceptionCaught")
     suspend fun restoreSession(): UserSession? {
         return try {
             if (!credentialsManager.hasValidCredentials()) {
@@ -156,12 +169,16 @@ class Auth0Manager @Inject constructor(
             val credentials = credentialsManager.awaitCredentials()
             Log.d(TAG, "Sesión restaurada desde almacenamiento seguro")
             mapCredentialsToSession(credentials, fallbackEmail = "usuario@urbanguard.com")
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error al restaurar la sesión", e)
             null
         }
     }
 
+    /** El catch amplio cubre la superficie de Android Keystore; limpiar es best-effort. */
+    @Suppress("TooGenericExceptionCaught")
     fun clearStoredCredentials() {
         try {
             credentialsManager.clearCredentials()
@@ -214,7 +231,10 @@ class Auth0Manager @Inject constructor(
                 Log.d(TAG, "  token (prefijo): ${accessToken.take(25)}...")
                 Log.d(TAG, "====================================")
             } catch (_: Exception) {
-                // Si el ID token no puede decodificarse, mantener valores seguros
+                // Si el ID token no puede decodificarse, mantener valores seguros.
+                // Se acepta el catch amplio porque la entrada es un JWT no confiable
+                // y la reaccion correcta es degradar a un usuario por defecto en
+                // lugar de fallar el arranque de la app.
             }
         }
 

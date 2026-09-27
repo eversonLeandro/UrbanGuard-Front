@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.data.repository
 
 import android.util.Log
 import co.edu.unicauca.urbanguard.core.network.NetworkErrorMapper
+import co.edu.unicauca.urbanguard.core.network.apiCall
 import co.edu.unicauca.urbanguard.data.mapper.toDomain
 import co.edu.unicauca.urbanguard.data.remote.api.service.CommunityApi
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoUserAssociation
@@ -22,13 +23,12 @@ class ConjuntoAssociationRepositoryImpl @Inject constructor(
 
     override suspend fun getMyConjuntos(): Result<List<ConjuntoUserAssociation>> {
         Log.d("ConjuntoRepo", "→ getMyConjuntos()")
-        return try {
+        val result = apiCall {
             val dtos = api.getMyComplexes()
             Log.d("ConjuntoRepo", "← ${dtos.size} DTOs recibidos")
-            Result.success(dtos.map { it.toDomain() })
-        } catch (e: Exception) {
-            Log.e("ConjuntoRepo", "Error: ${e.message}", e)
-            Result.failure(NetworkErrorMapper.toAppException(e))
+            dtos.map { it.toDomain() }
         }
+        result.exceptionOrNull()?.let { Log.e("ConjuntoRepo", "Error: ${it.message}", it) }
+        return result
     }
 }
