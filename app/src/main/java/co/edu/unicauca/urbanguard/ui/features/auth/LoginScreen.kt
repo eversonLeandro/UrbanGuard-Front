@@ -54,6 +54,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -211,9 +212,7 @@ fun LoginScreen(
                         enabled = !uiState.isLoading,
                         isError = uiState.emailError != null,
                         errorText = uiState.emailError,
-                        inputBg = inputBg,
-                        textSecondary = textSecondary,
-                        borderColor = borderColor
+                        colors = loginFieldColors(inputBg, textSecondary, borderColor)
                     )
 
                     // Contraseña
@@ -258,9 +257,7 @@ fun LoginScreen(
                         errorText = uiState.passwordError,
                         imeAction = ImeAction.Done,
                         onImeDone = { viewModel.onLoginClick() },
-                        inputBg = inputBg,
-                        textSecondary = textSecondary,
-                        borderColor = borderColor
+                        colors = loginFieldColors(inputBg, textSecondary, borderColor)
                     )
 
                     // "¿Olvidaste tu contraseña?"
@@ -375,6 +372,32 @@ private fun LoginEntranceBlock(
 }
 
 /**
+ * Paleta del campo de texto del login. Vive aparte para que [LoginTextField] no
+ * reciba tres colores sueltos: Compose ya tiene un tipo para esto.
+ */
+@Composable
+private fun loginFieldColors(
+    inputBg: Color,
+    textSecondary: Color,
+    borderColor: Color
+): TextFieldColors = OutlinedTextFieldDefaults.colors(
+    focusedContainerColor = inputBg,
+    unfocusedContainerColor = inputBg,
+    errorContainerColor = inputBg,
+    focusedBorderColor = UgNavy,
+    unfocusedBorderColor = borderColor,
+    errorBorderColor = UgErrorText,
+    focusedLabelColor = UgNavy,
+    unfocusedLabelColor = textSecondary,
+    cursorColor = UgNavy,
+    focusedLeadingIconColor = UgNavy,
+    unfocusedLeadingIconColor = textSecondary,
+    focusedTrailingIconColor = textSecondary,
+    unfocusedTrailingIconColor = textSecondary,
+    errorSupportingTextColor = UgErrorText
+)
+
+/**
  * Campo de texto del login con foco acentuado (borde + halo) y
  * colores preparados para tema claro/oscuro.
  */
@@ -385,9 +408,7 @@ private fun LoginTextField(
     label: String,
     leadingIcon: @Composable () -> Unit,
     isError: Boolean,
-    inputBg: Color,
-    textSecondary: Color,
-    borderColor: Color,
+    colors: TextFieldColors,
     trailingIcon: @Composable () -> Unit = {},
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardType: KeyboardType = KeyboardType.Text,
@@ -412,22 +433,7 @@ private fun LoginTextField(
             { Text(message, color = UgErrorText, fontSize = 12.sp) }
         },
         shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = inputBg,
-            unfocusedContainerColor = inputBg,
-            errorContainerColor = inputBg,
-            focusedBorderColor = UgNavy,
-            unfocusedBorderColor = borderColor,
-            errorBorderColor = UgErrorText,
-            focusedLabelColor = UgNavy,
-            unfocusedLabelColor = textSecondary,
-            cursorColor = UgNavy,
-            focusedLeadingIconColor = UgNavy,
-            unfocusedLeadingIconColor = textSecondary,
-            focusedTrailingIconColor = textSecondary,
-            unfocusedTrailingIconColor = textSecondary,
-            errorSupportingTextColor = UgErrorText
-        ),
+        colors = colors,
         modifier = Modifier
             .fillMaxWidth()
             .shadow(

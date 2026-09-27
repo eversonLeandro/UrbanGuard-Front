@@ -163,9 +163,11 @@ fun ConjuntoCodeScreen(
                                 Intent.createChooser(intent, "Compartir código")
                             )
                         },
-                        onRegenerateClick = viewModel::onRegenerateClick,
-                        onRegenerateConfirmed = viewModel::onRegenerateConfirmed,
-                        onRegenerateDismissed = viewModel::onRegenerateDismissed
+                        regenerate = RegenerateActions(
+                            onClick = viewModel::onRegenerateClick,
+                            onConfirmed = viewModel::onRegenerateConfirmed,
+                            onDismissed = viewModel::onRegenerateDismissed
+                        )
                     )
                 }
             }
@@ -303,6 +305,16 @@ private fun ActionLoadingContent() {
     }
 }
 
+/**
+ * Acciones del diálogo de regeneración del código. Van agrupadas porque siempre
+ * viajan juntas: abrir la confirmación, confirmarla y descartarla.
+ */
+private data class RegenerateActions(
+    val onClick: () -> Unit,
+    val onConfirmed: () -> Unit,
+    val onDismissed: () -> Unit
+)
+
 @Composable
 private fun CodeAvailableContent(
     code: String,
@@ -311,9 +323,7 @@ private fun CodeAvailableContent(
     showRegenerateConfirm: Boolean,
     onCopyClick: () -> Unit,
     onShareClick: () -> Unit,
-    onRegenerateClick: () -> Unit,
-    onRegenerateConfirmed: () -> Unit,
-    onRegenerateDismissed: () -> Unit
+    regenerate: RegenerateActions
 ) {
     // Card con el código
     Column(
@@ -423,7 +433,7 @@ private fun CodeAvailableContent(
     HorizontalDivider(color = UgBorderSoft)
 
     OutlinedButton(
-        onClick = onRegenerateClick,
+        onClick = regenerate.onClick,
         colors = ButtonDefaults.outlinedButtonColors(contentColor = UgErrorBright),
         border = androidx.compose.foundation.BorderStroke(1.dp, UgErrorBorder),
         shape = RoundedCornerShape(14.dp),
@@ -482,7 +492,7 @@ private fun CodeAvailableContent(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = onRegenerateDismissed,
+                    onClick = regenerate.onDismissed,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -491,7 +501,7 @@ private fun CodeAvailableContent(
                     Text("Cancelar", fontSize = 12.sp)
                 }
                 Button(
-                    onClick = onRegenerateConfirmed,
+                    onClick = regenerate.onConfirmed,
                     colors = ButtonDefaults.buttonColors(containerColor = UgErrorBright),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier

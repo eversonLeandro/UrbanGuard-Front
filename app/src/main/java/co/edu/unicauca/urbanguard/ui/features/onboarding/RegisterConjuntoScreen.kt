@@ -106,14 +106,10 @@ fun RegisterConjuntoScreen(
         ) {
             Spacer(Modifier.height(20.dp))
             GeneralFormSection(
-                complejoNombre = complejoNombre,
-                onComplejoNombreChange = { complejoNombre = it },
-                direccion = direccion,
-                onDireccionChange = { direccion = it },
-                ciudad = ciudad,
-                onCiudadChange = { ciudad = it },
-                totalUnidades = totalUnidades,
-                onTotalUnidadesChange = { totalUnidades = it }
+                complejoNombre = FormFieldState(complejoNombre) { complejoNombre = it },
+                direccion = FormFieldState(direccion) { direccion = it },
+                ciudad = FormFieldState(ciudad) { ciudad = it },
+                totalUnidades = FormFieldState(totalUnidades) { totalUnidades = it }
             )
             Spacer(Modifier.height(24.dp))
         }
@@ -179,16 +175,22 @@ private fun Footer(
     }
 }
 
+/**
+ * Valor de un campo del formulario junto con su callback de cambio. Se agrupan
+ * para que un campo no se pueda pasar sin su callback, que era el smell de
+ * tenerlos como parámetros sueltos.
+ */
+private data class FormFieldState(
+    val value: String,
+    val onValueChange: (String) -> Unit
+)
+
 @Composable
 private fun GeneralFormSection(
-    complejoNombre: String,
-    onComplejoNombreChange: (String) -> Unit,
-    direccion: String,
-    onDireccionChange: (String) -> Unit,
-    ciudad: String,
-    onCiudadChange: (String) -> Unit,
-    totalUnidades: String,
-    onTotalUnidadesChange: (String) -> Unit
+    complejoNombre: FormFieldState,
+    direccion: FormFieldState,
+    ciudad: FormFieldState,
+    totalUnidades: FormFieldState
 ) {
     val context = LocalContext.current
     val ciudades = remember { loadColombiaCities(context) }
@@ -231,8 +233,8 @@ private fun GeneralFormSection(
         InputField(
             label = "Nombre del condomino",
             icon = Icons.Default.Business,
-            value = complejoNombre,
-            onValueChange = onComplejoNombreChange,
+            value = complejoNombre.value,
+            onValueChange = complejoNombre.onValueChange,
             placeholder = "Ej: Residencial Arboledas"
         )
 
@@ -241,16 +243,16 @@ private fun GeneralFormSection(
         InputField(
             label = "Dirección",
             icon = Icons.Default.Place,
-            value = direccion,
-            onValueChange = onDireccionChange,
+            value = direccion.value,
+            onValueChange = direccion.onValueChange,
             placeholder = "Calle y número"
         )
 
         Spacer(Modifier.height(16.dp))
 
         CityDropdown(
-            selected = ciudad,
-            onSelected = onCiudadChange,
+            selected = ciudad.value,
+            onSelected = ciudad.onValueChange,
             options = ciudades
         )
 
@@ -259,8 +261,8 @@ private fun GeneralFormSection(
         InputField(
             label = "Total de unidades",
             icon = Icons.Default.GridView,
-            value = totalUnidades,
-            onValueChange = onTotalUnidadesChange,
+            value = totalUnidades.value,
+            onValueChange = totalUnidades.onValueChange,
             placeholder = "0",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )

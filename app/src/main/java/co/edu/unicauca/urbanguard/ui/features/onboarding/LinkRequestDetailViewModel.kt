@@ -17,6 +17,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Detalle de una solicitud de vinculación, con la acción de aprobar o rechazar.
+ *
+ * [LongParameterList] esta suprimido a proposito: son 6 dependencias inyectadas
+ * por Hilt, y `constructorThreshold` es 5. Agruparlas en un unico objeto
+ * atado a los bindings de Hilt no mejora nada y encubre las dependencias
+ * reales de la clase. La reduccion de verdad es mover el refresco de contexto
+ * (communityApi + conjuntoAssociationRepository + sessionManager) al interior de
+ * [ReviewLinkRequestUseCase], que es logica de dominio y no del ViewModel; queda
+ * pendiente por ser un cambio de comportamiento, no un cleanup.
+ */
+@Suppress("LongParameterList")
 @HiltViewModel
 class LinkRequestDetailViewModel @Inject constructor(
     private val getLinkRequestDetailUseCase: GetLinkRequestDetailUseCase,

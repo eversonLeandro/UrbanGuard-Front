@@ -6,6 +6,11 @@ complexity:
     active: true
     functionThreshold: 8 # parámetros de una funcion
     constructorThreshold: 5 # inyección  de dependencias
+    # Los parámetros con valor por defecto son configuración opcional, no parte de
+    # la firma que el consumidor está obligado a conocer. Contarlos inflaba el
+    # resultado sobre todo en composables de UI, donde casi todo lo opcional
+    # tiene default. Los umbrales de arriba no se tocan.
+    ignoreDefaultParameters: true
   TooManyFunctions:
     active: true
     thresholdInFiles: 11      # Máximo de funciones permitidas en un archivo
