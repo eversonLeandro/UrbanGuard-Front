@@ -75,7 +75,6 @@ fun LinkByCodeScreen(
     viewModel: LinkByCodeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val focusManager = LocalFocusManager.current
 
     // El requestSuccess se muestra como pantalla de éxito y la navegación
     // la dispara el botón "Volver al inicio" (no se auto-navega).
@@ -121,110 +120,19 @@ fun LinkByCodeScreen(
             )
 
             // Input del código
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                OutlinedTextField(
-                    value = uiState.code,
-                    onValueChange = viewModel::onCodeChange,
-                    label = { Text("Código de vinculación") },
-                    placeholder = {
-                        Text(
-                            "Ingresa el código que te dio tu administrador",
-                            color = UgEmerald,
-                            fontSize = 13.sp
-                        )
-                    },
-                    singleLine = true,
-                    isError = uiState.codeError != null || uiState.searchError != null,
-                    shape = RoundedCornerShape(8.dp),
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Characters,
-                        imeAction = ImeAction.Search
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            focusManager.clearFocus()
-                            viewModel.onSearchClick()
-                        }
-                    ),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = UgNavy,
-                        focusedLabelColor = UgNavy,
-                        cursorColor = UgNavy,
-                        errorBorderColor = UgErrorBright,
-                        errorLabelColor = UgErrorBright
-                    ),
-                    supportingText = {
-                        // El backend genera 6 caracteres sin separadores, así que se
-                        // explica el formato real en vez de mostrar un ejemplo inventado.
-                        Text("Son 6 caracteres, sin guiones ni espacios.", fontSize = 12.sp)
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // Texto de ayuda / error de validación
-                if (uiState.codeError != null) {
-                    Text(
-                        text = uiState.codeError!!,
-                        fontSize = 12.sp,
-                        color = UgErrorBright
-                    )
-                }
-            }
+            LinkCodeField(
+                code = uiState.code,
+                isError = uiState.codeError != null || uiState.searchError != null,
+                codeError = uiState.codeError,
+                onCodeChange = viewModel::onCodeChange,
+                onSearch = viewModel::onSearchClick
+            )
 
             // Botón buscar con animación de loading
-            Button(
-                onClick = {
-                    focusManager.clearFocus()
-                    viewModel.onSearchClick()
-                },
-                enabled = !uiState.isSearching,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = UgNavy,
-                    disabledContainerColor = UgNavy.copy(alpha = 0.7f)
-                ),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                if (uiState.isSearching) {
-                    // Animación de carga dentro del botón
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            strokeWidth = 2.dp,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = "Buscando conjunto...",
-                            color = Color.White,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 15.sp
-                        )
-                    }
-                } else {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = "Buscar conjunto",
-                            color = Color.White,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 15.sp
-                        )
-                    }
-                }
-            }
+            SearchConjuntoButton(
+                isSearching = uiState.isSearching,
+                onSearch = viewModel::onSearchClick
+            )
 
             // Banner de error de búsqueda
             AnimatedVisibility(
@@ -233,27 +141,7 @@ fun LinkByCodeScreen(
                 exit = fadeOut()
             ) {
                 if (uiState.searchError != null) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(UgErrorBg, RoundedCornerShape(8.dp))
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = UgErrorText,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = uiState.searchError!!,
-                            fontSize = 13.sp,
-                            color = UgErrorText,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    SearchErrorBanner(message = uiState.searchError!!)
                 }
             }
 
@@ -264,199 +152,177 @@ fun LinkByCodeScreen(
                 exit = fadeOut()
             ) {
                 uiState.conjuntoFound?.let { conjunto ->
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        // Label sección
-                        Text(
-                            text = "CONJUNTO ENCONTRADO",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = UgTextSecondary,
-                            letterSpacing = 0.8.sp
-                        )
-
-                        // Card del conjunto
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color.White, RoundedCornerShape(12.dp))
-                                .border(1.dp, UgBorder, RoundedCornerShape(12.dp))
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            // Ícono + nombre + dirección
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .background(
-                                            UgSuccessBg.copy(alpha = 0.3f),
-                                            RoundedCornerShape(12.dp)
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Home,
-                                        contentDescription = null,
-                                        tint = UgEmerald,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(
-                                        text = conjunto.nombre,
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = UgNavy
-                                    )
-                                    Text(
-                                        text = conjunto.direccion,
-                                        fontSize = 13.sp,
-                                        color = UgTextSecondary
-                                    )
-                                    Text(
-                                        text = conjunto.ciudad,
-                                        fontSize = 13.sp,
-                                        color = UgTextSecondary
-                                    )
-                                }
-                            }
-
-                            // Divider
-                            Divider(color = UgBorder)
-
-                            // Total miembros
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.People,
-                                    contentDescription = null,
-                                    tint = UgTextSecondary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = "${conjunto.totalMiembros} miembros activos",
-                                    fontSize = 13.sp,
-                                    color = UgTextSecondary
-                                )
-                            }
-
-                            // Número de apartamento del futuro residente
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                OutlinedTextField(
-                                    value = uiState.apartamento,
-                                    onValueChange = viewModel::onApartamentoChange,
-                                    label = { Text("Número de apartamento") },
-                                    placeholder = {
-                                        Text(
-                                            "Ej: 302",
-                                            color = UgEmerald,
-                                            fontSize = 13.sp
-                                        )
-                                    },
-                                    singleLine = true,
-                                    isError = uiState.apartamentoError != null,
-                                    shape = RoundedCornerShape(8.dp),
-                                    keyboardOptions = KeyboardOptions(
-                                        keyboardType = KeyboardType.Number,
-                                        imeAction = ImeAction.Done
-                                    ),
-                                    keyboardActions = KeyboardActions(
-                                        onDone = {
-                                            focusManager.clearFocus()
-                                            viewModel.onRequestLinkClick()
-                                        }
-                                    ),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = UgNavy,
-                                        focusedLabelColor = UgNavy,
-                                        cursorColor = UgNavy,
-                                        errorBorderColor = UgErrorBright,
-                                        errorLabelColor = UgErrorBright
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-
-                                if (uiState.apartamentoError != null) {
-                                    Text(
-                                        text = uiState.apartamentoError!!,
-                                        fontSize = 12.sp,
-                                        color = UgErrorBright
-                                    )
-                                }
-                            }
-
-                            // Botón solicitar vinculación
-                            Button(
-                                onClick = viewModel::onRequestLinkClick,
-                                enabled = !uiState.isRequesting,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = UgEmerald,
-                                    disabledContainerColor = UgEmerald.copy(alpha = 0.7f)
-                                ),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp)
-                            ) {
-                                if (uiState.isRequesting) {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        CircularProgressIndicator(
-                                            color = Color.White,
-                                            strokeWidth = 2.dp,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Text(
-                                            text = "Enviando solicitud...",
-                                            color = Color.White,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    }
-                                } else {
-                                    Text(
-                                        text = "Solicitar vinculación",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 15.sp
-                                    )
-                                }
-                            }
-
-                            // Error de solicitud
-                            if (uiState.requestError != null) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(UgErrorBg, RoundedCornerShape(8.dp))
-                                        .padding(10.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Warning,
-                                        contentDescription = null,
-                                        tint = UgErrorText,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Text(
-                                        text = uiState.requestError!!,
-                                        fontSize = 12.sp,
-                                        color = UgErrorText
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    ConjuntoFoundResult(
+                        conjunto = conjunto,
+                        apartamento = uiState.apartamento,
+                        apartamentoError = uiState.apartamentoError,
+                        isRequesting = uiState.isRequesting,
+                        requestError = uiState.requestError,
+                        onApartamentoChange = viewModel::onApartamentoChange,
+                        onRequest = viewModel::onRequestLinkClick
+                    )
                 }
             }
         }
+    }
+}
+
+/**
+ * Campo del código de vinculación con su error de validación debajo.
+ *
+ * El `onSearch` del teclado se comporta igual que el botón: limpia el foco y
+ * dispara la búsqueda.
+ */
+@Composable
+private fun LinkCodeField(
+    code: String,
+    isError: Boolean,
+    codeError: String?,
+    onCodeChange: (String) -> Unit,
+    onSearch: () -> Unit
+) {
+    val focusManager = LocalFocusManager.current
+
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        OutlinedTextField(
+            value = code,
+            onValueChange = onCodeChange,
+            label = { Text("Código de vinculación") },
+            placeholder = {
+                Text(
+                    "Ingresa el código que te dio tu administrador",
+                    color = UgEmerald,
+                    fontSize = 13.sp
+                )
+            },
+            singleLine = true,
+            isError = isError,
+            shape = RoundedCornerShape(8.dp),
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Characters,
+                imeAction = ImeAction.Search
+            ),
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    focusManager.clearFocus()
+                    onSearch()
+                }
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = UgNavy,
+                focusedLabelColor = UgNavy,
+                cursorColor = UgNavy,
+                errorBorderColor = UgErrorBright,
+                errorLabelColor = UgErrorBright
+            ),
+            supportingText = {
+                // El backend genera 6 caracteres sin separadores, así que se
+                // explica el formato real en vez de mostrar un ejemplo inventado.
+                Text("Son 6 caracteres, sin guiones ni espacios.", fontSize = 12.sp)
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Texto de ayuda / error de validación
+        if (codeError != null) {
+            Text(
+                text = codeError,
+                fontSize = 12.sp,
+                color = UgErrorBright
+            )
+        }
+    }
+}
+
+/**
+ * Botón de búsqueda con su animación de loading. Limpia el foco antes de
+ * delegar en [onSearch].
+ */
+@Composable
+private fun SearchConjuntoButton(
+    isSearching: Boolean,
+    onSearch: () -> Unit
+) {
+    val focusManager = LocalFocusManager.current
+
+    Button(
+        onClick = {
+            focusManager.clearFocus()
+            onSearch()
+        },
+        enabled = !isSearching,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = UgNavy,
+            disabledContainerColor = UgNavy.copy(alpha = 0.7f)
+        ),
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp)
+    ) {
+        if (isSearching) {
+            // Animación de carga dentro del botón
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CircularProgressIndicator(
+                    color = Color.White,
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = "Buscando conjunto...",
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp
+                )
+            }
+        } else {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = "Buscar conjunto",
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp
+                )
+            }
+        }
+    }
+}
+
+/** Banner de error de búsqueda. */
+@Composable
+private fun SearchErrorBanner(message: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(UgErrorBg, RoundedCornerShape(8.dp))
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Warning,
+            contentDescription = null,
+            tint = UgErrorText,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = message,
+            fontSize = 13.sp,
+            color = UgErrorText,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
