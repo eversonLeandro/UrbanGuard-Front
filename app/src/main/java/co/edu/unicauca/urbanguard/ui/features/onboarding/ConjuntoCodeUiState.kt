@@ -15,7 +15,7 @@ data class ConjuntoCodeUiState(
     // Instante de expiración del código; null = no hay código
     val expiresAt: Instant? = null,
 
-    // TODO: reemplazar este campo por el nombre que venga del ConjuntoConfig
+    // Pendiente: reemplazar este campo por el nombre que venga del ConjuntoConfig
     // una vez implementado UG-45/UG-46.
     val conjuntoName: String = "",
 

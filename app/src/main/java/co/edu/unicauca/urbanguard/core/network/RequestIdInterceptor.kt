@@ -1,4 +1,5 @@
 package co.edu.unicauca.urbanguard.core.network
+
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.util.UUID

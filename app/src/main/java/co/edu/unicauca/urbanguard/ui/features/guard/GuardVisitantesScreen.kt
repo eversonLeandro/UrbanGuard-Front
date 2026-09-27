@@ -1,19 +1,42 @@
 package co.edu.unicauca.urbanguard.ui.features.guard
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,14 +46,34 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
-import co.edu.unicauca.urbanguard.ui.theme.*
+import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgBorderSoft
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBg
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
+import co.edu.unicauca.urbanguard.ui.theme.UgInputBg
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgNavyLight
+import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
+/**
+ * Pantalla de control de visitantes.
+ *
+ * La interfaz actual es un mock estatico: [GuardVisitantesViewModel] todavia no
+ * carga datos, asi que aqui no se observa su `uiState`. El parametro se conserva
+ * a proposito para que la pantalla pueda engancharse al ViewModel cuando la
+ * feature se implemente.
+ *
+ * [LongMethod] tambien esta suprimido: partir este composable en
+ * subcomposables ahora es trabajo que se pierde al implementar la feature real.
+ */
+@Suppress("UnusedParameter", "LongMethod")
 @Composable
 fun GuardVisitantesScreen(
-    navController: NavHostController,
-    onLogout: () -> Unit = {},
+    onNotificationsClick: (() -> Unit)? = null,
     onScanQr: () -> Unit = {},
     viewModel: GuardVisitantesViewModel = hiltViewModel()
 ) {
@@ -44,7 +87,7 @@ fun GuardVisitantesScreen(
     ) {
         UrbanGuardTopBar(
             title = "Control de Visitantes",
-            onLogout = onLogout
+            onNotificationsClick = onNotificationsClick
         )
 
         Column(
@@ -52,6 +95,7 @@ fun GuardVisitantesScreen(
                 .fillMaxSize()
                 .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(top = 18.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -59,8 +103,20 @@ fun GuardVisitantesScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Buscar por nombre o apto...", fontSize = 13.5.sp, color = UgTextSecondary) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = UgNavy) },
+                placeholder = {
+                    Text(
+                        "Buscar por nombre o apto...",
+                        fontSize = 13.5.sp,
+                        color = UgTextSecondary
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = null,
+                        tint = UgNavy
+                    )
+                },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -71,7 +127,11 @@ fun GuardVisitantesScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(4.dp, shape = RoundedCornerShape(16.dp), ambientColor = UgNavy.copy(alpha = 0.08f))
+                    .shadow(
+                        4.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        ambientColor = UgNavy.copy(alpha = 0.08f)
+                    )
             )
 
             // ── Filtros ──────────────────────────────────────────────
@@ -83,25 +143,45 @@ fun GuardVisitantesScreen(
                     selected = selectedFilter == 0,
                     onClick = { selectedFilter = 0 },
                     label = { Text("Todos (3)", fontWeight = FontWeight.Bold, fontSize = 12.sp) },
-                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = UgNavy, selectedLabelColor = Color.White)
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = UgNavy,
+                        selectedLabelColor = Color.White
+                    )
                 )
                 FilterChip(
                     selected = selectedFilter == 1,
                     onClick = { selectedFilter = 1 },
-                    label = { Text("En Predio (2)", fontWeight = FontWeight.Bold, fontSize = 12.sp) },
-                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = UgEmerald, selectedLabelColor = Color.White)
+                    label = {
+                        Text(
+                            "En Predio (2)",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = UgEmerald,
+                        selectedLabelColor = Color.White
+                    )
                 )
                 FilterChip(
                     selected = selectedFilter == 2,
                     onClick = { selectedFilter = 2 },
                     label = { Text("Salidas (1)", fontWeight = FontWeight.Bold, fontSize = 12.sp) },
-                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = UgNavyLight, selectedLabelColor = Color.White)
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = UgNavyLight,
+                        selectedLabelColor = Color.White
+                    )
                 )
             }
 
             // ── Fecha del día ────────────────────────────────────
             val todayDate = java.time.LocalDate.now()
-                .format(java.time.format.DateTimeFormatter.ofPattern("dd 'de' MMMM yyyy", java.util.Locale("es", "CO")))
+                .format(
+                    java.time.format.DateTimeFormatter.ofPattern(
+                        "dd 'de' MMMM yyyy",
+                        java.util.Locale("es", "CO")
+                    )
+                )
             Text(
                 text = "Visitantes de hoy — $todayDate",
                 fontSize = 13.sp,
@@ -114,11 +194,22 @@ fun GuardVisitantesScreen(
                 onClick = onScanQr,
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
-                modifier = Modifier.fillMaxWidth().height(48.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
             ) {
-                Icon(Icons.Default.QrCodeScanner, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                Icon(
+                    Icons.Default.QrCodeScanner,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
                 Spacer(Modifier.width(8.dp))
-                Text("Escanear Código QR de Visitante", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                Text(
+                    "Escanear Código QR de Visitante",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.5.sp
+                )
             }
 
             // ── Botón Nuevo Registro ────────────────────────────────
@@ -126,11 +217,22 @@ fun GuardVisitantesScreen(
                 onClick = {},
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
-                modifier = Modifier.fillMaxWidth().height(48.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
                 Spacer(Modifier.width(8.dp))
-                Text("Registrar Nuevo Visitante Manual", fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                Text(
+                    "Registrar Nuevo Visitante Manual",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.5.sp
+                )
             }
 
             // ── Lista de Tarjetas de Visitantes ─────────────────────
@@ -217,7 +319,12 @@ private fun VisitorCard(
             HorizontalDivider(color = UgBorderSoft)
 
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(destination, fontSize = 12.5.sp, fontWeight = FontWeight.Medium, color = UgNavy)
+                Text(
+                    destination,
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = UgNavy
+                )
                 Text("Ingreso: $entryTime", fontSize = 11.5.sp, color = UgTextSecondary)
             }
 
@@ -225,9 +332,14 @@ private fun VisitorCard(
                 Button(
                     onClick = onActionClick,
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = UgErrorBg, contentColor = UgErrorText),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = UgErrorBg,
+                        contentColor = UgErrorText
+                    ),
                     border = androidx.compose.foundation.BorderStroke(1.dp, UgErrorBorder),
-                    modifier = Modifier.fillMaxWidth().height(42.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(42.dp)
                 ) {
                     Text("Marcar Salida de Predio", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }

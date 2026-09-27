@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GetMyConjuntosUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,7 +34,9 @@ class ConjuntoSelectionViewModel @Inject constructor(
             getMyConjuntosUseCase().fold(
                 onSuccess = { conjuntos ->
                     Log.d("ConjuntoSelVM", "Éxito: ${conjuntos.size} conjuntos")
-                    // Persiste la lista real en sesión sin tocar el rol de Auth0
+                    // SessionManager ya conserva el conjunto activo cuando sigue vigente
+                    // en la lista nueva, asi que consultar la lista (por ejemplo al
+                    // cambiar de conjunto desde Inicio) no deja al usuario sin conjunto.
                     sessionManager.setAssociations(conjuntos)
                     val session = sessionManager.session.value
                     _uiState.value = ConjuntoSelectionUiState(
@@ -47,7 +50,7 @@ class ConjuntoSelectionViewModel @Inject constructor(
                     Log.e("ConjuntoSelVM", "Fallo: ${error.message}")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = error.message
+                        errorMessage = AppError.from(error).message
                             ?: "Ocurrió un error al cargar tus conjuntos."
                     )
                 }
@@ -62,4 +65,4 @@ class ConjuntoSelectionViewModel @Inject constructor(
     }
 
     fun currentRole(): UserRole? = sessionManager.currentRole()
-}
+}

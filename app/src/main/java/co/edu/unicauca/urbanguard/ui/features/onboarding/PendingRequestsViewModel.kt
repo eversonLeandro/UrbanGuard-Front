@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.ui.features.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.LinkRequestState
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GetLinkRequestsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,7 +32,7 @@ class PendingRequestsViewModel @Inject constructor(
      */
     fun reloadRequests() {
         if (_uiState.value.requests.isEmpty()) {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
         }
         viewModelScope.launch {
             getLinkRequestsUseCase().fold(
@@ -39,13 +40,13 @@ class PendingRequestsViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         requests = requests,
-                        errorMessage = null
+                        error = null
                     )
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = error.message
+                        error = AppError.from(error)
                     )
                 }
             )
@@ -58,7 +59,7 @@ class PendingRequestsViewModel @Inject constructor(
     }
 
     fun onErrorDismissed() {
-        _uiState.value = _uiState.value.copy(errorMessage = null)
+        _uiState.value = _uiState.value.copy(error = null)
     }
 
     fun showMessage(message: String) {

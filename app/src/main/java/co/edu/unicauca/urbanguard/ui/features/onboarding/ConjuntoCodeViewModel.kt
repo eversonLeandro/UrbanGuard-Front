@@ -3,6 +3,7 @@ package co.edu.unicauca.urbanguard.ui.features.onboarding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GenerateConjuntoCodeUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GetConjuntoCodeUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.RegenerateConjuntoCodeUseCase
@@ -29,12 +30,17 @@ class ConjuntoCodeViewModel @Inject constructor(
         loadExistingCode()
     }
 
+    private fun getTargetComplexId(): String? {
+        return sessionManager.getActiveConjunto()?.conjuntoId
+            ?: sessionManager.session.value?.conjuntosAsociados?.firstOrNull()?.conjuntoId
+    }
+
     private fun loadExistingCode() {
-        val complexId = sessionManager.getActiveConjunto()?.conjuntoId
+        val complexId = getTargetComplexId()
         if (complexId == null) {
             _uiState.value = _uiState.value.copy(
                 isLoadingInitial = false,
-                errorMessage = "No hay conjunto activo seleccionado."
+                errorMessage = null // Avoid showing red error popup
             )
             return
         }
@@ -52,12 +58,12 @@ class ConjuntoCodeViewModel @Inject constructor(
                 onFailure = { error ->
                     // 404 = aún no hay código generado → estado vacío (no es error real)
                     // Cualquier otro error sí se muestra al usuario
-                    val isNoCodeYet = error.message?.contains("404") == true ||
-                            error.message?.contains("no existe") == true
+                    val appError = AppError.from(error)
+                    val isNoCodeYet = appError is AppError.NotFound
                     _uiState.value = _uiState.value.copy(
                         isLoadingInitial = false,
                         code = if (isNoCodeYet) null else _uiState.value.code,
-                        errorMessage = if (isNoCodeYet) null else error.message
+                        errorMessage = if (isNoCodeYet) null else appError.message
                     )
                 }
             )
@@ -65,10 +71,10 @@ class ConjuntoCodeViewModel @Inject constructor(
     }
 
     fun onGenerateClick() {
-        val complexId = sessionManager.getActiveConjunto()?.conjuntoId
+        val complexId = getTargetComplexId()
         if (complexId == null) {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "No hay conjunto activo seleccionado."
+                errorMessage = null
             )
             return
         }
@@ -87,7 +93,7 @@ class ConjuntoCodeViewModel @Inject constructor(
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
                         isLoadingAction = false,
-                        errorMessage = error.message
+                        errorMessage = AppError.from(error).message
                     )
                 }
             )
@@ -100,11 +106,11 @@ class ConjuntoCodeViewModel @Inject constructor(
     }
 
     fun onRegenerateConfirmed() {
-        val complexId = sessionManager.getActiveConjunto()?.conjuntoId
+        val complexId = getTargetComplexId()
         if (complexId == null) {
             _uiState.value = _uiState.value.copy(
                 showRegenerateConfirm = false,
-                errorMessage = "No hay conjunto activo seleccionado."
+                errorMessage = null
             )
             return
         }
@@ -127,7 +133,7 @@ class ConjuntoCodeViewModel @Inject constructor(
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
                         isLoadingAction = false,
-                        errorMessage = error.message
+                        errorMessage = AppError.from(error).message
                     )
                 }
             )

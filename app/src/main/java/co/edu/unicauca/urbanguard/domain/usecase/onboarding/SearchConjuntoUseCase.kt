@@ -1,4 +1,5 @@
 package co.edu.unicauca.urbanguard.domain.usecase.onboarding
+
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoSearch
 import co.edu.unicauca.urbanguard.domain.repository.LinkByCodeRepository
 import javax.inject.Inject

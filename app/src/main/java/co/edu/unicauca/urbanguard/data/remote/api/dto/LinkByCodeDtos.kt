@@ -15,6 +15,7 @@ data class UnitLookupDto(
     val id: String,
     val identifier: String
 )
+
 data class LinkRequestResponseDto(
     val id: String,
     val userId: String,

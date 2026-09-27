@@ -6,7 +6,12 @@ data class UserSession(
     val name: String,
     val role: UserRole,
     val conjuntosAsociados: List<ConjuntoUserAssociation> = emptyList(),
-    val conjuntoActivoId: String? = null
+    val conjuntoActivoId: String? = null,
+    // Nombre del conjunto activo cacheado en disco. [conjuntosAsociados] solo vive en
+    // memoria y llega por red, asi que tras un arranque en frio la lista esta vacia y
+    // el nombre quedaria sin resolver. Este campo permite mostrar el conjunto real
+    // de inmediato; la lista autoritativa lo sobreescribe en cuanto se recarga.
+    val conjuntoActivoNombre: String? = null
 )
 
 /**

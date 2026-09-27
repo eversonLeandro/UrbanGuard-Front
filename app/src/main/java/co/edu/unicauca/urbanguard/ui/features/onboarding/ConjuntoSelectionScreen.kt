@@ -1,33 +1,49 @@
 package co.edu.unicauca.urbanguard.ui.features.onboarding
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import co.edu.unicauca.urbanguard.R
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoUserAssociation
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
-import co.edu.unicauca.urbanguard.ui.theme.*
+import co.edu.unicauca.urbanguard.ui.theme.UgAmber
+import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 @Composable
 fun ConjuntoSelectionScreen(
@@ -35,6 +51,7 @@ fun ConjuntoSelectionScreen(
     onCreateConjunto: () -> Unit,
     onJoinByCode: () -> Unit,
     onLogout: () -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
     viewModel: ConjuntoSelectionViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -47,7 +64,8 @@ fun ConjuntoSelectionScreen(
         // Header
         UrbanGuardTopBar(
             title = "Seleccionar conjunto",
-            onLogout = onLogout
+            onLogout = onLogout,
+            onNavigateBack = onNavigateBack
         )
 
         when {
@@ -86,47 +104,6 @@ fun ConjuntoSelectionScreen(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun MenuButton(
-    onLogoutClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var menuExpanded by remember { mutableStateOf(false) }
-
-    Box(modifier = modifier) {
-        IconButton(onClick = { menuExpanded = true }) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = "Menú",
-                tint = UgEmerald
-            )
-        }
-        DropdownMenu(
-            expanded = menuExpanded,
-            onDismissRequest = { menuExpanded = false },
-            containerColor = Color.White
-        ) {
-            DropdownMenuItem(
-                text = {
-                    Text("Cerrar sesión", fontSize = 14.sp, color = UgNavy)
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = null,
-                        tint = UgErrorText,
-                        modifier = Modifier.size(20.dp)
-                    )
-                },
-                onClick = {
-                    menuExpanded = false
-                    onLogoutClick()
-                }
-            )
         }
     }
 }
@@ -377,27 +354,4 @@ private fun ErrorState(
             Text("Reintentar", fontWeight = FontWeight.Medium)
         }
     }
-}
-
-@Composable
-private fun LogoutDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Cerrar sesión", fontWeight = FontWeight.Bold, color = UgNavy) },
-        text = { Text("¿Seguro que deseas cerrar sesión?", color = UgTextSecondary) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Sí, cerrar sesión", color = UgErrorText, fontWeight = FontWeight.Medium)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = UgTextSecondary)
-            }
-        },
-        containerColor = Color.White
-    )
 }

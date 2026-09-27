@@ -2,6 +2,8 @@ package co.edu.unicauca.urbanguard.core.di
 
 import android.content.Context
 import co.edu.unicauca.urbanguard.BuildConfig
+import co.edu.unicauca.urbanguard.core.session.EncryptedRolePersistence
+import co.edu.unicauca.urbanguard.core.session.RolePersistence
 import co.edu.unicauca.urbanguard.data.repository.AuthRepositoryImpl
 import co.edu.unicauca.urbanguard.domain.repository.AuthRepository
 import com.auth0.android.Auth0
@@ -23,6 +25,10 @@ abstract class AuthModule {
     @Binds
     @Singleton
     abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRolePersistence(impl: EncryptedRolePersistence): RolePersistence
 
     companion object {
         @Provides

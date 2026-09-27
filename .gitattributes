@@ -1,0 +1,13 @@
+# Normaliza los finales de linea en el repositorio: LF en el repo, LF en el
+# working tree. Sin esto el proyecto depende de la config global de cada
+# equipo (core.autocrlf) y un checkout distinto produce diffs de lineas enteras.
+* text=auto eol=lf
+
+# Archivos binarios: no aplicar conversion de linea.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.so binary
+*.jar binary

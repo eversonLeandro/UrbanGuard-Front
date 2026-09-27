@@ -13,14 +13,34 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,7 +54,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
-import co.edu.unicauca.urbanguard.ui.theme.*
+import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
@@ -46,7 +69,10 @@ fun GuardScanQrScreen(
     val context = LocalContext.current
     var hasCameraPermission by remember {
         mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
         )
     }
     var scannedCode by remember { mutableStateOf<String?>(null) }
@@ -70,8 +96,7 @@ fun GuardScanQrScreen(
     ) {
         UrbanGuardTopBar(
             title = "Escanear código QR",
-            onNavigateBack = onNavigateBack,
-            showMenu = false
+            onNavigateBack = onNavigateBack
         )
 
         when {
@@ -105,6 +130,7 @@ fun GuardScanQrScreen(
     }
 }
 
+@Suppress("TooGenericExceptionCaught")
 @Composable
 private fun CameraPreviewContent(
     onCodeScanned: (String) -> Unit
@@ -167,6 +193,12 @@ private fun CameraPreviewContent(
                             imageAnalysis
                         )
                     } catch (e: Exception) {
+                        // El catch amplio cubre la superficie de CameraX
+                        // (CameraInfoUnavailableException, IllegalArgumentException,
+                        // SecurityException y otras unchecked). No esta en una
+                        // corrutina, asi que no corre riesgo de tragarse una
+                        // CancellationException. Si la camara no arranca, la pantalla
+                        // se queda sin previsualizacion y el vigilante lo ve en el log.
                         Log.e("GuardScanQr", "Error al iniciar cámara", e)
                     }
                 }, ContextCompat.getMainExecutor(ctx))
@@ -177,41 +209,53 @@ private fun CameraPreviewContent(
         )
 
         // Overlay con marco de escaneo
-        Column(
+        CameraScanOverlay()
+    }
+}
+
+/**
+ * Marco de escaneo e instrucción, superpuestos sobre la previsualización.
+ *
+ * No introduce un nodo de layout propio: la Column que emite sigue siendo hija
+ * directa del Box de [CameraPreviewContent], así que el overlay se superpone al
+ * preview igual que antes.
+ */
+@Composable
+private fun CameraScanOverlay() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .size(260.dp)
+                .border(3.dp, UgEmerald, RoundedCornerShape(16.dp)),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(260.dp)
-                    .border(3.dp, UgEmerald, RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.QrCodeScanner,
-                    contentDescription = null,
-                    tint = UgEmerald.copy(alpha = 0.4f),
-                    modifier = Modifier.size(80.dp)
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            Text(
-                text = "Apunta la cámara al código QR del visitante",
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(UgNavy.copy(alpha = 0.7f))
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            Icon(
+                imageVector = Icons.Default.QrCodeScanner,
+                contentDescription = null,
+                tint = UgEmerald.copy(alpha = 0.4f),
+                modifier = Modifier.size(80.dp)
             )
         }
+
+        Spacer(Modifier.height(24.dp))
+
+        Text(
+            text = "Apunta la cámara al código QR del visitante",
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(UgNavy.copy(alpha = 0.7f))
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
     }
 }
 
@@ -272,7 +316,12 @@ private fun ScanResultContent(
                 .fillMaxWidth()
                 .height(48.dp)
         ) {
-            Icon(Icons.Default.QrCodeScanner, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+            Icon(
+                Icons.Default.QrCodeScanner,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
             Spacer(Modifier.width(8.dp))
             Text("Escanear otro código", fontWeight = FontWeight.Bold, fontSize = 14.sp)
         }

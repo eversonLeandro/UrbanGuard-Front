@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -42,7 +43,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -51,8 +51,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.unicauca.urbanguard.R
-import co.edu.unicauca.urbanguard.ui.theme.*
+import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgDisabledText
+import co.edu.unicauca.urbanguard.ui.theme.UgDivider
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
+import co.edu.unicauca.urbanguard.ui.theme.UgInputBg
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgTextPrimary
+import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 import org.json.JSONArray
 
 @Composable
@@ -92,21 +101,18 @@ fun RegisterConjuntoScreen(
                 .fillMaxWidth()
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(horizontal = 20.dp, vertical = 8.dp)
-        ) {            
+        ) {
             Spacer(Modifier.height(20.dp))
             GeneralFormSection(
-                complejoNombre = complejoNombre,
-                onComplejoNombreChange = { complejoNombre = it },
-                direccion = direccion,
-                onDireccionChange = { direccion = it },
-                ciudad = ciudad,
-                onCiudadChange = { ciudad = it },
-                totalUnidades = totalUnidades,
-                onTotalUnidadesChange = { totalUnidades = it }
+                complejoNombre = FormFieldState(complejoNombre) { complejoNombre = it },
+                direccion = FormFieldState(direccion) { direccion = it },
+                ciudad = FormFieldState(ciudad) { ciudad = it },
+                totalUnidades = FormFieldState(totalUnidades) { totalUnidades = it }
             )
-            Spacer(Modifier.height(24.dp)) 
-        }                     
+            Spacer(Modifier.height(24.dp))
+        }
         Footer(
             enabled = isFormValid,
             errorMessage = uiState.errorMessage,
@@ -169,22 +175,28 @@ private fun Footer(
     }
 }
 
+/**
+ * Valor de un campo del formulario junto con su callback de cambio. Se agrupan
+ * para que un campo no se pueda pasar sin su callback, que era el smell de
+ * tenerlos como parámetros sueltos.
+ */
+private data class FormFieldState(
+    val value: String,
+    val onValueChange: (String) -> Unit
+)
+
 @Composable
 private fun GeneralFormSection(
-    complejoNombre: String,
-    onComplejoNombreChange: (String) -> Unit,
-    direccion: String,
-    onDireccionChange: (String) -> Unit,
-    ciudad: String,
-    onCiudadChange: (String) -> Unit,
-    totalUnidades: String,
-    onTotalUnidadesChange: (String) -> Unit
+    complejoNombre: FormFieldState,
+    direccion: FormFieldState,
+    ciudad: FormFieldState,
+    totalUnidades: FormFieldState
 ) {
     val context = LocalContext.current
     val ciudades = remember { loadColombiaCities(context) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-       Row(
+        Row(
             verticalAlignment = Alignment.Top,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -221,8 +233,8 @@ private fun GeneralFormSection(
         InputField(
             label = "Nombre del condomino",
             icon = Icons.Default.Business,
-            value = complejoNombre,
-            onValueChange = onComplejoNombreChange,
+            value = complejoNombre.value,
+            onValueChange = complejoNombre.onValueChange,
             placeholder = "Ej: Residencial Arboledas"
         )
 
@@ -231,16 +243,16 @@ private fun GeneralFormSection(
         InputField(
             label = "Dirección",
             icon = Icons.Default.Place,
-            value = direccion,
-            onValueChange = onDireccionChange,
+            value = direccion.value,
+            onValueChange = direccion.onValueChange,
             placeholder = "Calle y número"
         )
 
         Spacer(Modifier.height(16.dp))
 
         CityDropdown(
-            selected = ciudad,
-            onSelected = onCiudadChange,
+            selected = ciudad.value,
+            onSelected = ciudad.onValueChange,
             options = ciudades
         )
 
@@ -249,8 +261,8 @@ private fun GeneralFormSection(
         InputField(
             label = "Total de unidades",
             icon = Icons.Default.GridView,
-            value = totalUnidades,
-            onValueChange = onTotalUnidadesChange,
+            value = totalUnidades.value,
+            onValueChange = totalUnidades.onValueChange,
             placeholder = "0",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
@@ -326,10 +338,7 @@ private fun CityDropdown(
     var expanded by remember { mutableStateOf(false) }
     var query by remember(selected) { mutableStateOf(selected) }
 
-    val filteredOptions = remember(query, options) {
-        if (query.isBlank()) options else
-            options.filter { it.contains(query, ignoreCase = true) || query.contains(it, ignoreCase = true) }
-    }
+    val filteredOptions = remember(query, options) { filterCities(query, options) }
 
     Column(modifier = modifier.fillMaxWidth()) {
         FieldLabel(icon = Icons.Default.Map, text = "Ciudad")
@@ -405,6 +414,20 @@ private fun CityDropdown(
         }
     }
 }
+
+/**
+ * Filtra la lista de ciudades por coincidencia en ambos sentidos, para que
+ * "Bog" encuentre "Bogotá" y también al revés. Sin query no se filtra nada:
+ * el desplegable se abre con la lista completa.
+ */
+private fun filterCities(query: String, options: List<String>): List<String> =
+    if (query.isBlank()) {
+        options
+    } else {
+        options.filter {
+            it.contains(query, ignoreCase = true) || query.contains(it, ignoreCase = true)
+        }
+    }
 
 private fun loadColombiaCities(context: Context): List<String> {
     val jsonString = context.resources.openRawResource(R.raw.colombia_cities)

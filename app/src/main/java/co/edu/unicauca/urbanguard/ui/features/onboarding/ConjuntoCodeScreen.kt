@@ -7,23 +7,41 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -33,7 +51,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
-import co.edu.unicauca.urbanguard.ui.theme.*
+import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgBorderSoft
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBg
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorBright
+import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
+import co.edu.unicauca.urbanguard.ui.theme.UgIconFaint
+import co.edu.unicauca.urbanguard.ui.theme.UgIconMuted
+import co.edu.unicauca.urbanguard.ui.theme.UgInfoBg
+import co.edu.unicauca.urbanguard.ui.theme.UgInfoIcon
+import co.edu.unicauca.urbanguard.ui.theme.UgInfoText
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgSuccessBg
+import co.edu.unicauca.urbanguard.ui.theme.UgSuccessText
+import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 @Composable
 fun ConjuntoCodeScreen(
@@ -51,8 +85,7 @@ fun ConjuntoCodeScreen(
         // Header unificado
         UrbanGuardTopBar(
             title = "Código del conjunto",
-            onNavigateBack = onNavigateBack,
-            showMenu = false
+            onNavigateBack = onNavigateBack
         )
 
         Column(
@@ -63,7 +96,7 @@ fun ConjuntoCodeScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Nombre del conjunto
-            // TODO: reemplazar el texto quemado por el nombre real del conjunto
+            // Pendiente: reemplazar el texto quemado por el nombre real del conjunto
             // una vez que UG-45/UG-46 estén implementados.
             // El nombre vendrá del SessionManager o del ConjuntoConfig
             // que se cargará en el init del ViewModel.
@@ -110,29 +143,17 @@ fun ConjuntoCodeScreen(
                         showRegenerateConfirm = uiState.showRegenerateConfirm,
                         onCopyClick = {
                             viewModel.onCopyCode(uiState.code!!) { textToCopy ->
-                                val clipboard = context.getSystemService(
-                                    Context.CLIPBOARD_SERVICE
-                                ) as ClipboardManager
-                                clipboard.setPrimaryClip(
-                                    ClipData.newPlainText("Código conjunto", textToCopy)
-                                )
+                                copyToClipboard(context, textToCopy)
                             }
                         },
                         onShareClick = {
-                            val intent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    "Código de vinculación para ${uiState.conjuntoName}: ${uiState.code}"
-                                )
-                            }
-                            context.startActivity(
-                                Intent.createChooser(intent, "Compartir código")
-                            )
+                            shareCode(context, uiState.conjuntoName, uiState.code!!)
                         },
-                        onRegenerateClick = viewModel::onRegenerateClick,
-                        onRegenerateConfirmed = viewModel::onRegenerateConfirmed,
-                        onRegenerateDismissed = viewModel::onRegenerateDismissed
+                        regenerate = RegenerateActions(
+                            onClick = viewModel::onRegenerateClick,
+                            onConfirmed = viewModel::onRegenerateConfirmed,
+                            onDismissed = viewModel::onRegenerateDismissed
+                        )
                     )
                 }
             }
@@ -146,6 +167,21 @@ fun ConjuntoCodeScreen(
             }
         }
     }
+}
+
+/** Escribe el código en el portapapeles del sistema bajo la etiqueta del conjunto. */
+private fun copyToClipboard(context: Context, text: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(ClipData.newPlainText("Código conjunto", text))
+}
+
+/** Abre el selector de compartir del sistema con el texto de vinculación listo. */
+private fun shareCode(context: Context, conjuntoName: String, code: String) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, "Código de vinculación para $conjuntoName: $code")
+    }
+    context.startActivity(Intent.createChooser(intent, "Compartir código"))
 }
 
 // ─────────────────────────────────────────────
@@ -219,7 +255,10 @@ private fun EmptyCodeContent(onGenerateClick: () -> Unit) {
         }
     }
 
-    InfoBanner(text = "El código se genera una sola vez. Podrás regenerarlo si es necesario, pero el anterior quedará inválido.")
+    InfoBanner(
+        text = "El código se genera una sola vez. Podrás regenerarlo si es necesario, " +
+            "pero el anterior quedará inválido."
+    )
 
     Button(
         onClick = onGenerateClick,
@@ -267,202 +306,19 @@ private fun ActionLoadingContent() {
     }
 }
 
-@Composable
-private fun CodeAvailableContent(
-    code: String,
-    isCodeActive: Boolean,
-    copySuccess: Boolean,
-    showRegenerateConfirm: Boolean,
-    onCopyClick: () -> Unit,
-    onShareClick: () -> Unit,
-    onRegenerateClick: () -> Unit,
-    onRegenerateConfirmed: () -> Unit,
-    onRegenerateDismissed: () -> Unit
-) {
-    // Card con el código
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(20.dp))
-            .border(1.dp, UgBorder, RoundedCornerShape(20.dp))
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text(
-            text = "CÓDIGO DE VINCULACIÓN",
-            fontSize = 11.sp,
-            color = UgTextSecondary,
-            letterSpacing = 0.5.sp
-        )
-        Text(
-            text = code,
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = UgNavy,
-            letterSpacing = 6.sp,
-            fontFamily = FontFamily.Monospace
-        )
-        // Badge estado activo
-        Row(
-            modifier = Modifier
-                .background(UgSuccessBg, RoundedCornerShape(8.dp))
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                tint = UgEmerald,
-                modifier = Modifier.size(14.dp)
-            )
-            Text(
-                text = if (isCodeActive) "Código activo" else "Código inactivo",
-                fontSize = 12.sp,
-                color = UgSuccessText
-            )
-        }
-    }
-
-    // Banner de éxito al copiar (reemplaza el banner de info mientras está activo)
-    if (copySuccess) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(UgSuccessBg, RoundedCornerShape(12.dp))
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                tint = UgEmerald,
-                modifier = Modifier.size(18.dp)
-            )
-            Text(
-                text = "Código copiado al portapapeles",
-                fontSize = 13.sp,
-                color = UgSuccessText,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    } else {
-        InfoBanner(text = "Comparte este código con los residentes para que soliciten su vinculación al conjunto.")
-    }
-
-    // Botón copiar
-    Button(
-        onClick = onCopyClick,
-        colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
-        shape = RoundedCornerShape(14.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-    ) {
-        Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = if (copySuccess) "Copiar de nuevo" else "Copiar código",
-            fontWeight = FontWeight.Bold
-        )
-    }
-
-    // Botón compartir
-    Button(
-        onClick = onShareClick,
-        colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
-        shape = RoundedCornerShape(14.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-    ) {
-        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(8.dp))
-        Text("Compartir", fontWeight = FontWeight.Bold)
-    }
-
-    // Separador + botón regenerar
-    HorizontalDivider(color = UgBorderSoft)
-
-    OutlinedButton(
-        onClick = onRegenerateClick,
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = UgErrorBright),
-        border = androidx.compose.foundation.BorderStroke(1.dp, UgErrorBorder),
-        shape = RoundedCornerShape(14.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(46.dp)
-    ) {
-        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-        Spacer(Modifier.width(8.dp))
-        Text("Regenerar código", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-    }
-
-    // Modal de confirmación de regenerar (inline, no dialog flotante)
-    if (showRegenerateConfirm) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White, RoundedCornerShape(20.dp))
-                .border(1.dp, UgErrorBorder, RoundedCornerShape(20.dp))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .background(UgErrorBg, RoundedCornerShape(8.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = UgErrorBright,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-                Text(
-                    text = "¿Regenerar el código?",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = UgNavy
-                )
-            }
-            Text(
-                text = "El código actual quedará inválido. Los residentes que aún no se han vinculado deberán usar el nuevo código.",
-                fontSize = 12.sp,
-                color = UgTextSecondary,
-                lineHeight = 18.sp
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onRegenerateDismissed,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.weight(1f).height(40.dp)
-                ) {
-                    Text("Cancelar", fontSize = 12.sp)
-                }
-                Button(
-                    onClick = onRegenerateConfirmed,
-                    colors = ButtonDefaults.buttonColors(containerColor = UgErrorBright),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.weight(1f).height(40.dp)
-                ) {
-                    Text("Sí, regenerar", fontSize = 12.sp)
-                }
-            }
-        }
-    }
-}
+/**
+ * Acciones del diálogo de regeneración del código. Van agrupadas porque siempre
+ * viajan juntas: abrir la confirmación, confirmarla y descartarla.
+ *
+ * Vive aqui y no junto a [CodeAvailableContent] porque es la pantalla la que las
+ * construye, y asi el archivo de ese composable queda con una sola declaracion
+ * de nivel superior.
+ */
+internal data class RegenerateActions(
+    val onClick: () -> Unit,
+    val onConfirmed: () -> Unit,
+    val onDismissed: () -> Unit
+)
 
 // ─────────────────────────────────────────────
 // Componentes reutilizables
@@ -481,7 +337,9 @@ fun InfoBanner(text: String) {
             imageVector = Icons.Default.Info,
             contentDescription = null,
             tint = UgInfoIcon,
-            modifier = Modifier.size(16.dp).padding(top = 1.dp)
+            modifier = Modifier
+                .size(16.dp)
+                .padding(top = 1.dp)
         )
         Text(
             text = text,

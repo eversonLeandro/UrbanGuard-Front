@@ -4,9 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
-import co.edu.unicauca.urbanguard.domain.repository.ConjuntoAssociationRepository
 import co.edu.unicauca.urbanguard.data.remote.api.service.CommunityApi
+import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.LinkRequest
+import co.edu.unicauca.urbanguard.domain.repository.ConjuntoAssociationRepository
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GetLinkRequestDetailUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.ReviewLinkRequestUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +17,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Detalle de una solicitud de vinculación, con la acción de aprobar o rechazar.
+ *
+ * [LongParameterList] esta suprimido a proposito: son 6 dependencias inyectadas
+ * por Hilt, y `constructorThreshold` es 5. Agruparlas en un unico objeto
+ * atado a los bindings de Hilt no mejora nada y encubre las dependencias
+ * reales de la clase. La reduccion de verdad es mover el refresco de contexto
+ * (communityApi + conjuntoAssociationRepository + sessionManager) al interior de
+ * [ReviewLinkRequestUseCase], que es logica de dominio y no del ViewModel; queda
+ * pendiente por ser un cambio de comportamiento, no un cleanup.
+ */
+@Suppress("LongParameterList")
 @HiltViewModel
 class LinkRequestDetailViewModel @Inject constructor(
     private val getLinkRequestDetailUseCase: GetLinkRequestDetailUseCase,
@@ -36,13 +49,17 @@ class LinkRequestDetailViewModel @Inject constructor(
     }
 
     private fun loadRequest() {
-        if (_uiState.value.isLoading) _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        // La condición estaba invertida: el spinner solo se activaba cuando ya había
+        // una carga en curso, por lo que nunca se veía al recargar la solicitud.
+        if (!_uiState.value.isLoading) {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        }
         viewModelScope.launch {
             val id = requestId
             if (id == null) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "No se pudo identificar la solicitud"
+                    errorMessage = MISSING_REQUEST_ID_MESSAGE
                 )
                 return@launch
             }
@@ -58,7 +75,7 @@ class LinkRequestDetailViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         request = null,
-                        errorMessage = error.message
+                        errorMessage = AppError.from(error).message
                     )
                 }
             )
@@ -78,12 +95,22 @@ class LinkRequestDetailViewModel @Inject constructor(
     }
 
     fun onApproveConfirmed() {
-        _uiState.value = _uiState.value.copy(showApproveDialog = false, isLoadingAction = true, errorMessage = null)
+        if (_uiState.value.isLoadingAction) return
+        _uiState.value = _uiState.value.copy(
+            showApproveDialog = false,
+            isLoadingAction = true,
+            errorMessage = null
+        )
         reviewRequest(approve = true)
     }
 
     fun onRejectConfirmed() {
-        _uiState.value = _uiState.value.copy(showRejectDialog = false, isLoadingAction = true, errorMessage = null)
+        if (_uiState.value.isLoadingAction) return
+        _uiState.value = _uiState.value.copy(
+            showRejectDialog = false,
+            isLoadingAction = true,
+            errorMessage = null
+        )
         reviewRequest(approve = false)
     }
 
@@ -101,7 +128,7 @@ class LinkRequestDetailViewModel @Inject constructor(
             if (id == null) {
                 _uiState.value = _uiState.value.copy(
                     isLoadingAction = false,
-                    errorMessage = "No se pudo identificar la solicitud"
+                    errorMessage = MISSING_REQUEST_ID_MESSAGE
                 )
                 return@launch
             }
@@ -131,7 +158,7 @@ class LinkRequestDetailViewModel @Inject constructor(
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
                         isLoadingAction = false,
-                        errorMessage = error.message
+                        errorMessage = AppError.from(error).message
                     )
                 }
             )
@@ -144,5 +171,10 @@ class LinkRequestDetailViewModel @Inject constructor(
 
     fun consumeReviewResult() {
         _uiState.value = _uiState.value.copy(reviewResult = null)
+    }
+
+    private companion object {
+        const val MISSING_REQUEST_ID_MESSAGE =
+            "No encontramos la solicitud que intentas abrir. Vuelve a la lista e inténtalo de nuevo."
     }
 }

@@ -1,15 +1,19 @@
 package co.edu.unicauca.urbanguard.ui.navigation
+
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apartment
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -19,9 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -32,72 +34,28 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.components.PlaceholderScreen
+import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
+import co.edu.unicauca.urbanguard.ui.features.admin.AdminSecurityMenuScreen
+import co.edu.unicauca.urbanguard.ui.features.admin.RegisterGuardScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.SuperAdminScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.LoginScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.RegisterScreen
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Apartment
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.SupportAgent
+import co.edu.unicauca.urbanguard.ui.features.guard.GuardHomeScreen
+import co.edu.unicauca.urbanguard.ui.features.guard.GuardScanQrScreen
+import co.edu.unicauca.urbanguard.ui.features.guard.GuardSeguridadScreen
+import co.edu.unicauca.urbanguard.ui.features.guard.GuardVisitantesScreen
 import co.edu.unicauca.urbanguard.ui.features.home.HomeScreen
 import co.edu.unicauca.urbanguard.ui.features.news.NewsFeedScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ActivateConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoCodeScreen
+import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoSelectionScreen
+import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkByCodeScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkRequestDetailScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.PendingRequestsScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.RegisterConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolHistoryScreen
 import co.edu.unicauca.urbanguard.ui.features.profile.ProfileScreen
-import co.edu.unicauca.urbanguard.ui.features.guard.GuardHomeScreen
-import co.edu.unicauca.urbanguard.ui.features.guard.GuardSeguridadScreen
-import co.edu.unicauca.urbanguard.ui.features.guard.GuardVisitantesScreen
-import co.edu.unicauca.urbanguard.ui.features.guard.GuardScanQrScreen
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
-import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
-import co.edu.unicauca.urbanguard.ui.theme.UgNavy
-import kotlinx.coroutines.launch
-import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoSelectionScreen
-import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkByCodeScreen
-import co.edu.unicauca.urbanguard.ui.features.admin.RegisterGuardScreen
-import co.edu.unicauca.urbanguard.ui.features.admin.AdminSecurityMenuScreen
-
-// Rutas de navegación — una constante por pantalla
-object Routes {
-    const val LOGIN = "login"
-    const val CONJUNTO_CODE = "conjunto_code"
-    const val ACTIVATE_CONJUNTO = "activate_conjunto"
-    const val REGISTER_CONJUNTO = "register_conjunto/{activationCode}"
-    const val PENDING_REQUESTS = "pending_requests"
-    const val REQUEST_DETAIL = "link_request_detail/{requestId}"
-    const val HOME = "home"
-    const val CENSUS = "census"
-    const val SECURITY = "security"
-    const val NEWS = "news"
-    const val PROFILE = "profile"
-    const val VISITORS = "visitors"
-    const val SUPPORT = "support"
-    const val CONJUNTO_INFO = "conjunto_info"
-    const val RESERVATIONS = "reservations"
-    const val PACKAGES = "packages"
-    const val NOTIFICATIONS = "notifications"
-    // TODO: agregar el resto de rutas aquí a medida que se implementen:
-    const val LINK_BY_CODE = "link_by_code"
-    const val REGISTER = "register"
-    const val CONJUNTO_SELECTION = "conjunto_selection"
-    const val ADMIN = "admin"
-    const val REGISTER_GUARD = "register_guard"
-    const val PATROL_HISTORY = "patrol_history"
-
-    // Rutas del Vigilante (barra de navegación inferior del rol GUARD)
-    const val GUARD_HOME = "guard_home"
-    const val GUARD_VISITANTES = "guard_visitantes"
-    const val GUARD_SEGURIDAD = "guard_seguridad"
-    const val GUARD_PERFIL = "guard_perfil"
-    const val GUARD_SCAN_QR = "guard_scan_qr"
-}
 
 // Clave en el savedStateHandle de PENDING_REQUESTS para recibir el
 // resultado de la decisión (APROBADA/RECHAZADA) tomada en el detalle.
@@ -123,6 +81,16 @@ fun roleToDestination(role: UserRole?): String = when (role) {
     else -> Routes.LOGIN
 }
 
+/**
+ * Mapa de navegacion completo de la app: decide la pantalla de entrada segun el rol
+ * y registra cada destino.
+ *
+ * Suprimido de LongMethod a proposito. Partir este archivo por rol pierde la vista
+ * unica de las rutas, que es lo que lo hace legible y revisable, y ademas NavHost
+ * quedaria repartido en varios grafos sin tipado de destinos. Si alguna vez se supera
+ * la vista por rol con un unico NavHost en AppNavGraph, la supresion debe retirarse.
+ */
+@Suppress("LongMethod")
 @Composable
 fun AppNavGraph(
     navController: NavHostController = rememberNavController(),
@@ -146,28 +114,12 @@ fun AppNavGraph(
                 .background(Color.White),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .background(UgEmerald, RoundedCornerShape(16.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Apartment,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(30.dp)
-                    )
-                }
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    text = "UrbanGuard",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = UgNavy
-                )
-            }
+            Image(
+                painter = androidx.compose.ui.res.painterResource(co.edu.unicauca.urbanguard.R.drawable.logo_u),
+                contentDescription = "Logo UrbanGuard",
+                modifier = Modifier.size(120.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit
+            )
         }
         return
     }
@@ -186,7 +138,10 @@ fun AppNavGraph(
                     // ADMIN / RESIDENT / GUARD ya tienen conjunto activo en Auth0 → Home.
                     // La carga real de conjuntos ocurre en ConjuntoSelectionViewModel.
                     val destination = roleToDestination(role)
-                    Log.d("NavGraph", "=== [LOGIN NAVIGATION] role: $role -> destino: $destination ===")
+                    Log.d(
+                        "NavGraph",
+                        "=== [LOGIN NAVIGATION] role: $role -> destino: $destination ==="
+                    )
                     navController.navigate(destination) {
                         // Elimina el Login del backstack — el usuario
                         // no puede volver atrás con el botón físico
@@ -194,7 +149,7 @@ fun AppNavGraph(
                     }
                 },
                 onNavigateToOnboarding = {
-                    // TODO: navegar a RegisterConjuntoScreen (UG-45)
+                    // Pendiente (UG-45): navegar a RegisterConjuntoScreen
                     navController.navigate(Routes.ACTIVATE_CONJUNTO)
                 },
                 onNavigateToRegister = {
@@ -244,6 +199,13 @@ fun AppNavGraph(
                     sessionViewModel.logout {
                         navController.navigateToLogin()
                     }
+                },
+                // Solo se ofrece volver cuando la pantalla no es el punto de
+                // partida de la sesión; en el onboarding inicial no hay a dónde ir.
+                onNavigateBack = if (navController.previousBackStackEntry != null) {
+                    { navController.popBackStack() }
+                } else {
+                    null
                 }
             )
         }
@@ -289,10 +251,9 @@ fun AppNavGraph(
 
         composable(Routes.HOME) {
             HomeScreen(
-                onLogout = {
-                    sessionViewModel.logout {
-                        navController.navigateToLogin()
-                    }
+                onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
+                onOpenConjuntoSelection = {
+                    navController.navigate(Routes.CONJUNTO_SELECTION)
                 },
                 onOpenConjuntoCode = {
                     navController.navigate(Routes.CONJUNTO_CODE)
@@ -394,7 +355,9 @@ fun AppNavGraph(
                     navController.popBackStack()
                 },
                 onLinkSuccess = {
-                    // La solicitud está pendiente de aprobación — vuelve al selector
+                    // La solicitud está pendiente de aprobación — el botón
+                    // "Volver a mis conjuntos" y la flecha del top bar de la
+                    // pantalla de éxito devuelven al selector.
                     navController.navigate(Routes.CONJUNTO_SELECTION) {
                         popUpTo(navController.graph.id) { inclusive = true }
                     }
@@ -431,10 +394,16 @@ fun AppNavGraph(
         }
 
         composable(Routes.NOTIFICATIONS) {
-            PlaceholderScreen(
-                title = "Notificaciones",
-                icon = Icons.Default.Notifications
-            )
+            Column(modifier = Modifier.fillMaxSize()) {
+                UrbanGuardTopBar(
+                    title = "Notificaciones",
+                    onNavigateBack = { navController.popBackStack() }
+                )
+                PlaceholderScreen(
+                    title = "Notificaciones",
+                    icon = Icons.Default.Notifications
+                )
+            }
         }
 
         composable(Routes.PROFILE) {
@@ -460,12 +429,7 @@ fun AppNavGraph(
         // ── Vigilante (rol GUARD) ─────────────────────────────────────
         composable(Routes.GUARD_HOME) {
             GuardHomeScreen(
-                navController = navController,
-                onLogout = {
-                    sessionViewModel.logout {
-                        navController.navigateToLogin()
-                    }
-                },
+                onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
                 onScanQr = {
                     navController.navigate(Routes.GUARD_SCAN_QR)
                 }
@@ -474,12 +438,7 @@ fun AppNavGraph(
 
         composable(Routes.GUARD_VISITANTES) {
             GuardVisitantesScreen(
-                navController = navController,
-                onLogout = {
-                    sessionViewModel.logout {
-                        navController.navigateToLogin()
-                    }
-                },
+                onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
                 onScanQr = {
                     navController.navigate(Routes.GUARD_SCAN_QR)
                 }
@@ -488,12 +447,7 @@ fun AppNavGraph(
 
         composable(Routes.GUARD_SEGURIDAD) {
             GuardSeguridadScreen(
-                navController = navController,
-                onLogout = {
-                    sessionViewModel.logout {
-                        navController.navigateToLogin()
-                    }
-                }
+                onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) }
             )
         }
 

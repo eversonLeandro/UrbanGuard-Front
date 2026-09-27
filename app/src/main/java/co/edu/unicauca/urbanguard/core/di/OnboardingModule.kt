@@ -1,4 +1,5 @@
 package co.edu.unicauca.urbanguard.core.di
+
 import co.edu.unicauca.urbanguard.data.remote.api.service.OnboardingApi
 import co.edu.unicauca.urbanguard.data.repository.ConjuntoCodeRepositoryImpl
 import co.edu.unicauca.urbanguard.data.repository.OnboardingRepositoryImpl
@@ -12,10 +13,6 @@ import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
-@Module
-@InstallIn(SingletonComponent::class)
-object OnboardingModule {
-}
 @Module
 @InstallIn(SingletonComponent::class)
 object OnboardingProvideModule {

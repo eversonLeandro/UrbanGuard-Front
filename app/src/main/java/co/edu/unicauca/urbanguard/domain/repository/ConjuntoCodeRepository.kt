@@ -1,6 +1,8 @@
 package co.edu.unicauca.urbanguard.domain.repository
+
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoCode
 import co.edu.unicauca.urbanguard.domain.model.CreatedComplex
+
 interface ConjuntoCodeRepository {
     suspend fun getCode(conjuntoId: String? = null): Result<ConjuntoCode>
     suspend fun generateCode(conjuntoId: String): Result<ConjuntoCode>
