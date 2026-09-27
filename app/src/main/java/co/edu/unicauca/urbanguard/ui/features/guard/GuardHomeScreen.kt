@@ -82,82 +82,7 @@ fun GuardHomeScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // ── Tarjeta de Bienvenida del Guardia ──────────────────
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = RoundedCornerShape(24.dp),
-                        ambientColor = UgNavy.copy(alpha = 0.25f)
-                    )
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(UgHeroGradient)
-                    .padding(22.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(UgEmerald.copy(alpha = 0.2f))
-                                .border(1.5.dp, UgEmerald, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = if (uiState.userName.isNotBlank()) uiState.userName.take(1)
-                                    .uppercase() else "G",
-                                color = Color.White,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        Spacer(Modifier.width(14.dp))
-                        Column {
-                            Text(
-                                "¡Bienvenido!",
-                                fontSize = 13.sp,
-                                color = Color.White.copy(alpha = 0.75f)
-                            )
-                            Text(
-                                text = if (uiState.userName.isNotBlank()) {
-                                    uiState.userName
-                                } else {
-                                    "guardia@urbanguard.com"
-                                },
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                maxLines = 1
-                            )
-                        }
-                    }
-
-                    Spacer(Modifier.width(10.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(UgEmerald.copy(alpha = 0.25f))
-                            .border(1.dp, UgEmerald.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text(
-                            "GUARDIA",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = UgEmeraldLight
-                        )
-                    }
-                }
-            }
+            GuardWelcomeCard(userName = uiState.userName)
 
             // ── Métricas del Día (Tarjetas Idénticas) ────────────────
             Text(
@@ -197,57 +122,7 @@ fun GuardHomeScreen(
             // ── Accesos Rápidos de Guardia ──────────────────────────
             Text("Acciones Rápidas", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = UgNavy)
 
-            Button(
-                onClick = onScanQr,
-                shape = RoundedCornerShape(18.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp)
-                    .shadow(
-                        elevation = 6.dp,
-                        shape = RoundedCornerShape(18.dp),
-                        ambientColor = UgEmerald.copy(alpha = 0.4f)
-                    )
-            ) {
-                Icon(
-                    Icons.Default.QrCodeScanner,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    "Escanear Pase QR de Ingreso",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-
-            OutlinedButton(
-                onClick = {},
-                shape = RoundedCornerShape(18.dp),
-                border = androidx.compose.foundation.BorderStroke(1.5.dp, UgAmber),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = UgAmber),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Icon(
-                    Icons.Default.ReportProblem,
-                    contentDescription = null,
-                    tint = UgAmber,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    "Registrar Incidente de Seguridad",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = UgNavy
-                )
-            }
+            GuardQuickActions(onScanQr = onScanQr)
 
             // ── Bitácora Reciente ───────────────────────────────────
             Text(
@@ -257,33 +132,186 @@ fun GuardHomeScreen(
                 color = UgNavy
             )
 
-            Card(
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                modifier = Modifier.fillMaxWidth()
+            GuardRecentActivityCard()
+        }
+    }
+}
+
+/**
+ * Tarjeta de bienvenida en degradado, con la inicial del guardia y su badge.
+ *
+ * El `weight(1f)` del bloque de texto sigue resolviendo contra el RowScope de la
+ * Row que se emite aqui dentro, asi que la fila se reparte igual que antes.
+ */
+@Composable
+private fun GuardWelcomeCard(userName: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(24.dp),
+                ambientColor = UgNavy.copy(alpha = 0.25f)
+            )
+            .clip(RoundedCornerShape(24.dp))
+            .background(UgHeroGradient)
+            .padding(22.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(UgEmerald.copy(alpha = 0.2f))
+                        .border(1.5.dp, UgEmerald, CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
-                    GuardLogItem(
-                        time = "10:42 AM",
-                        title = "Ingreso Peatonal Autorizado",
-                        subtitle = "Juan Pérez - Apt 402",
-                        status = "Permitido",
-                        statusColor = UgEmerald
+                    Text(
+                        text = if (userName.isNotBlank()) userName.take(1)
+                            .uppercase() else "G",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                    HorizontalDivider(color = UgBorderSoft)
-                    GuardLogItem(
-                        time = "09:15 AM",
-                        title = "Recepción de Paquete",
-                        subtitle = "Servientrega -> Apt 101",
-                        status = "Recibido",
-                        statusColor = UgInfoIcon
+                }
+                Spacer(Modifier.width(14.dp))
+                Column {
+                    Text(
+                        "¡Bienvenido!",
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.75f)
+                    )
+                    Text(
+                        text = if (userName.isNotBlank()) {
+                            userName
+                        } else {
+                            "guardia@urbanguard.com"
+                        },
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 1
                     )
                 }
             }
+
+            Spacer(Modifier.width(10.dp))
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(UgEmerald.copy(alpha = 0.25f))
+                    .border(1.dp, UgEmerald.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    "GUARDIA",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UgEmeraldLight
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Acciones rapidas del guardia.
+ *
+ * El boton de incidentes sigue sin accion: el reporte de incidentes no entra en
+ * este sprint, asi que su onClick continua vacio a proposito.
+ */
+@Composable
+private fun GuardQuickActions(onScanQr: () -> Unit) {
+    Button(
+        onClick = onScanQr,
+        shape = RoundedCornerShape(18.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(54.dp)
+            .shadow(
+                elevation = 6.dp,
+                shape = RoundedCornerShape(18.dp),
+                ambientColor = UgEmerald.copy(alpha = 0.4f)
+            )
+    ) {
+        Icon(
+            Icons.Default.QrCodeScanner,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            "Escanear Pase QR de Ingreso",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+    }
+
+    OutlinedButton(
+        onClick = {},
+        shape = RoundedCornerShape(18.dp),
+        border = androidx.compose.foundation.BorderStroke(1.5.dp, UgAmber),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = UgAmber),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp)
+    ) {
+        Icon(
+            Icons.Default.ReportProblem,
+            contentDescription = null,
+            tint = UgAmber,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            "Registrar Incidente de Seguridad",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = UgNavy
+        )
+    }
+}
+
+/** Bitacora reciente de la porteria. */
+@Composable
+private fun GuardRecentActivityCard() {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            GuardLogItem(
+                time = "10:42 AM",
+                title = "Ingreso Peatonal Autorizado",
+                subtitle = "Juan Pérez - Apt 402",
+                status = "Permitido",
+                statusColor = UgEmerald
+            )
+            HorizontalDivider(color = UgBorderSoft)
+            GuardLogItem(
+                time = "09:15 AM",
+                title = "Recepción de Paquete",
+                subtitle = "Servientrega -> Apt 101",
+                status = "Recibido",
+                statusColor = UgInfoIcon
+            )
         }
     }
 }
