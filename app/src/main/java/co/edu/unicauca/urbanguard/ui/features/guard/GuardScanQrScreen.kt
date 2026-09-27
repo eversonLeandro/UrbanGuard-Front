@@ -209,41 +209,53 @@ private fun CameraPreviewContent(
         )
 
         // Overlay con marco de escaneo
-        Column(
+        CameraScanOverlay()
+    }
+}
+
+/**
+ * Marco de escaneo e instrucción, superpuestos sobre la previsualización.
+ *
+ * No introduce un nodo de layout propio: la Column que emite sigue siendo hija
+ * directa del Box de [CameraPreviewContent], así que el overlay se superpone al
+ * preview igual que antes.
+ */
+@Composable
+private fun CameraScanOverlay() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .size(260.dp)
+                .border(3.dp, UgEmerald, RoundedCornerShape(16.dp)),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(260.dp)
-                    .border(3.dp, UgEmerald, RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.QrCodeScanner,
-                    contentDescription = null,
-                    tint = UgEmerald.copy(alpha = 0.4f),
-                    modifier = Modifier.size(80.dp)
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            Text(
-                text = "Apunta la cámara al código QR del visitante",
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(UgNavy.copy(alpha = 0.7f))
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            Icon(
+                imageVector = Icons.Default.QrCodeScanner,
+                contentDescription = null,
+                tint = UgEmerald.copy(alpha = 0.4f),
+                modifier = Modifier.size(80.dp)
             )
         }
+
+        Spacer(Modifier.height(24.dp))
+
+        Text(
+            text = "Apunta la cámara al código QR del visitante",
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(UgNavy.copy(alpha = 0.7f))
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
     }
 }
 
