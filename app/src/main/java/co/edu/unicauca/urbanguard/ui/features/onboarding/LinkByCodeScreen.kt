@@ -519,78 +519,18 @@ private fun LinkSuccessScreen(
         Spacer(Modifier.height(28.dp))
 
         // Card resumen de la solicitud
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White, RoundedCornerShape(12.dp))
-                .border(1.dp, UgBorder, RoundedCornerShape(12.dp))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
-        ) {
-            SolicitudInfoRow(label = "Conjunto", value = conjuntoNombre)
-            Divider(color = UgBorderSoft, thickness = 1.dp)
-            SolicitudInfoRow(label = "Dirección", value = "$direccion, $ciudad")
-            Divider(color = UgBorderSoft, thickness = 1.dp)
-            SolicitudInfoRow(label = "Apartamento", value = "N.º $unidad")
-            Divider(color = UgBorderSoft, thickness = 1.dp)
-            SolicitudInfoRow(label = "Fecha de solicitud", value = fechaSolicitud)
-            Divider(color = UgBorderSoft, thickness = 1.dp)
-            // Fila de estado con badge
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Estado",
-                    fontSize = 13.sp,
-                    color = UgTextSecondary
-                )
-                Box(
-                    modifier = Modifier
-                        .background(UgWarningBg, RoundedCornerShape(6.dp))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "PENDIENTE",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = UgWarningText,
-                        letterSpacing = 0.5.sp
-                    )
-                }
-            }
-        }
+        SolicitudSummaryCard(
+            conjuntoNombre = conjuntoNombre,
+            direccion = direccion,
+            ciudad = ciudad,
+            unidad = unidad,
+            fechaSolicitud = fechaSolicitud
+        )
 
         Spacer(Modifier.height(16.dp))
 
         // Banner informativo amber
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(UgWarningBg, RoundedCornerShape(8.dp))
-                .border(1.dp, UgWarningBorder, RoundedCornerShape(8.dp))
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Icon(
-                imageVector = Icons.Default.Shield,
-                contentDescription = null,
-                tint = UgWarningText,
-                modifier = Modifier
-                    .size(16.dp)
-                    .padding(top = 1.dp)
-            )
-            Text(
-                text = "El administrador revisará tu solicitud. Recibirás una notificación con el resultado.",
-                fontSize = 13.sp,
-                color = UgWarningText,
-                lineHeight = 18.sp
-            )
-        }
+        PendingReviewNotice()
 
         Spacer(Modifier.weight(1f))
         Spacer(Modifier.height(32.dp))
@@ -615,6 +555,94 @@ private fun LinkSuccessScreen(
         }
 
         Spacer(Modifier.height(32.dp))
+    }
+}
+
+/**
+ * Resumen de lo que se envió, con el estado pendiente al final. El badge va en
+ * la última fila y no en un composable aparte porque comparte `Row` con la
+ * etiqueta "Estado" y partirlo obligaría a duplicar el peso de ambas columnas.
+ */
+@Composable
+private fun SolicitudSummaryCard(
+    conjuntoNombre: String,
+    direccion: String,
+    ciudad: String,
+    unidad: String,
+    fechaSolicitud: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White, RoundedCornerShape(12.dp))
+            .border(1.dp, UgBorder, RoundedCornerShape(12.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp)
+    ) {
+        SolicitudInfoRow(label = "Conjunto", value = conjuntoNombre)
+        Divider(color = UgBorderSoft, thickness = 1.dp)
+        SolicitudInfoRow(label = "Dirección", value = "$direccion, $ciudad")
+        Divider(color = UgBorderSoft, thickness = 1.dp)
+        SolicitudInfoRow(label = "Apartamento", value = "N.º $unidad")
+        Divider(color = UgBorderSoft, thickness = 1.dp)
+        SolicitudInfoRow(label = "Fecha de solicitud", value = fechaSolicitud)
+        Divider(color = UgBorderSoft, thickness = 1.dp)
+        // Fila de estado con badge
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Estado",
+                fontSize = 13.sp,
+                color = UgTextSecondary
+            )
+            Box(
+                modifier = Modifier
+                    .background(UgWarningBg, RoundedCornerShape(6.dp))
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "PENDIENTE",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = UgWarningText,
+                    letterSpacing = 0.5.sp
+                )
+            }
+        }
+    }
+}
+
+/** Aviso de que la solicitud quedó esperando respuesta del administrador. */
+@Composable
+private fun PendingReviewNotice() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(UgWarningBg, RoundedCornerShape(8.dp))
+            .border(1.dp, UgWarningBorder, RoundedCornerShape(8.dp))
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Icon(
+            imageVector = Icons.Default.Shield,
+            contentDescription = null,
+            tint = UgWarningText,
+            modifier = Modifier
+                .size(16.dp)
+                .padding(top = 1.dp)
+        )
+        Text(
+            text = "El administrador revisará tu solicitud. Recibirás una notificación con el resultado.",
+            fontSize = 13.sp,
+            color = UgWarningText,
+            lineHeight = 18.sp
+        )
     }
 }
 
