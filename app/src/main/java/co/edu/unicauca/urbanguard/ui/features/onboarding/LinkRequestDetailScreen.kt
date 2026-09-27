@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -26,7 +25,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -84,181 +82,186 @@ fun LinkRequestDetailScreen(
             onNavigateBack = onNavigateBack
         )
 
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = UgEmerald)
-                }
-            }
+        RequestDetailBody(
+            uiState = uiState,
+            onErrorDismissed = viewModel::onErrorDismissed,
+            onSuccessDismissed = viewModel::onSuccessDismissed,
+            onApproveClick = viewModel::onApproveClick,
+            onRejectClick = viewModel::onRejectClick
+        )
+    }
 
-            else -> {
-                val request = uiState.request
-                if (request != null) {
-                    Column(
+    ApproveRequestDialog(
+        visible = uiState.showApproveDialog,
+        request = uiState.request,
+        onConfirm = viewModel::onApproveConfirmed,
+        onDismiss = viewModel::onDialogDismissed
+    )
+
+    RejectRequestDialog(
+        visible = uiState.showRejectDialog,
+        request = uiState.request,
+        onConfirm = viewModel::onRejectConfirmed,
+        onDismiss = viewModel::onDialogDismissed
+    )
+}
+
+/**
+ * Cuerpo de la pantalla: resuelve los tres estados posibles (cargando, detalle
+ * disponible, sin solicitud). Vive aparte para que [LinkRequestDetailScreen] no
+ * tenga que conocer la estructura de estados ni los banners.
+ *
+ * [LinkRequestDetailUiState] se pasa entero en vez de descomponerlo en
+ * parámetros: son más de ocho y la regla de lista larga penalizaría una firma
+ * que además volvería frágil frente a cualquier campo nuevo.
+ */
+@Composable
+private fun RequestDetailBody(
+    uiState: LinkRequestDetailUiState,
+    onErrorDismissed: () -> Unit,
+    onSuccessDismissed: () -> Unit,
+    onApproveClick: () -> Unit,
+    onRejectClick: () -> Unit
+) {
+    when {
+        uiState.isLoading -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = UgEmerald)
+            }
+        }
+
+        else -> {
+            val request = uiState.request
+            if (request != null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    RequestHeaderCard(request)
+                    InfoCard(request)
+
+                    uiState.errorMessage?.let { message ->
+                        DetailMessageBanner(
+                            text = message,
+                            textColor = UgErrorText,
+                            backgroundColor = UgErrorBg,
+                            onDismiss = onErrorDismissed
+                        )
+                    }
+
+                    ReviewOutcomeBanner(
+                        message = uiState.successMessage,
+                        onDismiss = onSuccessDismissed
+                    )
+
+                    // Solo se puede revisar una solicitud pendiente; tras
+                    // aprobar o rechazar la decisión ya no es reversible.
+                    if (uiState.isPending) {
+                        Spacer(Modifier.weight(1f))
+
+                        ReviewActionArea(
+                            isLoadingAction = uiState.isLoadingAction,
+                            onApproveClick = onApproveClick,
+                            onRejectClick = onRejectClick
+                        )
+                    }
+                }
+            } else {
+                // Sin detalle que mostrar (no existe o no se pudo cargar).
+                // El error es lo único relevante y no se puede cerrar: la
+                // única salida es la flecha del top bar.
+                uiState.errorMessage?.let { message ->
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        contentAlignment = Alignment.Center
                     ) {
-                        RequestHeaderCard(request)
-                        InfoCard(request)
-
-                        uiState.errorMessage?.let { message ->
-                            DetailMessageBanner(
-                                text = message,
-                                textColor = UgErrorText,
-                                backgroundColor = UgErrorBg,
-                                onDismiss = viewModel::onErrorDismissed
-                            )
-                        }
-
-                        uiState.successMessage?.let { message ->
-                            val isWarning = message.contains("pendiente", ignoreCase = true)
-                            DetailMessageBanner(
-                                text = message,
-                                textColor = if (isWarning) UgAmber else UgEmerald,
-                                backgroundColor = if (isWarning) UgAmberSoft else UgSuccessBg,
-                                onDismiss = viewModel::onSuccessDismissed
-                            )
-                        }
-
-                        // Solo se puede revisar una solicitud pendiente; tras
-                        // aprobar o rechazar la decisión ya no es reversible.
-                        if (uiState.isPending) {
-                            Spacer(Modifier.weight(1f))
-
-                            if (uiState.isLoadingAction) {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(color = UgEmerald)
-                                }
-                            } else {
-                                Button(
-                                    onClick = viewModel::onApproveClick,
-                                    colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
-                                    shape = RoundedCornerShape(10.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp)
-                                ) {
-                                    Text(
-                                        "Aprobar solicitud",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                                OutlinedButton(
-                                    onClick = viewModel::onRejectClick,
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = UgErrorText),
-                                    border = BorderStroke(1.dp, UgErrorText),
-                                    shape = RoundedCornerShape(10.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp)
-                                ) {
-                                    Text(
-                                        "Rechazar solicitud",
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    // Sin detalle que mostrar (no existe o no se pudo cargar).
-                    // El error es lo único relevante y no se puede cerrar: la
-                    // única salida es la flecha del top bar.
-                    uiState.errorMessage?.let { message ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            DetailMessageBanner(
-                                text = message,
-                                textColor = UgErrorText,
-                                backgroundColor = UgErrorBg,
-                                onDismiss = null
-                            )
-                        }
+                        DetailMessageBanner(
+                            text = message,
+                            textColor = UgErrorText,
+                            backgroundColor = UgErrorBg,
+                            onDismiss = null
+                        )
                     }
                 }
             }
         }
     }
+}
 
-    // Diálogo de confirmación de aprobación
-    if (uiState.showApproveDialog) {
-        AlertDialog(
-            onDismissRequest = viewModel::onDialogDismissed,
-            containerColor = Color.White,
-            title = {
-                Text("¿Aprobar la solicitud?", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-            },
-            text = {
-                Text(
-                    "El residente ${uiState.request?.nombreSolicitante ?: ""} será vinculado a " +
-                        "${uiState.request?.conjuntoNombre ?: "su conjunto"}.",
-                    fontSize = 13.sp,
-                    color = UgTextSecondary,
-                    lineHeight = 19.sp
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = viewModel::onApproveConfirmed,
-                    colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Aprobar", fontSize = 12.sp)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = viewModel::onDialogDismissed) {
-                    Text("Cancelar", fontSize = 12.sp, color = UgTextSecondary)
-                }
-            }
+/**
+ * Banner de exito tras aprobar o rechazar. El tono pasa a ambar cuando el
+ * mensaje reporta una sincronizacion pendiente, que no es un fallo pero tampoco
+ * un cierre limpio.
+ */
+@Composable
+private fun ReviewOutcomeBanner(message: String?, onDismiss: () -> Unit) {
+    message?.let { text ->
+        val isWarning = text.contains("pendiente", ignoreCase = true)
+        DetailMessageBanner(
+            text = text,
+            textColor = if (isWarning) UgAmber else UgEmerald,
+            backgroundColor = if (isWarning) UgAmberSoft else UgSuccessBg,
+            onDismiss = onDismiss
         )
     }
+}
 
-    // Diálogo de confirmación de rechazo
-    if (uiState.showRejectDialog) {
-        AlertDialog(
-            onDismissRequest = viewModel::onDialogDismissed,
-            containerColor = Color.White,
-            title = {
-                Text("¿Rechazar la solicitud?", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-            },
-            text = {
-                Text(
-                    "El residente ${uiState.request?.nombreSolicitante ?: ""} no podrá vincularse con este código.",
-                    fontSize = 13.sp,
-                    color = UgTextSecondary,
-                    lineHeight = 19.sp
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = viewModel::onRejectConfirmed,
-                    colors = ButtonDefaults.buttonColors(containerColor = UgErrorText),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Rechazar", fontSize = 12.sp)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = viewModel::onDialogDismissed) {
-                    Text("Cancelar", fontSize = 12.sp, color = UgTextSecondary)
-                }
-            }
-        )
+/**
+ * Botones de aprobar y rechazar, o el indicador de progreso mientras la decisión
+ * viaja al servidor. No introduce un nodo de layout: los dos botones siguen
+ * siendo hijos directos de la Column que lo contiene, con el mismo
+ * `spacedBy(14.dp)`.
+ */
+@Composable
+private fun ReviewActionArea(
+    isLoadingAction: Boolean,
+    onApproveClick: () -> Unit,
+    onRejectClick: () -> Unit
+) {
+    if (isLoadingAction) {
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = UgEmerald)
+        }
+    } else {
+        Button(
+            onClick = onApproveClick,
+            colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        ) {
+            Text(
+                "Aprobar solicitud",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+        OutlinedButton(
+            onClick = onRejectClick,
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = UgErrorText),
+            border = BorderStroke(1.dp, UgErrorText),
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        ) {
+            Text(
+                "Rechazar solicitud",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 
