@@ -143,25 +143,11 @@ fun ConjuntoCodeScreen(
                         showRegenerateConfirm = uiState.showRegenerateConfirm,
                         onCopyClick = {
                             viewModel.onCopyCode(uiState.code!!) { textToCopy ->
-                                val clipboard = context.getSystemService(
-                                    Context.CLIPBOARD_SERVICE
-                                ) as ClipboardManager
-                                clipboard.setPrimaryClip(
-                                    ClipData.newPlainText("Código conjunto", textToCopy)
-                                )
+                                copyToClipboard(context, textToCopy)
                             }
                         },
                         onShareClick = {
-                            val intent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    "Código de vinculación para ${uiState.conjuntoName}: ${uiState.code}"
-                                )
-                            }
-                            context.startActivity(
-                                Intent.createChooser(intent, "Compartir código")
-                            )
+                            shareCode(context, uiState.conjuntoName, uiState.code!!)
                         },
                         regenerate = RegenerateActions(
                             onClick = viewModel::onRegenerateClick,
@@ -181,6 +167,21 @@ fun ConjuntoCodeScreen(
             }
         }
     }
+}
+
+/** Escribe el código en el portapapeles del sistema bajo la etiqueta del conjunto. */
+private fun copyToClipboard(context: Context, text: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(ClipData.newPlainText("Código conjunto", text))
+}
+
+/** Abre el selector de compartir del sistema con el texto de vinculación listo. */
+private fun shareCode(context: Context, conjuntoName: String, code: String) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, "Código de vinculación para $conjuntoName: $code")
+    }
+    context.startActivity(Intent.createChooser(intent, "Compartir código"))
 }
 
 // ─────────────────────────────────────────────
