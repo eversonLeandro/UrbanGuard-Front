@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
@@ -55,7 +56,6 @@ fun RegisterGuardScreen(
     var apellidos by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(
         modifier = Modifier
@@ -82,137 +82,142 @@ fun RegisterGuardScreen(
                 color = UgNavy
             )
 
-            OutlinedTextField(
+            GuardTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Email,
-                        contentDescription = null,
-                        tint = UgEmerald
-                    )
-                },
-                singleLine = true,
+                label = "Email",
+                icon = Icons.Default.Email,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = UgNavy,
-                    focusedLabelColor = UgNavy,
-                    cursorColor = UgNavy
                 )
             )
 
-            OutlinedTextField(
+            GuardTextField(
                 value = nombres,
                 onValueChange = { nombres = it },
-                label = { Text("Nombres") },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
-                        tint = UgEmerald
-                    )
-                },
-                singleLine = true,
+                label = "Nombres",
+                icon = Icons.Default.Person,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Words,
                     imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = UgNavy,
-                    focusedLabelColor = UgNavy,
-                    cursorColor = UgNavy
                 )
             )
 
-            OutlinedTextField(
+            GuardTextField(
                 value = apellidos,
                 onValueChange = { apellidos = it },
-                label = { Text("Apellidos") },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
-                        tint = UgEmerald
-                    )
-                },
-                singleLine = true,
+                label = "Apellidos",
+                icon = Icons.Default.Person,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Words,
                     imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = UgNavy,
-                    focusedLabelColor = UgNavy,
-                    cursorColor = UgNavy
                 )
             )
 
-            OutlinedTextField(
+            GuardTextField(
                 value = telefono,
                 onValueChange = { telefono = it },
-                label = { Text("Teléfono") },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Phone,
-                        contentDescription = null,
-                        tint = UgEmerald
-                    )
-                },
-                singleLine = true,
+                label = "Teléfono",
+                icon = Icons.Default.Phone,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Phone,
                     imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = UgNavy,
-                    focusedLabelColor = UgNavy,
-                    cursorColor = UgNavy
                 )
             )
 
-            Text(
-                text = "Nota: El teléfono se usará como contraseña inicial.",
-                fontSize = 12.sp,
-                color = UgTextSecondary,
-                modifier = Modifier.padding(start = 4.dp)
+            // Pendiente: el registro de vigilantes aún no está implementado;
+            // el botón habilita la validación de campos pero no persiste nada.
+            GuardFormFooter(
+                enabled = email.isNotBlank() &&
+                    nombres.isNotBlank() &&
+                    apellidos.isNotBlank() &&
+                    telefono.isNotBlank(),
+                onSubmit = {}
             )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                // Pendiente: el registro de vigilantes aún no está implementado;
-                // el botón habilita la validación de campos pero no persiste nada.
-                onClick = {},
-                enabled = email.isNotBlank() && nombres.isNotBlank() && apellidos.isNotBlank() && telefono.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text(
-                    text = "Registrar Guardia",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-            }
         }
+    }
+}
+
+/**
+ * Campo de texto del formulario de guardia.
+ *
+ * Los cuatro campos solo cambiaban etiqueta, icono, tipo de teclado e accion de
+ * IME; la forma, los colores y el ancho eran identicos, asi que se unifican aqui
+ * para que un cambio de estilo se aplique a los cuatro a la vez.
+ *
+ * La accion de IME se deduce de [KeyboardOptions.imeAction]: con [ImeAction.Done]
+ * el boton del teclado cierra el teclado, y en cualquier otro caso se pasa el
+ * foco al campo siguiente. Asi el llamador solo declara la intencion y no repite
+ * el cableado de foco en cada campo.
+ */
+@Composable
+private fun GuardTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    icon: ImageVector,
+    keyboardOptions: KeyboardOptions
+) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        leadingIcon = {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = UgEmerald
+            )
+        },
+        singleLine = true,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = KeyboardActions(
+            onNext = { focusManager.moveFocus(FocusDirection.Down) },
+            onDone = { keyboardController?.hide() }
+        ),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = UgNavy,
+            focusedLabelColor = UgNavy,
+            cursorColor = UgNavy
+        )
+    )
+}
+
+/** Cierre del formulario: nota de ayuda, separador y boton de envio. */
+@Composable
+private fun GuardFormFooter(
+    enabled: Boolean,
+    onSubmit: () -> Unit
+) {
+    Text(
+        text = "Nota: El teléfono se usará como contraseña inicial.",
+        fontSize = 12.sp,
+        color = UgTextSecondary,
+        modifier = Modifier.padding(start = 4.dp)
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    Button(
+        onClick = onSubmit,
+        enabled = enabled,
+        colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp)
+    ) {
+        Text(
+            text = "Registrar Guardia",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
     }
 }
