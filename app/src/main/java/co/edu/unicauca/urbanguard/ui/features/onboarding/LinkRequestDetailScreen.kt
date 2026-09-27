@@ -7,14 +7,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Warning
@@ -114,6 +115,11 @@ fun LinkRequestDetailScreen(
  * [LinkRequestDetailUiState] se pasa entero en vez de descomponerlo en
  * parámetros: son más de ocho y la regla de lista larga penalizaría una firma
  * que además volvería frágil frente a cualquier campo nuevo.
+ *
+ * La parte informative va en una columna scrolleable que cede el espacio
+ * sobrante, y las acciones quedan fuera de ella: si no, la suma de cabecera,
+ * ficha y botones supera la altura útil en equipos cortos y Compose dibuja el
+ * último botón por debajo del borde inferior, donde ya no se ve.
  */
 @Composable
 private fun RequestDetailBody(
@@ -123,74 +129,75 @@ private fun RequestDetailBody(
     onApproveClick: () -> Unit,
     onRejectClick: () -> Unit
 ) {
-    when {
-        uiState.isLoading -> {
+    if (uiState.isLoading) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = UgEmerald)
+        }
+        return
+    }
+
+    val request = uiState.request
+
+    // Sin detalle que mostrar (no existe o no se pudo cargar).
+    // El error es lo único relevante y no se puede cerrar: la
+    // única salida es la flecha del top bar.
+    if (request == null) {
+        uiState.errorMessage?.let { message ->
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = UgEmerald)
+                DetailMessageBanner(
+                    text = message,
+                    textColor = UgErrorText,
+                    backgroundColor = UgErrorBg,
+                    onDismiss = null
+                )
             }
         }
+        return
+    }
 
-        else -> {
-            val request = uiState.request
-            if (request != null) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    RequestHeaderCard(request)
-                    InfoCard(request)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            RequestHeaderCard(request)
+            InfoCard(request)
 
-                    uiState.errorMessage?.let { message ->
-                        DetailMessageBanner(
-                            text = message,
-                            textColor = UgErrorText,
-                            backgroundColor = UgErrorBg,
-                            onDismiss = onErrorDismissed
-                        )
-                    }
-
-                    ReviewOutcomeBanner(
-                        message = uiState.successMessage,
-                        onDismiss = onSuccessDismissed
-                    )
-
-                    // Solo se puede revisar una solicitud pendiente; tras
-                    // aprobar o rechazar la decisión ya no es reversible.
-                    if (uiState.isPending) {
-                        Spacer(Modifier.weight(1f))
-
-                        ReviewActionArea(
-                            isLoadingAction = uiState.isLoadingAction,
-                            onApproveClick = onApproveClick,
-                            onRejectClick = onRejectClick
-                        )
-                    }
-                }
-            } else {
-                // Sin detalle que mostrar (no existe o no se pudo cargar).
-                // El error es lo único relevante y no se puede cerrar: la
-                // única salida es la flecha del top bar.
-                uiState.errorMessage?.let { message ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        DetailMessageBanner(
-                            text = message,
-                            textColor = UgErrorText,
-                            backgroundColor = UgErrorBg,
-                            onDismiss = null
-                        )
-                    }
-                }
+            uiState.errorMessage?.let { message ->
+                DetailMessageBanner(
+                    text = message,
+                    textColor = UgErrorText,
+                    backgroundColor = UgErrorBg,
+                    onDismiss = onErrorDismissed
+                )
             }
+
+            ReviewOutcomeBanner(
+                message = uiState.successMessage,
+                onDismiss = onSuccessDismissed
+            )
+        }
+
+        // Solo se puede revisar una solicitud pendiente; tras
+        // aprobar o rechazar la decisión ya no es reversible.
+        if (uiState.isPending) {
+            ReviewActionArea(
+                isLoadingAction = uiState.isLoadingAction,
+                onApproveClick = onApproveClick,
+                onRejectClick = onRejectClick
+            )
         }
     }
 }
