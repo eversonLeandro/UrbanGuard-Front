@@ -88,236 +88,309 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // ── Tarjeta Héroe de Bienvenida ──────────────────────────
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = RoundedCornerShape(24.dp),
-                        ambientColor = UgNavy.copy(alpha = 0.3f),
-                        spotColor = UgNavy.copy(alpha = 0.3f)
-                    )
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(UgHeroGradient)
-                    .padding(22.dp)
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(UgEmerald.copy(alpha = 0.2f))
-                                .border(1.5.dp, UgEmerald, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = if (uiState.userName.isNotBlank()) uiState.userName.take(1)
-                                    .uppercase() else "U",
-                                color = Color.White,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        Spacer(Modifier.width(14.dp))
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(
-                                text = "¡Hola de nuevo!",
-                                fontSize = 12.sp,
-                                color = Color.White.copy(alpha = 0.75f)
-                            )
-                            Text(
-                                text = if (uiState.userName.isNotBlank()) uiState.userName else "Usuario UrbanGuard",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            if (uiState.userRole.isNotBlank()) {
-                                Spacer(Modifier.height(2.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(UgEmerald.copy(alpha = 0.25f))
-                                        .border(
-                                            1.dp,
-                                            UgEmerald.copy(alpha = 0.5f),
-                                            RoundedCornerShape(8.dp)
-                                        )
-                                        .padding(horizontal = 9.dp, vertical = 3.dp)
-                                ) {
-                                    Text(
-                                        text = uiState.userRole,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = UgEmeraldLight
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.12f), thickness = 1.dp)
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround
-                    ) {
-                        HeroStatItem(
-                            label = "Estado",
-                            value = "Activo",
-                            icon = Icons.Default.Shield
-                        )
-                        HeroStatItem(
-                            label = "Conjunto",
-                            value = uiState.conjuntoName.ifBlank { "Sin conjunto" },
-                            icon = Icons.Default.Key
-                        )
-                    }
-                }
-            }
+            HomeHeroCard(
+                userName = uiState.userName,
+                userRole = uiState.userRole,
+                conjuntoName = uiState.conjuntoName
+            )
 
             // ── Acciones Administrativas (solo ADMIN) ───────────────────
             if (uiState.role == UserRole.ADMIN) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = "Gestión de Administración",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = UgNavy
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        AdminQuickActionCard(
-                            title = "Compartir Código",
-                            subtitle = "Invitar residentes",
-                            icon = Icons.Default.Key,
-                            modifier = Modifier.weight(1f),
-                            onClick = onOpenConjuntoCode
-                        )
-                        AdminQuickActionCard(
-                            title = "Solicitudes",
-                            subtitle = "Aprobar accesos",
-                            icon = Icons.Default.PersonAdd,
-                            modifier = Modifier.weight(1f),
-                            onClick = onOpenPendingRequests
-                        )
-                    }
-                }
+                AdminActionsSection(
+                    onOpenConjuntoCode = onOpenConjuntoCode,
+                    onOpenPendingRequests = onOpenPendingRequests
+                )
             }
 
             // ── Accesos Rápidos de Comunidad ────────────────────────────
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = "Servicios Principales",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = UgNavy
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    HomeActionCard(
-                        title = "Pases QR",
-                        subtitle = "Invitar visitantes",
-                        icon = Icons.Default.QrCodeScanner,
-                        badgeColor = UgEmerald,
-                        modifier = Modifier.weight(1f)
-                    )
-                    HomeActionCard(
-                        title = "Paquetes",
-                        subtitle = "Entregas en portería",
-                        icon = Icons.Default.Inventory2,
-                        badgeColor = UgInfoIcon,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    HomeActionCard(
-                        title = "Comunicados",
-                        subtitle = "Noticias del conjunto",
-                        icon = Icons.Default.Campaign,
-                        badgeColor = UgAmber,
-                        modifier = Modifier.weight(1f)
-                    )
-                    HomeActionCard(
-                        title = "PQRS & Reportes",
-                        subtitle = "Atención al residente",
-                        icon = Icons.AutoMirrored.Filled.Chat,
-                        badgeColor = UgNavy,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
+            CommunityServicesSection()
 
             // ── Selector de conjunto ───────────────────────────────────
-            // Reemplaza el banner informativo anterior, que repetia lo que ya
-            // dice la tarjeta "Comunicados" de la seccion de servicios.
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(18.dp))
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(Color.White)
-                    .border(1.dp, UgBorder, RoundedCornerShape(18.dp))
-                    .clickable(onClick = onOpenConjuntoSelection)
-                    .padding(18.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(42.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(UgEmerald.copy(alpha = 0.12f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Apartment,
-                            contentDescription = null,
-                            tint = UgEmerald,
-                            modifier = Modifier.size(22.dp)
+            ConjuntoSelectorCard(
+                conjuntoName = uiState.conjuntoName,
+                onClick = onOpenConjuntoSelection
+            )
+        }
+    }
+}
+
+/**
+ * Cabecera de la tarjeta heroe: avatar con la inicial, saludo, nombre y badge
+ * de rol.
+ *
+ * El badge se oculta cuando [userRole] viene vacio, igual que antes.
+ */
+@Composable
+private fun HomeHeroHeader(
+    userName: String,
+    userRole: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(UgEmerald.copy(alpha = 0.2f))
+                .border(1.5.dp, UgEmerald, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (userName.isNotBlank()) userName.take(1)
+                    .uppercase() else "U",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = "¡Hola de nuevo!",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.75f)
+            )
+            Text(
+                text = if (userName.isNotBlank()) userName else "Usuario UrbanGuard",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            if (userRole.isNotBlank()) {
+                Spacer(Modifier.height(2.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(UgEmerald.copy(alpha = 0.25f))
+                        .border(
+                            1.dp,
+                            UgEmerald.copy(alpha = 0.5f),
+                            RoundedCornerShape(8.dp)
                         )
-                    }
-                    Spacer(Modifier.width(14.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            "Seleccionar conjunto",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = UgNavy
-                        )
-                        Text(
-                            text = if (uiState.conjuntoName.isNotBlank()) {
-                                uiState.conjuntoName
-                            } else {
-                                "Toca para ver los conjuntos vinculados a tu cuenta"
-                            },
-                            fontSize = 12.sp,
-                            color = UgTextSecondary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = UgTextSecondary,
-                        modifier = Modifier.size(20.dp)
+                        .padding(horizontal = 9.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        text = userRole,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = UgEmeraldLight
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Tarjeta heroe de bienvenida, con la inicial del usuario, su rol y el estado
+ * del conjunto.
+ */
+@Composable
+private fun HomeHeroCard(
+    userName: String,
+    userRole: String,
+    conjuntoName: String
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(24.dp),
+                ambientColor = UgNavy.copy(alpha = 0.3f),
+                spotColor = UgNavy.copy(alpha = 0.3f)
+            )
+            .clip(RoundedCornerShape(24.dp))
+            .background(UgHeroGradient)
+            .padding(22.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            HomeHeroHeader(userName = userName, userRole = userRole)
+
+            HorizontalDivider(color = Color.White.copy(alpha = 0.12f), thickness = 1.dp)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                HeroStatItem(
+                    label = "Estado",
+                    value = "Activo",
+                    icon = Icons.Default.Shield
+                )
+                HeroStatItem(
+                    label = "Conjunto",
+                    value = conjuntoName.ifBlank { "Sin conjunto" },
+                    icon = Icons.Default.Key
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Accesos administrativos. Solo se pinta cuando el rol es ADMIN, pero la
+ * condicion se queda en la pantalla para que quede claro que la seccion es
+ * condicional y no un simple bloque mas.
+ *
+ * El `weight(1f)` se aplica en la Row que emite este composable y viaja por el
+ * parametro `modifier` de cada tarjeta, asi que las dos siguen repartiendo el
+ * ancho a partes iguales.
+ */
+@Composable
+private fun AdminActionsSection(
+    onOpenConjuntoCode: () -> Unit,
+    onOpenPendingRequests: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = "Gestión de Administración",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = UgNavy
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            AdminQuickActionCard(
+                title = "Compartir Código",
+                subtitle = "Invitar residentes",
+                icon = Icons.Default.Key,
+                modifier = Modifier.weight(1f),
+                onClick = onOpenConjuntoCode
+            )
+            AdminQuickActionCard(
+                title = "Solicitudes",
+                subtitle = "Aprobar accesos",
+                icon = Icons.Default.PersonAdd,
+                modifier = Modifier.weight(1f),
+                onClick = onOpenPendingRequests
+            )
+        }
+    }
+}
+
+/** Rejilla de los servicios principales del conjunto. */
+@Composable
+private fun CommunityServicesSection() {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = "Servicios Principales",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = UgNavy
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            HomeActionCard(
+                title = "Pases QR",
+                subtitle = "Invitar visitantes",
+                icon = Icons.Default.QrCodeScanner,
+                badgeColor = UgEmerald,
+                modifier = Modifier.weight(1f)
+            )
+            HomeActionCard(
+                title = "Paquetes",
+                subtitle = "Entregas en portería",
+                icon = Icons.Default.Inventory2,
+                badgeColor = UgInfoIcon,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            HomeActionCard(
+                title = "Comunicados",
+                subtitle = "Noticias del conjunto",
+                icon = Icons.Default.Campaign,
+                badgeColor = UgAmber,
+                modifier = Modifier.weight(1f)
+            )
+            HomeActionCard(
+                title = "PQRS & Reportes",
+                subtitle = "Atención al residente",
+                icon = Icons.AutoMirrored.Filled.Chat,
+                badgeColor = UgNavy,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+/**
+ * Selector de conjunto.
+ *
+ * Reemplaza el banner informativo anterior, que repetia lo que ya decia la
+ * tarjeta "Comunicados" de la seccion de servicios. El `weight(1f)` del texto
+ * sigue resolviendo contra el RowScope de la Row que se emite aqui dentro.
+ */
+@Composable
+private fun ConjuntoSelectorCard(
+    conjuntoName: String,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(elevation = 2.dp, shape = RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.White)
+            .border(1.dp, UgBorder, RoundedCornerShape(18.dp))
+            .clickable(onClick = onClick)
+            .padding(18.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(UgEmerald.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Apartment,
+                    contentDescription = null,
+                    tint = UgEmerald,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Seleccionar conjunto",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = UgNavy
+                )
+                Text(
+                    text = if (conjuntoName.isNotBlank()) {
+                        conjuntoName
+                    } else {
+                        "Toca para ver los conjuntos vinculados a tu cuenta"
+                    },
+                    fontSize = 12.sp,
+                    color = UgTextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = UgTextSecondary,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
