@@ -355,7 +355,9 @@ fun AppNavGraph(
                     navController.popBackStack()
                 },
                 onLinkSuccess = {
-                    // La solicitud está pendiente de aprobación — vuelve al selector
+                    // La solicitud está pendiente de aprobación — el botón
+                    // "Volver a mis conjuntos" y la flecha del top bar de la
+                    // pantalla de éxito devuelven al selector.
                     navController.navigate(Routes.CONJUNTO_SELECTION) {
                         popUpTo(navController.graph.id) { inclusive = true }
                     }

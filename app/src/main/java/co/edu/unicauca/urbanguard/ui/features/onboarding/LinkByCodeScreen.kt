@@ -77,7 +77,8 @@ fun LinkByCodeScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     // El requestSuccess se muestra como pantalla de éxito y la navegación
-    // la dispara el botón "Volver al inicio" (no se auto-navega).
+    // la disparan el botón "Volver a mis conjuntos" y la flecha del top bar
+    // (no se auto-navega).
 
     // Si el requestSuccess está activo mostramos la pantalla de éxito
     if (uiState.requestSuccess && uiState.linkRequest != null) {
@@ -87,6 +88,7 @@ fun LinkByCodeScreen(
             ciudad = uiState.conjuntoFound?.ciudad ?: "",
             unidad = uiState.apartamento,
             fechaSolicitud = uiState.linkRequest!!.fechaSolicitud,
+            onNavigateBack = onNavigateBack,
             onNavigateHome = onLinkSuccess
         )
         return
@@ -330,6 +332,21 @@ private fun SearchErrorBanner(message: String) {
 // Pantalla de éxito — solicitud enviada
 // ─────────────────────────────────────────────
 
+/**
+ * Pantalla de éxito — solicitud enviada.
+ *
+ * Se paints sola, sin el armazón de la pantalla de ingreso, asi que necesita su
+ * propio top bar: sin la flecha de [onNavigateBack] el residente se queda sin
+ * forma visible de volver, porque el boton de salida vive al final de un bloque
+ * mas largo que la pantalla.
+ *
+ * El contenido va en una columna scrolleable con `weight(1f)` y las acciones
+ * quedan dentro de ella: el resumen y el aviso suman mas alto que cualquier
+ * pantalla, asi que sin scroll el boton se dibuja por debajo del borde inferior.
+ * [onNavigateBack] hace `popBackStack()` sobre este mismo destino, que descarta
+ * el `requestSuccess` del ViewModel junto con la pantalla; por eso no hace falta
+ * limpiar ese estado a mano.
+ */
 @Composable
 private fun LinkSuccessScreen(
     conjuntoNombre: String,
@@ -337,91 +354,113 @@ private fun LinkSuccessScreen(
     ciudad: String,
     unidad: String,
     fechaSolicitud: String,
+    onNavigateBack: () -> Unit,
     onNavigateHome: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(UgBackground)
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(64.dp))
+        UrbanGuardTopBar(
+            title = "Unirse a conjunto",
+            onNavigateBack = onNavigateBack
+        )
 
-        // Ícono escudo en círculo naranja/amber — igual al prototipo
-        Box(
+        Column(
             modifier = Modifier
-                .size(80.dp)
-                .background(UgWarningBg, CircleShape),
-            contentAlignment = Alignment.Center
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = Icons.Default.Shield,
-                contentDescription = null,
-                tint = UgWarningText,
-                modifier = Modifier.size(40.dp)
+            SolicitudEnviadaHeader()
+
+            Spacer(Modifier.height(28.dp))
+
+            // Card resumen de la solicitud
+            SolicitudSummaryCard(
+                conjuntoNombre = conjuntoNombre,
+                direccion = direccion,
+                ciudad = ciudad,
+                unidad = unidad,
+                fechaSolicitud = fechaSolicitud
             )
+
+            Spacer(Modifier.height(16.dp))
+
+            // Banner informativo amber
+            PendingReviewNotice()
+
+            Spacer(Modifier.height(32.dp))
+
+            // Botón volver a mis conjuntos
+            OutlinedButton(
+                onClick = onNavigateHome,
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = UgNavy),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(UgNavy)
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text(
+                    text = "Volver a mis conjuntos",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp
+                )
+            }
+
+            Spacer(Modifier.height(32.dp))
         }
-
-        Spacer(Modifier.height(24.dp))
-
-        Text(
-            text = "Solicitud enviada",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Medium,
-            color = UgNavy
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Text(
-            text = "Tu solicitud está pendiente de aprobación por el administrador",
-            fontSize = 14.sp,
-            color = UgTextSecondary,
-            textAlign = TextAlign.Center,
-            lineHeight = 20.sp
-        )
-
-        Spacer(Modifier.height(28.dp))
-
-        // Card resumen de la solicitud
-        SolicitudSummaryCard(
-            conjuntoNombre = conjuntoNombre,
-            direccion = direccion,
-            ciudad = ciudad,
-            unidad = unidad,
-            fechaSolicitud = fechaSolicitud
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        // Banner informativo amber
-        PendingReviewNotice()
-
-        Spacer(Modifier.weight(1f))
-        Spacer(Modifier.height(32.dp))
-
-        // Botón volver al inicio
-        OutlinedButton(
-            onClick = onNavigateHome,
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = UgNavy),
-            border = ButtonDefaults.outlinedButtonBorder.copy(
-                brush = androidx.compose.ui.graphics.SolidColor(UgNavy)
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-        ) {
-            Text(
-                text = "Volver al inicio",
-                fontWeight = FontWeight.Medium,
-                fontSize = 15.sp
-            )
-        }
-
-        Spacer(Modifier.height(32.dp))
     }
+}
+
+/**
+ * Escudo, titulo y texto de confirmacion de la pantalla de exito.
+ *
+ * El margen superior baja de 64dp a 24dp porque ahora el top bar hace ese papel:
+ * dejarlo igual dejaba un hueco muerto de mas de 100dp arriba del titulo.
+ */
+@Composable
+private fun SolicitudEnviadaHeader() {
+    Spacer(Modifier.height(24.dp))
+
+    // Ícono escudo en círculo naranja/amber — igual al prototipo
+    Box(
+        modifier = Modifier
+            .size(80.dp)
+            .background(UgWarningBg, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Shield,
+            contentDescription = null,
+            tint = UgWarningText,
+            modifier = Modifier.size(40.dp)
+        )
+    }
+
+    Spacer(Modifier.height(24.dp))
+
+    Text(
+        text = "Solicitud enviada",
+        fontSize = 22.sp,
+        fontWeight = FontWeight.Medium,
+        color = UgNavy
+    )
+
+    Spacer(Modifier.height(8.dp))
+
+    Text(
+        text = "Tu solicitud está pendiente de aprobación por el administrador",
+        fontSize = 14.sp,
+        color = UgTextSecondary,
+        textAlign = TextAlign.Center,
+        lineHeight = 20.sp
+    )
 }
 
 /**
