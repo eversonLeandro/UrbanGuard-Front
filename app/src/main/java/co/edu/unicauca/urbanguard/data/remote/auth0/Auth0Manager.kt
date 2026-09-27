@@ -2,7 +2,6 @@ package co.edu.unicauca.urbanguard.data.remote.auth0
 
 import android.util.Log
 import co.edu.unicauca.urbanguard.BuildConfig
-import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
@@ -29,21 +28,6 @@ class Auth0Manager @Inject constructor(
 
     companion object {
         private const val TAG = "Auth0Manager"
-
-        /**
-         * Política de contraseña que la app exige. Se muestra completa para que el
-         * usuario sepa qué corregir, en lugar de devolverle un error en inglés.
-         */
-        private const val PASSWORD_POLICY_MESSAGE =
-            "La contraseña no cumple la política de seguridad. " +
-                    "Usa al menos 8 caracteres, con al menos una mayúscula y un número."
-
-        private const val APP_CONFIG_MESSAGE =
-            "La aplicación no pudo autenticarte en este momento. Intenta de nuevo en unos minutos."
-
-        private const val SIGNUP_DISABLED_MESSAGE =
-            "El registro de cuentas nuevas no está disponible en este momento. " +
-                    "Contacta al administrador de tu conjunto."
     }
 
     suspend fun loginEmbedded(
@@ -95,7 +79,7 @@ class Auth0Manager @Inject constructor(
                     "Error en registro de Auth0: code=${error.getCode()}, desc=${error.getDescription()}",
                     error
                 )
-                continuation.resumeWithException(mapAuth0Error(error))
+                continuation.resumeWithException(Auth0ErrorMapper.toAppException(error))
             }
         })
     }
@@ -121,7 +105,7 @@ class Auth0Manager @Inject constructor(
                         "Error en login de Auth0: code=${error.getCode()}, desc=${error.getDescription()}",
                         error
                     )
-                    continuation.resumeWithException(mapAuth0Error(error))
+                    continuation.resumeWithException(Auth0ErrorMapper.toAppException(error))
                 }
             })
     }
@@ -264,108 +248,5 @@ class Auth0Manager @Inject constructor(
             // Cualquier claim desconocido o null → centinela USER → ConjuntoSelection.
             else -> UserRole.USER
         }
-    }
-
-    /**
-     * Traduce una [AuthenticationException] de Auth0 a un [AppError] con texto en español.
-     *
-     * Principio: al usuario se le explica qué hacer, nunca se le muestra la descripción
-     * cruda de Auth0 (viene en inglés y en muchos casos es un error de configuración
-     * interno, no un problema del usuario). El código real se registra en el log.
-     *
-     * Devuelve un [AppException] para que el mensaje de negocio viaje intacto hasta la
-     * capa de UI: [co.edu.unicauca.urbanguard.core.network.NetworkErrorMapper] respeta
-     * los [AppException] y no los vuelve a envolver.
-     */
-    private fun mapAuth0Error(error: AuthenticationException): AppException {
-        val code = error.getCode().orEmpty().trim().lowercase()
-        val description = error.getDescription().orEmpty().trim()
-        val mapped: AppError = when {
-            // --- Registro duplicado -------------------------------------------------
-            code == "user_exists" || description.contains("already exists", ignoreCase = true) ->
-                AppError.EmailAlreadyRegistered(AppError.EmailAlreadyRegistered.MESSAGE)
-
-            // --- Credenciales incorrectas ------------------------------------------
-            error.isInvalidCredentials ||
-                    code in setOf(
-                "invalid_grant",
-                "wrong_email_password",
-                "invalid_user_password"
-            ) ->
-                AppError.InvalidCredentials(AppError.InvalidCredentials.MESSAGE)
-
-            // --- Cuenta creada pero correo sin verificar ---------------------------
-            code == "requires_verification" || error.isVerificationRequired ||
-                    description.contains("not confirmed", ignoreCase = true) ||
-                    description.contains("not been verified", ignoreCase = true) ->
-                AppError.EmailNotVerified(AppError.EmailNotVerified.MESSAGE)
-
-            // --- Política de contraseña --------------------------------------------
-            error.isPasswordLeaked ->
-                AppError.WeakPassword(
-                    "Esa contraseña aparece en filtraciones de datos conocidas. Elige una nueva."
-                )
-
-            error.isPasswordAlreadyUsed ->
-                AppError.WeakPassword("Esa contraseña ya la usaste antes. Elige una diferente.")
-
-            error.isRuleError || error.isPasswordNotStrongEnough ||
-                    code in setOf(
-                "invalid_password",
-                "password_strength_error",
-                "password_dictionary_error"
-            ) ->
-                AppError.WeakPassword(PASSWORD_POLICY_MESSAGE)
-
-            // --- Sesión vencida ----------------------------------------------------
-            error.isInvalidRefreshToken || error.isRefreshTokenDeleted ||
-                    code in setOf("expired_token", "invalid_refresh_token", "login_required") ->
-                AppError.SessionExpired(AppError.SessionExpired.MESSAGE)
-
-            // --- Verificación adicional (MFA / Bot Protection) ----------------------
-            error.isMultifactorRequired || error.isMultifactorEnrollRequired ||
-                    code in setOf(
-                "mfa_required",
-                "mfa_registration_required",
-                "mfa_invalid_code"
-            ) ->
-                AppError.ExtraVerificationRequired(AppError.ExtraVerificationRequired.MESSAGE)
-
-            // --- Cuenta bloqueada o inactiva ---------------------------------------
-            error.isTooManyAttempts || code == "too_many_attempts" ->
-                AppError.AccountBlocked(AppError.AccountBlocked.MESSAGE)
-
-            error.isAccessDenied || code == "access_denied" ->
-                AppError.AccountDisabled(AppError.AccountDisabled.MESSAGE)
-
-            // --- Conectividad ------------------------------------------------------
-            error.isNetworkError ->
-                AppError.NoConnection(AppError.NoConnection.MESSAGE)
-
-            // --- Configuración incorrecta del lado del proyecto --------------------
-            // No son culpa del usuario: se avisa de forma genérica y se deja traza.
-            error.isInvalidConfiguration || error.isIdTokenValidationError ||
-                    code in setOf(
-                "unauthorized_client",
-                "invalid_request",
-                "invalid_authorize_url"
-            ) ->
-                AppError.Unexpected(APP_CONFIG_MESSAGE)
-
-            code == "public signup is disabled" || description.contains(
-                "signup is disabled",
-                ignoreCase = true
-            ) ->
-                AppError.Unexpected(SIGNUP_DISABLED_MESSAGE)
-
-            // --- Sin código reconocible --------------------------------------------
-            else -> {
-                Log.w(TAG, "Código de Auth0 sin mapeo: code=$code, desc=$description")
-                AppError.Unexpected(AppError.Unexpected.MESSAGE)
-            }
-        }
-
-        Log.e(TAG, "Auth0 rechazado: code=$code, tipo=${error.javaClass.simpleName}")
-        return AppException(mapped)
     }
 }
