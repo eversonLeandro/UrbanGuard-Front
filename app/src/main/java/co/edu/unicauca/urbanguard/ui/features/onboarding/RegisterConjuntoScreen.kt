@@ -338,15 +338,7 @@ private fun CityDropdown(
     var expanded by remember { mutableStateOf(false) }
     var query by remember(selected) { mutableStateOf(selected) }
 
-    val filteredOptions = remember(query, options) {
-        if (query.isBlank()) options else
-            options.filter {
-                it.contains(query, ignoreCase = true) || query.contains(
-                    it,
-                    ignoreCase = true
-                )
-            }
-    }
+    val filteredOptions = remember(query, options) { filterCities(query, options) }
 
     Column(modifier = modifier.fillMaxWidth()) {
         FieldLabel(icon = Icons.Default.Map, text = "Ciudad")
@@ -422,6 +414,20 @@ private fun CityDropdown(
         }
     }
 }
+
+/**
+ * Filtra la lista de ciudades por coincidencia en ambos sentidos, para que
+ * "Bog" encuentre "Bogotá" y también al revés. Sin query no se filtra nada:
+ * el desplegable se abre con la lista completa.
+ */
+private fun filterCities(query: String, options: List<String>): List<String> =
+    if (query.isBlank()) {
+        options
+    } else {
+        options.filter {
+            it.contains(query, ignoreCase = true) || query.contains(it, ignoreCase = true)
+        }
+    }
 
 private fun loadColombiaCities(context: Context): List<String> {
     val jsonString = context.resources.openRawResource(R.raw.colombia_cities)
