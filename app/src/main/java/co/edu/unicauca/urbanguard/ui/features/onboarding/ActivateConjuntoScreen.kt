@@ -88,104 +88,14 @@ fun ActivateConjuntoScreen(
                 .padding(horizontal = 20.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            HeroImage()
+            ActivationHeader()
 
-            Spacer(Modifier.height(20.dp))
-
-            Text(
-                text = "Activar Licencia de Proyecto",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = UgTextPrimary,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = "Ingresa el código proporcionado por el dueño del proyecto para habilitar tu conjunto.",
-                fontSize = 13.sp,
-                color = UgTextSecondary,
-                textAlign = TextAlign.Center,
-                lineHeight = 18.sp
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            // Label "Código de Licencia"
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Lock,
-                    contentDescription = null,
-                    tint = UgTextPrimary,
-                    modifier = Modifier.size(14.dp)
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = "Código de Licencia",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = UgTextPrimary
-                )
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedTextField(
+            ActivationCodeField(
                 value = uiState.code,
                 onValueChange = { viewModel.onCodeChange(formatActivationCode(it)) },
-                placeholder = {
-                    Text(
-                        "Ingresa tu código de licencia",
-                        fontSize = 16.sp,
-                        color = UgTextSecondary,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-                textStyle = androidx.compose.ui.text.TextStyle(
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    textAlign = TextAlign.Center,
-                    color = UgTextPrimary
-                ),
-                singleLine = true,
-                shape = RoundedCornerShape(10.dp),
-                isError = errorMessage != null,
-                enabled = !uiState.isLoading,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedBorderColor = UgNavy,
-                    unfocusedBorderColor = UgBorder,
-                    errorBorderColor = UgErrorBright,
-                    cursorColor = UgNavy
-                ),
-                modifier = Modifier.fillMaxWidth()
+                errorMessage = errorMessage,
+                isLoading = uiState.isLoading
             )
-
-            Spacer(Modifier.height(8.dp))
-
-            if (errorMessage != null) {
-                Text(
-                    text = errorMessage,
-                    fontSize = 12.sp,
-                    color = UgErrorText,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(8.dp))
-            } else {
-                Text(
-                    text = "EL CÓDIGO ES ALFANUMÉRICO: usa letras y números.",
-                    fontSize = 11.sp,
-                    color = UgTextSecondary,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
 
             Spacer(Modifier.height(20.dp))
 
@@ -193,61 +103,201 @@ fun ActivateConjuntoScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            val isEnabled = !uiState.isLoading && uiState.code.isNotBlank()
-
-            Button(
-                onClick = { viewModel.validateCode() },
-                enabled = isEnabled,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = UgEmerald,
-                    contentColor = Color.White,
-                    disabledContainerColor = UgDivider,
-                    disabledContentColor = UgDisabledText
-                ),
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.height(20.dp)
-                    )
-                } else {
-                    Text(
-                        text = "Validar Código",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Icon(
-                        imageVector = Icons.Filled.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
+            ValidateCodeButton(
+                isLoading = uiState.isLoading,
+                enabled = !uiState.isLoading && uiState.code.isNotBlank(),
+                onClick = viewModel::validateCode
+            )
 
             Spacer(Modifier.height(16.dp))
 
-            Row {
-                Text(
-                    text = "¿Tienes problemas con tu código? ",
-                    fontSize = 12.sp,
-                    color = UgTextSecondary
-                )
-                Text(
-                    text = "Contactar soporte",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = UgNavy
-                )
-            }
+            SupportContactRow()
 
             Spacer(Modifier.height(12.dp))
         }
+    }
+}
+
+/** Imagen, titulo y descripcion de la pantalla. */
+@Composable
+private fun ActivationHeader() {
+    HeroImage()
+
+    Spacer(Modifier.height(20.dp))
+
+    Text(
+        text = "Activar Licencia de Proyecto",
+        fontSize = 20.sp,
+        fontWeight = FontWeight.Bold,
+        color = UgTextPrimary,
+        textAlign = TextAlign.Center
+    )
+
+    Spacer(Modifier.height(8.dp))
+
+    Text(
+        text = "Ingresa el código proporcionado por el dueño del proyecto para habilitar tu conjunto.",
+        fontSize = 13.sp,
+        color = UgTextSecondary,
+        textAlign = TextAlign.Center,
+        lineHeight = 18.sp
+    )
+
+    Spacer(Modifier.height(24.dp))
+}
+
+/**
+ * Campo del codigo de licencia, con su etiqueta y el mensaje de error o la
+ * pista de formato.
+ *
+ * No envuelve nada: emite el OutlinedTextField, un Spacer y luego el texto
+ * condicional, asi que conserva su lugar dentro de la Column centrada.
+ */
+@Composable
+private fun ActivationCodeField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    errorMessage: String?,
+    isLoading: Boolean
+) {
+    // Label "Código de Licencia"
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Lock,
+            contentDescription = null,
+            tint = UgTextPrimary,
+            modifier = Modifier.size(14.dp)
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = "Código de Licencia",
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = UgTextPrimary
+        )
+    }
+
+    Spacer(Modifier.height(8.dp))
+
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = {
+            Text(
+                "Ingresa tu código de licencia",
+                fontSize = 16.sp,
+                color = UgTextSecondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        textStyle = androidx.compose.ui.text.TextStyle(
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            color = UgTextPrimary
+        ),
+        singleLine = true,
+        shape = RoundedCornerShape(10.dp),
+        isError = errorMessage != null,
+        enabled = !isLoading,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White,
+            focusedBorderColor = UgNavy,
+            unfocusedBorderColor = UgBorder,
+            errorBorderColor = UgErrorBright,
+            cursorColor = UgNavy
+        ),
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(Modifier.height(8.dp))
+
+    if (errorMessage != null) {
+        Text(
+            text = errorMessage,
+            fontSize = 12.sp,
+            color = UgErrorText,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(8.dp))
+    } else {
+        Text(
+            text = "EL CÓDIGO ES ALFANUMÉRICO: usa letras y números.",
+            fontSize = 11.sp,
+            color = UgTextSecondary,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+/** Boton de validacion: muestra spinner mientras [isLoading] y el texto si no. */
+@Composable
+private fun ValidateCodeButton(
+    isLoading: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = UgEmerald,
+            contentColor = Color.White,
+            disabledContainerColor = UgDivider,
+            disabledContentColor = UgDisabledText
+        ),
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp)
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                color = Color.White,
+                strokeWidth = 2.dp,
+                modifier = Modifier.height(20.dp)
+            )
+        } else {
+            Text(
+                text = "Validar Código",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.width(6.dp))
+            Icon(
+                imageVector = Icons.Filled.ArrowForward,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+
+/**
+ * Aviso de contacto con soporte.
+ *
+ * Pendiente: "Contactar soporte" es texto decorativo, sin accion asociada.
+ */
+@Composable
+private fun SupportContactRow() {
+    Row {
+        Text(
+            text = "¿Tienes problemas con tu código? ",
+            fontSize = 12.sp,
+            color = UgTextSecondary
+        )
+        Text(
+            text = "Contactar soporte",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = UgNavy
+        )
     }
 }
 
