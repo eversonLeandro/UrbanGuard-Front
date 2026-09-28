@@ -12,6 +12,7 @@ hilt = "2.60.1"
 hiltNavigationCompose = "1.2.0"
 okhttp = "4.12.0"
 retrofit = "2.11.0"
+zxing = "3.5.3"
 
 auth0 = "2.10.2"
 jwtdecode = "2.0.2"
@@ -40,6 +41,7 @@ hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.r
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
