@@ -39,6 +39,42 @@ object InputValidators {
     private const val MAX_EMAIL_LENGTH = 254
 
     /**
+     * Formatos de teléfono, de nombre de persona y longitudes máximas del
+     * formulario de alta de vigilante.
+     *
+     * Deben calcar exactamente las restricciones de `CreateGuardRequest` en el
+     * community-service (`@Size(max = 100)`, `@Size(max = 30)` y
+     * `@Pattern(regexp = "^[+0-9()\\- ]*$")`). El motivo de duplicarlas aquí y no
+     * solo avisar tras el 400 es que ese endpoint devuelve todos los fallos de
+     * validación en un único string aplanado, sin un error por campo: sin reglas
+     * locales el usuario solo descubre que el teléfono tenía letras después de
+     * un viaje de ida y vuelta al servidor.
+     */
+    private val PHONE_REGEX = Regex("^[+0-9()\\- ]*$")
+
+    const val PHONE_MAX_LENGTH = 30
+    const val NAME_MAX_LENGTH = 100
+
+    /**
+     * Valida un teléfono de contacto.
+     *
+     * Admite dígitos, `+`, paréntesis, guion y espacios porque son los formatos
+     * que se escriben a mano en pantalla; el backend usa el mismo conjunto.
+     */
+    fun isValidPhone(phone: String): Boolean {
+        val trimmed = phone.trim()
+        return trimmed.isNotEmpty() &&
+            trimmed.length <= PHONE_MAX_LENGTH &&
+            PHONE_REGEX.matches(trimmed)
+    }
+
+    /** Valida un nombre o apellido: no vacío y dentro del máximo del backend. */
+    fun isValidName(name: String): Boolean {
+        val trimmed = name.trim()
+        return trimmed.isNotEmpty() && trimmed.length <= NAME_MAX_LENGTH
+    }
+
+    /**
      * Devuelve, en español y en el orden en que el usuario debe corregirlas,
      * las reglas de contraseña que no se cumplen. Vacía significa que es válida.
      */
