@@ -32,6 +32,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.components.PlaceholderScreen
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
@@ -56,6 +57,9 @@ import co.edu.unicauca.urbanguard.ui.features.onboarding.RegisterConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolHistoryScreen
 import co.edu.unicauca.urbanguard.ui.features.profile.ProfileScreen
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
+import co.edu.unicauca.urbanguard.ui.features.visitors.GenerateQrScreen
+import co.edu.unicauca.urbanguard.ui.features.visitors.GeneratedPassScreen
+import co.edu.unicauca.urbanguard.ui.features.visitors.VisitorPassListScreen
 
 // Clave en el savedStateHandle de PENDING_REQUESTS para recibir el
 // resultado de la decisión (APROBADA/RECHAZADA) tomada en el detalle.
@@ -260,6 +264,17 @@ fun AppNavGraph(
                 },
                 onOpenPendingRequests = {
                     navController.navigate(Routes.PENDING_REQUESTS)
+                },
+                onOpenGenerateQr = {
+                    // Mismas opciones que usa la pestaña del bottom nav, para no
+                    // duplicar la pila ni romper la selección de pestaña activa.
+                    navController.navigate(Routes.VISITORS) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
             )
         }
@@ -344,9 +359,30 @@ fun AppNavGraph(
         }
 
         composable(Routes.VISITORS) {
-            PlaceholderScreen(
-                title = "Visitantes",
-                icon = Icons.Default.People
+            VisitorPassListScreen(
+                onGenerateNewClick = {
+                    navController.navigate(Routes.VISITORS_NEW_PASS)
+                }
+            )
+        }
+        composable(Routes.VISITORS_NEW_PASS) {
+            GenerateQrScreen(
+                onGenerated = {
+                    // El pase ya quedó guardado en el repositorio: al volver
+                    // atrás desde la vista del pase se descarta el formulario
+                    // para no regenerarlo al girar el dispositivo.
+                    navController.navigate(Routes.VISITORS_PASS) {
+                        popUpTo(Routes.VISITORS_NEW_PASS) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(Routes.VISITORS_PASS) {
+            GeneratedPassScreen(
+                onBackClick = { navController.popBackStack() },
+                onGenerateAnotherClick = {
+                    navController.navigate(Routes.VISITORS_NEW_PASS)
+                }
             )
         }
         composable(Routes.LINK_BY_CODE) {

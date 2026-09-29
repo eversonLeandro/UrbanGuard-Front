@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Carpeta donde VisitorConstants.QR_CACHE_DIR escribe el PNG del pase QR
+         para compartirlo. Debe mantenerse sincronizada con esa constante. -->
+    <cache-path
+        name="qr"
+        path="qr/" />
+</paths>

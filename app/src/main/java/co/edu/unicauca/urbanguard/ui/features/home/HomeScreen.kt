@@ -65,6 +65,7 @@ fun HomeScreen(
     onOpenConjuntoSelection: () -> Unit = {},
     onOpenConjuntoCode: () -> Unit = {},
     onOpenPendingRequests: () -> Unit = {},
+    onOpenGenerateQr: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -103,7 +104,7 @@ fun HomeScreen(
             }
 
             // ── Accesos Rápidos de Comunidad ────────────────────────────
-            CommunityServicesSection()
+            CommunityServicesSection(onOpenGenerateQr = onOpenGenerateQr)
 
             // ── Selector de conjunto ───────────────────────────────────
             ConjuntoSelectorCard(
@@ -276,7 +277,7 @@ private fun AdminActionsSection(
 
 /** Rejilla de los servicios principales del conjunto. */
 @Composable
-private fun CommunityServicesSection() {
+private fun CommunityServicesSection(onOpenGenerateQr: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = "Servicios Principales",
@@ -294,7 +295,9 @@ private fun CommunityServicesSection() {
                 subtitle = "Invitar visitantes",
                 icon = Icons.Default.QrCodeScanner,
                 badgeColor = UgEmerald,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onOpenGenerateQr() }
             )
             HomeActionCard(
                 title = "Paquetes",
