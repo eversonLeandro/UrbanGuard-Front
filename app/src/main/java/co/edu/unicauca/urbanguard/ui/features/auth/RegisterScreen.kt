@@ -1,9 +1,20 @@
 package co.edu.unicauca.urbanguard.ui.features.auth
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -29,18 +40,25 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -60,11 +78,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.unicauca.urbanguard.R
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgBorder
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorBg
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
+import kotlinx.coroutines.delay
 
 @Composable
 fun RegisterScreen(
@@ -102,47 +122,63 @@ fun RegisterScreen(
             .background(UgBackground)
             .verticalScroll(scrollState)
             .imePadding()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 24.dp)
+            .padding(top = 40.dp, bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        RegisterHeader()
+        // ── Logo + marca ─────────────────────────────────────────
+        RegisterEntranceBlock(step = 0) {
+            RegisterHeader()
+        }
 
         Spacer(Modifier.height(20.dp))
 
-        RegisterIdentityFields(
-            uiState = uiState,
-            onNameChange = viewModel::onNameChange,
-            onEmailChange = viewModel::onEmailChange,
-            onNextField = moveToNextField
-        )
+        // ── Encabezado de bienvenida ─────────────────────────────
+        RegisterEntranceBlock(step = 1) {
+            Text(
+                "Crear cuenta",
+                color = UgNavy,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 20.sp
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Regístrate para comenzar a gestionar tu comunidad",
+                color = UgTextSecondary,
+                fontSize = 13.sp
+            )
+        }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(16.dp))
 
-        RegisterPasswordFields(
-            uiState = uiState,
-            onPasswordChange = viewModel::onPasswordChange,
-            onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
-            onTogglePasswordVisibility = viewModel::togglePasswordVisibility,
-            onToggleConfirmPasswordVisibility = viewModel::toggleConfirmPasswordVisibility,
-            onNextField = moveToNextField,
-            onRegisterFromKeyboard = {
-                keyboardController?.hide()
-                viewModel.onRegisterClick()
+        // ── Card del formulario ──────────────────────────────────
+        RegisterEntranceBlock(step = 2) {
+            RegisterFormCard(
+                uiState = uiState,
+                viewModel = viewModel,
+                moveToNextField = moveToNextField,
+                onRegisterFromKeyboard = {
+                    keyboardController?.hide()
+                    viewModel.onRegisterClick()
+                }
+            )
+        }
+
+        Spacer(Modifier.height(22.dp))
+
+        // ── Enlace "Ya tienes cuenta" ────────────────────────────
+        RegisterEntranceBlock(step = 3) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("¿Ya tienes una cuenta? ", color = UgTextSecondary, fontSize = 12.5.sp)
+                Text(
+                    "Iniciar sesión",
+                    color = UgEmerald,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.5.sp,
+                    modifier = Modifier.clickable { onNavigateToLogin() }
+                )
             }
-        )
-
-        RegisterErrorBanner(uiState.errorMessage)
-
-        Spacer(Modifier.height(24.dp))
-
-        RegisterSubmitButton(
-            isLoading = uiState.isLoading,
-            onClick = viewModel::onRegisterClick
-        )
-
-        Spacer(Modifier.height(20.dp))
-
-        RegisterFooter(onNavigateToLogin = onNavigateToLogin)
+        }
 
         Spacer(Modifier.height(32.dp))
     }
@@ -156,34 +192,99 @@ fun RegisterScreen(
  * ambito de la Column que los contiene.
  */
 @Composable
-private fun ColumnScope.RegisterHeader() {
-    Spacer(Modifier.height(48.dp))
-
+private fun RegisterHeader() {
+    Text(
+        "UrbanGuard",
+        color = UgNavy,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 24.sp,
+        letterSpacing = 0.4.sp
+    )
+    Spacer(Modifier.height(12.dp))
     Image(
         painter = painterResource(R.drawable.logo_u),
         contentDescription = "Logo UrbanGuard",
         modifier = Modifier
             .size(88.dp)
             .clip(RoundedCornerShape(20.dp))
+            .shadow(elevation = 8.dp, shape = RoundedCornerShape(20.dp))
     )
-    Spacer(Modifier.height(8.dp))
-    Text("UrbanGuard", color = UgNavy, fontWeight = FontWeight.Medium, fontSize = 20.sp)
+}
 
-    Spacer(Modifier.height(24.dp))
+/**
+ * Envuelve un bloque con fade-in + slide-up escalonado por [step].
+ * Solo anima la primera composición (la pantalla carga una vez).
+ */
+@Composable
+private fun RegisterEntranceBlock(
+    step: Int,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(150L + step * 90L)
+        visible = true
+    }
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = tween(380)) +
+                slideInVertically(animationSpec = tween(380)) { it / 4 }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            content = content
+        )
+    }
+}
 
-    Text(
-        "Crear cuenta",
-        color = UgNavy,
-        fontWeight = FontWeight.Medium,
-        fontSize = 20.sp,
-        modifier = Modifier.align(Alignment.Start)
-    )
-    Text(
-        "Regístrate para comenzar a gestionar tu comunidad",
-        color = UgTextSecondary,
-        fontSize = 13.sp,
-        modifier = Modifier.align(Alignment.Start)
-    )
+/**
+ * Tarjeta que agrupa los campos de formulario, errores y el botón principal.
+ */
+@Composable
+private fun RegisterFormCard(
+    uiState: RegisterUiState,
+    viewModel: RegisterViewModel,
+    moveToNextField: () -> Unit,
+    onRegisterFromKeyboard: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            RegisterIdentityFields(
+                uiState = uiState,
+                onNameChange = viewModel::onNameChange,
+                onEmailChange = viewModel::onEmailChange,
+                onNextField = moveToNextField
+            )
+
+            RegisterPasswordFields(
+                uiState = uiState,
+                onPasswordChange = viewModel::onPasswordChange,
+                onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
+                onTogglePasswordVisibility = viewModel::togglePasswordVisibility,
+                onToggleConfirmPasswordVisibility = viewModel::toggleConfirmPasswordVisibility,
+                onNextField = moveToNextField,
+                onRegisterFromKeyboard = onRegisterFromKeyboard
+            )
+
+            RegisterErrorBanner(uiState.errorMessage)
+
+            RegisterSubmitButton(
+                isLoading = uiState.isLoading,
+                onClick = viewModel::onRegisterClick
+            )
+        }
+    }
 }
 
 /**
@@ -212,8 +313,6 @@ private fun RegisterIdentityFields(
         keyboardActions = KeyboardActions(onNext = { onNextField() }),
         errorText = uiState.nameError
     )
-
-    Spacer(Modifier.height(12.dp))
 
     RegisterTextField(
         value = uiState.email,
@@ -260,7 +359,13 @@ private fun RegisterTextField(
         keyboardActions = keyboardActions,
         isError = errorText != null,
         supportingText = errorText?.let { { Text(it) } },
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = UgNavy,
+            focusedLabelColor = UgNavy,
+            unfocusedBorderColor = UgBorder,
+            cursorColor = UgNavy
+        ),
         modifier = Modifier.fillMaxWidth()
     )
 }
@@ -300,8 +405,6 @@ private fun RegisterPasswordFields(
         ),
         keyboardActions = KeyboardActions(onNext = { onNextField() })
     )
-
-    Spacer(Modifier.height(12.dp))
 
     PasswordField(
         value = uiState.confirmPassword,
@@ -377,7 +480,13 @@ private fun PasswordField(
         keyboardActions = keyboardActions,
         isError = errorText != null,
         supportingText = supportingText,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = UgNavy,
+            focusedLabelColor = UgNavy,
+            unfocusedBorderColor = UgBorder,
+            cursorColor = UgNavy
+        ),
         modifier = Modifier.fillMaxWidth()
     )
 }
@@ -389,11 +498,10 @@ private fun PasswordField(
 @Composable
 private fun RegisterErrorBanner(message: String?) {
     if (message == null) return
-    Spacer(Modifier.height(12.dp))
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(UgErrorBg, RoundedCornerShape(8.dp))
+            .background(UgErrorBg, RoundedCornerShape(10.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -408,43 +516,69 @@ private fun RegisterErrorBanner(message: String?) {
     }
 }
 
-/** Boton de envio: muestra progreso y se deshabilita mientras la peticion corre. */
+/** Boton de envio con sombra y animación de pulso al cargar, igual al Login. */
 @Composable
 private fun RegisterSubmitButton(isLoading: Boolean, onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressedElevation by animateFloatAsState(
+        targetValue = if (isPressed) 10f else 4f,
+        animationSpec = tween(150)
+    )
+
+    val infinite = rememberInfiniteTransition(label = "pulse")
+    val pulseAlpha by infinite.animateFloat(
+        initialValue = 0.82f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(animation = tween(700)),
+        label = "buttonPulse"
+    )
+
+    val containerColor = if (isLoading) UgNavy.copy(alpha = pulseAlpha) else UgNavy
+
     Button(
         onClick = onClick,
         enabled = !isLoading,
-        colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
-        shape = RoundedCornerShape(8.dp),
+        interactionSource = interactionSource,
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = Color.White,
+            disabledContainerColor = containerColor,
+            disabledContentColor = Color.White
+        ),
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .height(52.dp)
+            .shadow(
+                elevation = pressedElevation.dp,
+                shape = RoundedCornerShape(14.dp),
+                ambientColor = UgNavy.copy(alpha = 0.35f),
+                spotColor = UgNavy.copy(alpha = 0.35f)
+            )
     ) {
         if (isLoading) {
             CircularProgressIndicator(
-                color = Color.White,
-                strokeWidth = 2.dp,
-                modifier = Modifier.size(18.dp)
+                color = UgEmerald,
+                strokeWidth = 2.5.dp,
+                modifier = Modifier.size(20.dp)
             )
-            Spacer(Modifier.width(8.dp))
-            Text("Registrando...")
+            Spacer(Modifier.width(10.dp))
+            Text(
+                "Registrando...",
+                color = Color.White,
+                fontWeight = FontWeight.Medium,
+                fontSize = 15.sp
+            )
         } else {
-            Text("Registrarse", fontWeight = FontWeight.Medium)
+            Text(
+                "Registrarse",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                letterSpacing = 0.2.sp
+            )
         }
     }
 }
 
-/** Enlace inferior a la pantalla de inicio de sesion. */
-@Composable
-private fun RegisterFooter(onNavigateToLogin: () -> Unit) {
-    Row {
-        Text("¿Ya tienes una cuenta? ", color = UgTextSecondary, fontSize = 12.5.sp)
-        Text(
-            "Iniciar sesión",
-            color = UgEmerald,
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.5.sp,
-            modifier = Modifier.clickable { onNavigateToLogin() }
-        )
-    }
-}
+

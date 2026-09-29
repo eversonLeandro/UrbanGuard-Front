@@ -6,9 +6,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,7 +22,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AssignmentTurnedIn
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -28,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -231,31 +238,83 @@ private fun ReviewResultBanner(
     message: String,
     onDismiss: () -> Unit
 ) {
+    LaunchedEffect(message) {
+        delay(4000)
+        onDismiss()
+    }
+
     val isApproved = message.contains("aceptada", ignoreCase = true)
-    val textColor = if (isApproved) UgEmerald else UgErrorText
-    val bgColor = if (isApproved) UgSuccessBg else UgErrorBg
-    Row(
+    val mainColor = if (isApproved) UgEmerald else UgErrorText
+    val bgColor = Color.White
+    
+    androidx.compose.material3.Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .background(bgColor, RoundedCornerShape(10.dp))
-            .clickable { onDismiss() }
-            .padding(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clickable { onDismiss() },
+        shape = RoundedCornerShape(12.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = bgColor),
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Icon(
-            imageVector = if (isApproved) Icons.Filled.CheckCircle else Icons.Filled.Warning,
-            contentDescription = null,
-            tint = textColor,
-            modifier = Modifier.size(16.dp)
-        )
-        Text(
-            text = message,
-            fontSize = 13.sp,
-            color = textColor,
-            modifier = Modifier.weight(1f)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+        ) {
+            // Banda de color lateral
+            Box(
+                modifier = Modifier
+                    .width(5.dp)
+                    .fillMaxHeight()
+                    .background(mainColor)
+            )
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(if (isApproved) UgSuccessBg else UgErrorBg),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isApproved) Icons.Filled.CheckCircle else Icons.Filled.Warning,
+                        contentDescription = null,
+                        tint = mainColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (isApproved) "Solicitud Aprobada" else "Solicitud Rechazada",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = UgNavy
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = message,
+                        fontSize = 13.sp,
+                        color = UgTextSecondary,
+                        lineHeight = 18.sp
+                    )
+                }
+                
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Cerrar",
+                    tint = UgIconMuted,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
     }
 }
 
@@ -460,43 +519,73 @@ private fun EmptyRequestsState(
     filter: LinkRequestState,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    val icon = when (filter) {
+        LinkRequestState.PENDIENTE -> Icons.Default.Inbox
+        LinkRequestState.APROBADA -> Icons.Default.AssignmentTurnedIn
+        LinkRequestState.RECHAZADA -> Icons.Default.Cancel
+    }
+    
+    val (iconTint, bgColor) = when (filter) {
+        LinkRequestState.PENDIENTE -> UgAmber to UgAmberSoft
+        LinkRequestState.APROBADA -> UgEmerald to UgSuccessBg
+        LinkRequestState.RECHAZADA -> UgErrorText to UgErrorBg
+    }
+
+    Box(
+        modifier = modifier.padding(horizontal = 24.dp, vertical = 32.dp),
+        contentAlignment = Alignment.TopCenter
     ) {
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .clip(CircleShape)
-                .background(UgBorder),
-            contentAlignment = Alignment.Center
+        androidx.compose.material3.Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
+            elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 2.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = if (filter == LinkRequestState.PENDIENTE) "✓" else "!",
-                fontSize = 30.sp,
-                color = UgIconMuted,
-                fontWeight = FontWeight.Medium
-            )
+            Column(
+                modifier = Modifier.padding(vertical = 40.dp, horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .background(bgColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    text = when (filter) {
+                        LinkRequestState.PENDIENTE -> "Todo al día"
+                        LinkRequestState.APROBADA -> "Sin aprobaciones"
+                        LinkRequestState.RECHAZADA -> "Sin rechazos"
+                    },
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = iconTint
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = when (filter) {
+                        LinkRequestState.PENDIENTE -> "No tienes solicitudes pendientes por revisar."
+                        LinkRequestState.APROBADA -> "Aún no has aprobado ninguna solicitud."
+                        LinkRequestState.RECHAZADA -> "No hay solicitudes rechazadas en el historial."
+                    },
+                    fontSize = 14.sp,
+                    color = UgNavy,
+                    lineHeight = 20.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = when (filter) {
-                LinkRequestState.PENDIENTE -> "No hay solicitudes pendientes"
-                LinkRequestState.APROBADA -> "No hay solicitudes aprobadas"
-                LinkRequestState.RECHAZADA -> "No hay solicitudes rechazadas"
-            },
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = UgNavy
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = "Cuando un residente use el código de vinculación, aparecerá aquí.",
-            fontSize = 12.sp,
-            color = UgTextSecondary,
-            lineHeight = 18.sp
-        )
     }
 }
 
