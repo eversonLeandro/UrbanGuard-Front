@@ -26,7 +26,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -34,6 +36,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -259,12 +262,69 @@ private fun CameraScanOverlay() {
     }
 }
 
+// Enum para simular los diferentes estados de validación
+enum class PassStatus {
+    APPROVED, EXPIRED, USED
+}
+
+// Simulamos los datos recuperados de la base de datos al escanear el QR
+private data class ScanSummary(
+    val visitorName: String,
+    val extraGuests: Int,
+    val destination: String
+)
+
+// Data class para agrupar la información visual de cada estado
+private data class PassStatusInfo(
+    val color: Color,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val title: String,
+    val description: String,
+    val summary: ScanSummary? = null
+)
+
+private fun getStatusInfo(status: PassStatus): PassStatusInfo {
+    return when (status) {
+        PassStatus.APPROVED -> PassStatusInfo(
+            color = UgEmerald,
+            icon = Icons.Default.CheckCircle,
+            title = "Acceso Autorizado",
+            description = "El pase QR es válido. Permita el ingreso al visitante.",
+            summary = ScanSummary(
+                visitorName = "Carlos López",
+                extraGuests = 2,
+                destination = "Apto 402 (Flia. Martínez)"
+            )
+        )
+        PassStatus.EXPIRED -> PassStatusInfo(
+            color = Color(0xFFE53935), // Rojo
+            icon = androidx.compose.material.icons.Icons.Default.Cancel ?: Icons.Default.QrCodeScanner,
+            title = "Pase Expirado",
+            description = "Este pase fue emitido para una fecha anterior y ya no es válido."
+        )
+        PassStatus.USED -> PassStatusInfo(
+            color = Color(0xFFF57C00), // Naranja
+            icon = androidx.compose.material.icons.Icons.Default.Info ?: Icons.Default.QrCodeScanner,
+            title = "Pase Ya Utilizado",
+            description = "Este pase ya fue registrado previamente en la portería."
+        )
+    }
+}
+
 @Composable
 private fun ScanResultContent(
     code: String,
     onScanAgain: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    // Simulamos el estado basado en el código escaneado o de forma aleatoria.
+    // AQUÍ EL VIEWMODEL: Cuando conectes el backend, aquí llamarás al ViewModel para validar el 'code'.
+    // Si el backend responde 200 OK, el ViewModel actualizará automáticamente el historial de visitantes.
+    val status = remember(code) { 
+        PassStatus.entries.toTypedArray().random() 
+    }
+    val statusInfo = getStatusInfo(status)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -272,73 +332,130 @@ private fun ScanResultContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        StatusCard(statusInfo = statusInfo)
+        Spacer(Modifier.height(40.dp))
+        ScanResultActions(onScanAgain = onScanAgain, onNavigateBack = onNavigateBack)
+    }
+}
+
+@Composable
+private fun StatusCard(statusInfo: PassStatusInfo) {
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = Color.White,
+        shadowElevation = 8.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            StatusCardHeader(statusInfo)
+            
+            // Solo mostrar el resumen de visita si hay datos (ej. Aprobado)
+            if (statusInfo.summary != null) {
+                Spacer(Modifier.height(24.dp))
+                VisitorSummaryBox(summary = statusInfo.summary)
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatusCardHeader(statusInfo: PassStatusInfo) {
+    Box(
+        modifier = Modifier
+            .size(80.dp)
+            .background(statusInfo.color.copy(alpha = 0.1f), RoundedCornerShape(40.dp)),
+        contentAlignment = Alignment.Center
+    ) {
         Icon(
-            imageVector = Icons.Default.CheckCircle,
+            imageVector = statusInfo.icon,
             contentDescription = null,
-            tint = UgEmerald,
-            modifier = Modifier.size(72.dp)
+            tint = statusInfo.color,
+            modifier = Modifier.size(48.dp)
         )
+    }
 
-        Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(24.dp))
 
-        Text(
-            text = "Código escaneado",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = UgNavy
-        )
+    Text(
+        text = statusInfo.title,
+        fontSize = 22.sp,
+        fontWeight = FontWeight.ExtraBold,
+        color = statusInfo.color
+    )
 
-        Spacer(Modifier.height(12.dp))
+    Spacer(Modifier.height(12.dp))
 
-        Card(
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
+    Text(
+        text = statusInfo.description,
+        fontSize = 15.sp,
+        color = UgTextSecondary,
+        textAlign = TextAlign.Center,
+        lineHeight = 22.sp
+    )
+}
+
+@Composable
+private fun VisitorSummaryBox(summary: ScanSummary) {
+    Surface(
+        color = UgBackground,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("👤 Visitante:", fontSize = 12.sp, color = UgTextSecondary)
             Text(
-                text = code,
+                text = "${summary.visitorName} (+${summary.extraGuests} acomp.)",
                 fontSize = 14.sp,
-                color = UgNavy,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(16.dp),
-                textAlign = TextAlign.Center
+                fontWeight = FontWeight.SemiBold,
+                color = UgNavy
+            )
+            Spacer(Modifier.height(8.dp))
+            Text("🏠 Destino:", fontSize = 12.sp, color = UgTextSecondary)
+            Text(
+                text = summary.destination,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = UgNavy
             )
         }
+    }
+}
 
-        Spacer(Modifier.height(24.dp))
+@Composable
+private fun ScanResultActions(onScanAgain: () -> Unit, onNavigateBack: () -> Unit) {
+    Button(
+        onClick = onScanAgain,
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+    ) {
+        Icon(
+            Icons.Default.QrCodeScanner,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(Modifier.width(12.dp))
+        Text("Escanear siguiente pase", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+    }
 
-        Button(
-            onClick = onScanAgain,
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-        ) {
-            Icon(
-                Icons.Default.QrCodeScanner,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(Modifier.width(8.dp))
-            Text("Escanear otro código", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-        }
+    Spacer(Modifier.height(16.dp))
 
-        Spacer(Modifier.height(12.dp))
-
-        OutlinedButton(
-            onClick = onNavigateBack,
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = UgNavy),
-            border = ButtonDefaults.outlinedButtonBorder,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-        ) {
-            Text("Volver", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-        }
+    OutlinedButton(
+        onClick = onNavigateBack,
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = UgNavy),
+        border = ButtonDefaults.outlinedButtonBorder,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+    ) {
+        Text("Volver al menú", fontWeight = FontWeight.Bold, fontSize = 16.sp)
     }
 }
 

@@ -25,7 +25,7 @@ class ProfileViewModel @Inject constructor(
                 userName = session?.name ?: "",
                 userRole = when (session?.role) {
                     UserRole.ADMIN -> "ADMIN"
-                    UserRole.GUARD -> "GUARD"
+                    UserRole.GUARD -> "GUARDIA"
                     UserRole.RESIDENT -> "RESIDENT"
                     UserRole.USER -> "USER"
                     UserRole.SUPERADMIN -> "SUPERADMIN"
