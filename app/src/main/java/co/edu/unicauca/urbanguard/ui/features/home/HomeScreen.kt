@@ -224,7 +224,7 @@ private fun HomeHeroCard(
                 HeroStatItem(
                     label = "Conjunto",
                     value = conjuntoName.ifBlank { "Sin conjunto" },
-                    icon = Icons.Default.Key
+                    icon = Icons.Default.Apartment
                 )
             }
         }

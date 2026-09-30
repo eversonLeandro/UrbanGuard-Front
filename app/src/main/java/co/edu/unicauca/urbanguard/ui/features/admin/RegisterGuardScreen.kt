@@ -1,6 +1,13 @@
 package co.edu.unicauca.urbanguard.ui.features.admin
 
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +34,8 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -35,8 +45,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -53,6 +65,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.unicauca.urbanguard.domain.model.CreatedGuard
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
+import co.edu.unicauca.urbanguard.ui.theme.UgBorder
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorBright
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
@@ -63,10 +76,6 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 /**
  * Alta de vigilante (HU-009) — POST /api/complexes/{complexId}/guards.
- *
- * El conjunto destino lo decide el ViewModel contra la sesión (el conjunto
- * activo), así que esta pantalla no necesita recibir ningún argumento de
- * navegación.
  */
 @Composable
 fun RegisterGuardScreen(
@@ -88,30 +97,43 @@ fun RegisterGuardScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
+                .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState())
-                .imePadding(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .imePadding()
+                .padding(top = 24.dp, bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            GuardFormSection(
-                uiState = uiState,
-                onEmailChange = viewModel::onEmailChange,
-                onNombresChange = viewModel::onNombresChange,
-                onApellidosChange = viewModel::onApellidosChange,
-                onTelefonoChange = viewModel::onTelefonoChange
-            )
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    GuardFormSection(
+                        uiState = uiState,
+                        onEmailChange = viewModel::onEmailChange,
+                        onNombresChange = viewModel::onNombresChange,
+                        onApellidosChange = viewModel::onApellidosChange,
+                        onTelefonoChange = viewModel::onTelefonoChange
+                    )
 
-            GuardFormFooter(
-                enabled = !uiState.isSubmitting,
-                isLoading = uiState.isSubmitting,
-                errorMessage = uiState.errorMessage,
-                onSubmit = viewModel::onSubmit
-            )
+                    GuardFormFooter(
+                        enabled = !uiState.isSubmitting,
+                        isLoading = uiState.isSubmitting,
+                        errorMessage = uiState.errorMessage,
+                        onSubmit = viewModel::onSubmit
+                    )
+                }
+            }
         }
     }
 
-    // El diálogo se monta fuera de la columna: es la única señal de que el
-    // vigilante quedó creado, y tiene que sobrevivir al scroll del formulario.
     uiState.createdGuard?.let { created ->
         GuardCreatedDialog(
             created = created,
@@ -123,13 +145,6 @@ fun RegisterGuardScreen(
     }
 }
 
-/**
- * Los cuatro campos del formulario.
- *
- * Se separan de [RegisterGuardScreen] para que esa función separe armazón y
- * acciones, y para que la lista de campos se lea de un vistazo en lugar de
- * quedar enterrada en el medio de la columna.
- */
 @Composable
 private fun GuardFormSection(
     uiState: RegisterGuardUiState,
@@ -141,9 +156,10 @@ private fun GuardFormSection(
     Text(
         text = "Información del guardia",
         fontSize = 18.sp,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         color = UgNavy
     )
+    Spacer(modifier = Modifier.height(2.dp))
 
     GuardTextField(
         value = uiState.email,
@@ -194,22 +210,6 @@ private fun GuardFormSection(
     )
 }
 
-/**
- * Campo de texto del formulario de guardia.
- *
- * Los cuatro campos solo cambiaban etiqueta, icono, tipo de teclado, accion de
- * IME y error; la forma, los colores y el ancho eran identicos, asi que se
- * unifican aqui para que un cambio de estilo se aplique a los cuatro a la vez.
- *
- * La accion de IME se deduce de [KeyboardOptions.imeAction]: con [ImeAction.Done]
- * el boton del teclado cierra el teclado, y en cualquier otro caso se pasa el
- * foco al campo siguiente. Asi el llamador solo declara la intencion y no repite
- * el cableado de foco en cada campo.
- *
- * [errorText] se pinta como texto de apoyo del propio campo y no como banner:
- * el backend aplana los errores de validacion en un solo string, asi que quien
- * puede atribuirlos a un campo concreto es la validacion local del ViewModel.
- */
 @Composable
 private fun GuardTextField(
     value: String,
@@ -230,7 +230,7 @@ private fun GuardTextField(
             Icon(
                 icon,
                 contentDescription = null,
-                tint = if (errorText != null) UgErrorBright else UgEmerald
+                tint = if (errorText != null) UgErrorBright else UgTextSecondary
             )
         },
         singleLine = true,
@@ -244,6 +244,7 @@ private fun GuardTextField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = UgNavy,
             focusedLabelColor = UgNavy,
+            unfocusedBorderColor = UgBorder,
             cursorColor = UgNavy,
             errorBorderColor = UgErrorBright,
             errorLabelColor = UgErrorBright
@@ -257,13 +258,6 @@ private fun GuardTextField(
     )
 }
 
-/**
- * Cierre del formulario: nota de ayuda, banner de error y boton de envio.
- *
- * El banner recoge lo que no se puede atribuir a un campo — 403, 404, 409, los
- * 5xx y el 400 del backend — y por eso convive con los errores por campo sin
- * duplicarlos.
- */
 @Composable
 private fun GuardFormFooter(
     enabled: Boolean,
@@ -290,19 +284,58 @@ private fun GuardFormFooter(
         )
     }
 
-    Spacer(modifier = Modifier.height(24.dp))
+    Spacer(modifier = Modifier.height(16.dp))
+
+    GuardSubmitButton(
+        enabled = enabled,
+        isLoading = isLoading,
+        onSubmit = onSubmit
+    )
+}
+
+@Composable
+private fun GuardSubmitButton(
+    enabled: Boolean,
+    isLoading: Boolean,
+    onSubmit: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressedElevation by animateFloatAsState(
+        targetValue = if (isPressed) 10f else 4f,
+        animationSpec = tween(150)
+    )
+
+    val infinite = rememberInfiniteTransition(label = "pulse")
+    val pulseAlpha by infinite.animateFloat(
+        initialValue = 0.82f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(animation = tween(700)),
+        label = "buttonPulse"
+    )
+
+    val containerColor = if (isLoading) UgNavy.copy(alpha = pulseAlpha) else UgNavy
 
     Button(
         onClick = onSubmit,
         enabled = enabled,
+        interactionSource = interactionSource,
         colors = ButtonDefaults.buttonColors(
-            containerColor = UgNavy,
-            disabledContainerColor = UgNavy.copy(alpha = 0.7f)
+            containerColor = containerColor,
+            contentColor = Color.White,
+            disabledContainerColor = containerColor,
+            disabledContentColor = Color.White
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(50.dp)
+            .height(52.dp)
+            .shadow(
+                elevation = pressedElevation.dp,
+                shape = RoundedCornerShape(14.dp),
+                ambientColor = UgNavy.copy(alpha = 0.35f),
+                spotColor = UgNavy.copy(alpha = 0.35f)
+            )
     ) {
         if (isLoading) {
             Row(
@@ -310,36 +343,29 @@ private fun GuardFormFooter(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CircularProgressIndicator(
-                    color = Color.White,
-                    strokeWidth = 2.dp,
-                    modifier = Modifier.size(18.dp)
+                    color = UgEmerald,
+                    strokeWidth = 2.5.dp,
+                    modifier = Modifier.size(20.dp)
                 )
                 Text(
                     text = "Registrando...",
                     color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp
                 )
             }
         } else {
             Text(
                 text = "Registrar Guardia",
                 color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                letterSpacing = 0.2.sp
             )
         }
     }
 }
 
-/**
- * Confirmación del alta.
- *
- * Recuerda que el teléfono es la contraseña inicial porque es el único punto
- * donde el administrador ve ese dato con claridad: si se pierde, la cuenta
- * queda creada y sin forma de entrar, y el backend no tiene endpoint de
- * reseteo para vigilantes.
- */
 @Composable
 private fun GuardCreatedDialog(
     created: CreatedGuard,
