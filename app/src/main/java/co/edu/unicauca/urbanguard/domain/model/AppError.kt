@@ -85,6 +85,18 @@ sealed class AppError {
         }
     }
 
+    /**
+     * El token es válido pero el login no fue suficientemente reciente para una
+     * operación sensible (cambio de contraseña). El usuario debe autenticarse de
+     * nuevo con prompt=login para renovar auth_time antes de reintentar.
+     */
+    data class ReauthRequired(override val message: String) : AppError() {
+        companion object {
+            const val MESSAGE =
+                "Por seguridad debes confirmar tu identidad. Inicia sesión de nuevo para continuar."
+        }
+    }
+
     /** Autenticado pero sin permisos para esta acción. */
     data class Forbidden(override val message: String) : AppError() {
         companion object {

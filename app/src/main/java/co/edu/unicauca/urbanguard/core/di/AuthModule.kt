@@ -4,8 +4,10 @@ import android.content.Context
 import co.edu.unicauca.urbanguard.BuildConfig
 import co.edu.unicauca.urbanguard.core.session.EncryptedRolePersistence
 import co.edu.unicauca.urbanguard.core.session.RolePersistence
+import co.edu.unicauca.urbanguard.data.remote.auth0.Auth0ReauthLoginProvider
 import co.edu.unicauca.urbanguard.data.repository.AuthRepositoryImpl
 import co.edu.unicauca.urbanguard.domain.repository.AuthRepository
+import co.edu.unicauca.urbanguard.domain.repository.ReauthLoginProvider
 import com.auth0.android.Auth0
 import com.auth0.android.authentication.AuthenticationAPIClient
 import com.auth0.android.authentication.storage.SecureCredentialsManager
@@ -29,6 +31,10 @@ abstract class AuthModule {
     @Binds
     @Singleton
     abstract fun bindRolePersistence(impl: EncryptedRolePersistence): RolePersistence
+
+    @Binds
+    @Singleton
+    abstract fun bindReauthLoginProvider(impl: Auth0ReauthLoginProvider): ReauthLoginProvider
 
     companion object {
         @Provides

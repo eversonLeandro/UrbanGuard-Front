@@ -1,7 +1,10 @@
 package co.edu.unicauca.urbanguard.ui.features.profile
 
+import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
@@ -26,13 +30,22 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,7 +57,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -70,14 +87,17 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
 
+    PasswordChangeTicketEffect(
+        ticketUrl = uiState.ticketUrl,
+        onConsumed = viewModel::onTicketConsumed
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(UgBackground)
     ) {
-        UrbanGuardTopBar(
-            title = "Mi Perfil"
-        )
+        UrbanGuardTopBar(title = "Mi Perfil")
 
         Column(
             modifier = Modifier
@@ -88,13 +108,21 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // ── Card de Perfil de Usuario ─────────────────────────────
+            // ── Card de Perfil de Usuario ─────────────────────────────────
             UserProfileCard(
                 userName = uiState.userName,
                 userRole = uiState.userRole
             )
 
-            // ── Sección: Ajustes de Cuenta ────────────────────────────
+            // ── Error de cambio de contraseña ─────────────────────────────
+            if (uiState.passwordChangeError != null) {
+                PasswordChangeErrorBanner(
+                    message = uiState.passwordChangeError!!,
+                    onDismiss = viewModel::onPasswordChangeErrorDismissed
+                )
+            }
+
+            // ── Sección: Ajustes de Cuenta ────────────────────────────────
             ProfileSectionCard(title = "Ajustes de Cuenta") {
                 ProfileOptionRow(
                     icon = Icons.Default.Person,
@@ -104,7 +132,9 @@ fun ProfileScreen(
                 ProfileOptionRow(
                     icon = Icons.Default.Lock,
                     title = "Seguridad",
-                    subtitle = "Contraseña y acceso"
+                    subtitle = "Contraseña y acceso",
+                    isLoading = uiState.isRequestingTicket,
+                    onClick = { viewModel.requestPasswordChange() }
                 )
                 ProfileOptionRow(
                     icon = Icons.Default.Notifications,
@@ -113,7 +143,7 @@ fun ProfileScreen(
                 )
             }
 
-            // ── Sección: Soporte e Información ─────────────────────────
+            // ── Sección: Soporte e Información ─────────────────────────────
             ProfileSectionCard(title = "Soporte e Información") {
                 ProfileOptionRow(
                     icon = Icons.Default.Shield,
@@ -127,28 +157,83 @@ fun ProfileScreen(
                 )
             }
 
-            // ── Botón Destacado de Cerrar Sesión ───────────────────────
+            // ── Botón Destacado de Cerrar Sesión ───────────────────────────
             LogoutButton(onClick = { showLogoutDialog = true })
         }
     }
 
+    ProfileDialogs(
+        showLogoutDialog = showLogoutDialog,
+        needsReauth = uiState.needsReauth,
+        onLogout = {
+            showLogoutDialog = false
+            onLogout()
+        },
+        onLogoutDismiss = { showLogoutDialog = false },
+        onReauthConfirm = { email, password -> viewModel.onReauthSubmit(email, password) },
+        onReauthDismiss = viewModel::onReauthDismissed
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun ProfileDialogs(
+    showLogoutDialog: Boolean,
+    needsReauth: Boolean,
+    onLogout: () -> Unit,
+    onLogoutDismiss: () -> Unit,
+    onReauthConfirm: (email: String, password: String) -> Unit,
+    onReauthDismiss: () -> Unit
+) {
+    // ── Diálogo de confirmación de cierre de sesión ───────────────────────
     if (showLogoutDialog) {
         LogoutDialog(
-            onConfirm = {
-                showLogoutDialog = false
-                onLogout()
-            },
-            onDismiss = { showLogoutDialog = false }
+            onConfirm = onLogout,
+            onDismiss = onLogoutDismiss
+        )
+    }
+
+    // ── Diálogo de reautenticación ────────────────────────────────────────
+    if (needsReauth) {
+        ReauthDialog(
+            onConfirm = onReauthConfirm,
+            onDismiss = onReauthDismiss
         )
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Abre el ticket de cambio de contraseña en un Custom Tab cuando llega.
+ *
+ * Se consume después de lanzar para no perder la URL si el Custom Tab falla.
+ * La URL es una credencial temporal: no se guarda, solo se abre y se descarta.
+ */
+@Composable
+private fun PasswordChangeTicketEffect(
+    ticketUrl: String?,
+    onConsumed: () -> Unit
+) {
+    val context = LocalContext.current
+    LaunchedEffect(ticketUrl) {
+        val url = ticketUrl ?: return@LaunchedEffect
+        try {
+            val customTabsIntent = CustomTabsIntent.Builder()
+                .setShowTitle(true)
+                .build()
+            customTabsIntent.launchUrl(context, Uri.parse(url))
+        } finally {
+            onConsumed()
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Card con la foto inicial, el nombre y el rol.
- *
- * El `Box` que emite este composable sigue siendo hijo directo de la Column
- * desplazable, asi que la tarjeta conserva su sitio en el `spacedBy(20.dp)`.
- * El badge de rol se oculta cuando [userRole] viene vacio, igual que antes.
  */
 @Composable
 private fun UserProfileCard(
@@ -168,9 +253,7 @@ private fun UserProfileCard(
             .border(1.dp, UgBorder, RoundedCornerShape(24.dp))
             .padding(22.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -180,8 +263,7 @@ private fun UserProfileCard(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (userName.isNotBlank()) userName.take(1)
-                        .uppercase() else "U",
+                    text = if (userName.isNotBlank()) userName.take(1).uppercase() else "U",
                     color = Color.White,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold
@@ -217,7 +299,40 @@ private fun UserProfileCard(
     }
 }
 
-/** Boton destacado de cierre de sesion. Solo abre el dialogo, no ejecuta la salida. */
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Banner de error no intrusivo para fallos en el cambio de contraseña. */
+@Composable
+private fun PasswordChangeErrorBanner(message: String, onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(UgErrorBg)
+            .border(1.dp, UgErrorBorder, RoundedCornerShape(14.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = message,
+                color = UgErrorText,
+                fontSize = 13.sp,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.width(8.dp))
+            TextButton(onClick = onDismiss) {
+                Text("OK", color = UgErrorText, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Botón destacado de cierre de sesión. */
 @Composable
 private fun LogoutButton(onClick: () -> Unit) {
     Button(
@@ -248,6 +363,8 @@ private fun LogoutButton(onClick: () -> Unit) {
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 private fun ProfileSectionCard(
     title: String,
@@ -277,15 +394,26 @@ private fun ProfileSectionCard(
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
 private fun ProfileOptionRow(
     icon: ImageVector,
     title: String,
-    subtitle: String
+    subtitle: String,
+    isLoading: Boolean = false,
+    onClick: (() -> Unit)? = null
 ) {
+    val clickableModifier = if (onClick != null && !isLoading) {
+        Modifier.clickable(onClick = onClick)
+    } else {
+        Modifier
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .then(clickableModifier)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -306,11 +434,110 @@ private fun ProfileOptionRow(
             Text(subtitle, fontSize = 12.sp, color = UgTextSecondary)
         }
 
-        Icon(
-            Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = UgIconMuted,
-            modifier = Modifier.size(20.dp)
-        )
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
+                color = UgNavy
+            )
+        } else if (onClick != null) {
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = UgIconMuted,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Diálogo de reautenticación para cambio de contraseña.
+ *
+ * Muestra un mensaje explicativo y solicita el correo y la contraseña del usuario.
+ * Se lanza cuando el backend responde REAUTH_REQUIRED (auth_time > 5 minutos).
+ */
+@Composable
+private fun ReauthDialog(
+    onConfirm: (email: String, password: String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        title = {
+            Text(
+                text = "Confirma tu identidad",
+                fontWeight = FontWeight.Bold,
+                color = UgNavy
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Por seguridad, necesitamos verificar tu identidad antes de cambiar la contraseña. " +
+                            "Ingresa tus credenciales de acceso.",
+                    fontSize = 13.sp,
+                    color = UgTextSecondary
+                )
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Correo electrónico") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = UgNavy,
+                        focusedLabelColor = UgNavy
+                    )
+                )
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Contraseña") },
+                    singleLine = true,
+                    visualTransformation = if (passwordVisible) VisualTransformation.None
+                    else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Default.Visibility
+                                else Icons.Default.VisibilityOff,
+                                contentDescription = if (passwordVisible) "Ocultar contraseña"
+                                else "Mostrar contraseña",
+                                tint = UgIconMuted
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = UgNavy,
+                        focusedLabelColor = UgNavy
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(email.trim(), password) },
+                enabled = email.isNotBlank() && password.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(containerColor = UgNavy)
+            ) {
+                Text("Confirmar", color = Color.White)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = UgTextSecondary)
+            }
+        }
+    )
 }
