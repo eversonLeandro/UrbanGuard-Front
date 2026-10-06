@@ -4,6 +4,7 @@ import co.edu.unicauca.urbanguard.core.network.AuthInterceptor
 import co.edu.unicauca.urbanguard.core.network.NetworkConfig
 import co.edu.unicauca.urbanguard.core.network.RequestIdInterceptor
 import co.edu.unicauca.urbanguard.data.remote.api.service.AuthApi
+import co.edu.unicauca.urbanguard.data.remote.api.service.UserApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,4 +48,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): AuthApi = retrofit.create(AuthApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideUserApi(retrofit: Retrofit): UserApi = retrofit.create(UserApi::class.java)
 }

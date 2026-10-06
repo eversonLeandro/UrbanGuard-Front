@@ -164,6 +164,7 @@ fun ErrorBanner(
 private fun titleFor(error: AppError): String = when (error) {
     is AppError.NoConnection -> "Sin conexión"
     is AppError.SessionExpired -> "Sesión expirada"
+    is AppError.ReauthRequired -> "Confirma tu identidad"
     is AppError.InvalidCredentials -> "No pudimos verificar tus datos"
     is AppError.EmailAlreadyRegistered -> "Correo ya registrado"
     is AppError.EmailNotVerified -> "Cuenta sin verificar"

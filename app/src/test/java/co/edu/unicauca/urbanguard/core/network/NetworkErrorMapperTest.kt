@@ -27,6 +27,13 @@ class NetworkErrorMapperTest {
     }
 
     @Test
+    fun `401 with REAUTH_REQUIRED is reported as reauth required`() {
+        val error = NetworkErrorMapper.toAppError(httpException(401, "REAUTH_REQUIRED"))
+
+        assertTrue("Se esperaba ReauthRequired pero fue $error", error is AppError.ReauthRequired)
+    }
+
+    @Test
     fun `409 is reported as a conflict`() {
         val error = NetworkErrorMapper.toAppError(httpException(409, "Conflict"))
 

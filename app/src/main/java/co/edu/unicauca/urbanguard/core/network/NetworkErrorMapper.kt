@@ -121,7 +121,11 @@ object NetworkErrorMapper {
      */
     private fun forCode(code: Int, message: String?): AppError = when (code) {
         400, 422 -> AppError.Validation(message ?: AppError.Validation.MESSAGE)
-        401 -> AppError.SessionExpired(message ?: AppError.SessionExpired.MESSAGE)
+        401 -> if (message == "REAUTH_REQUIRED") {
+            AppError.ReauthRequired(AppError.ReauthRequired.MESSAGE)
+        } else {
+            AppError.SessionExpired(message ?: AppError.SessionExpired.MESSAGE)
+        }
         403 -> AppError.Forbidden(message ?: AppError.Forbidden.MESSAGE)
         404 -> AppError.NotFound(message ?: AppError.NotFound.MESSAGE)
         409 -> AppError.Conflict(message ?: AppError.Conflict.MESSAGE)
