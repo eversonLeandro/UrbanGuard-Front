@@ -32,15 +32,20 @@ object VisitorConstants {
         DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale("es", "CO"))
 
     /**
-     * Bandera del bypass de visitantes, equivalente a `OnboardingBypass.ENABLED`.
+     * Activa la llamada real al backend para **generar** el pase QR
+     * (`POST api/complexes/{complexId}/visitor-invitations`).
      *
-     * El backend todavía no expone `POST api/visitors/authorizations`, así que
-     * `VisitorRepositoryImpl` devuelve un pase simulado mientras este flag esté
-     * en `false`. Para conectar el endpoint real basta con ponerlo en `true`:
-     * la llamada ya está escrita en el repositorio y `VisitorApi` sigue
-     * inyectada por Hilt, no hay que tocar el módulo de inyección.
+     * Con el flag en `false` `VisitorRepositoryImpl` devuelve un pase simulado.
+     * Gobierna solo la generación: el historial tiene su propio flag.
      */
-    const val VISITORS_BACKEND_ENABLED = false
+    const val VISITORS_BACKEND_ENABLED = true
+
+    /**
+     * Activa la llamada real del historial de pases.
+     *
+     * Sigue en `false` porque su contrato con el backend aún no está adaptado.
+     */
+    const val VISITOR_HISTORY_BACKEND_ENABLED = false
 
     // ── Mensajes de validación ────────────────────────────────────────────
     const val MSG_NAME_REQUIRED = "Ingresa el nombre del visitante."

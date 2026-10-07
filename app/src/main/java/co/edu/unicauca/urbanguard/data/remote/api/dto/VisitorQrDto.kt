@@ -3,33 +3,33 @@ package co.edu.unicauca.urbanguard.data.remote.api.dto
 /**
  * Cuerpo para crear un pase QR de visitante.
  *
- * Endpoint PROVISIONAL: POST api/visitors/authorizations
- * Body: { "visitorName": String, "guestCount": Int, "date": "yyyy-MM-dd", "complexId": String }
+ * POST `api/complexes/{complexId}/visitor-invitations` (el `complexId` va en la
+ * ruta, nunca en el body). Éxito: 201 Created.
+ * Body: { "visitorName": String, "guestCount": Int, "visitDate": "yyyy-MM-dd" }
  *
- * NOTA: el backend hace parseo estricto del cuerpo, por eso los nombres JSON
- * deben coincidir exactamente. El contrato está PENDIENTE de acordar con backend.
+ * El backend hace parseo estricto del cuerpo: cualquier campo extra o de tipo
+ * distinto responde 400, por eso los nombres JSON deben coincidir exactamente.
  */
 data class VisitorQrRequestDto(
     val visitorName: String,
     val guestCount: Int,
-    val date: String,
-    val complexId: String
+    val visitDate: String
 )
 
 /**
  * Respuesta de la creación de un pase QR de visitante.
  *
- * Endpoint PROVISIONAL: POST api/visitors/authorizations
- * Éxito esperado: 201 Created
- * Body: { "qrCode": String, "date": "yyyy-MM-dd" }
+ * POST `api/complexes/{complexId}/visitor-invitations` → 201 Created
+ * Body: { "invitationId": "<UUID>", "code": "<22 caracteres>", "visitDate": "yyyy-MM-dd" }
  *
- * `qrCode` es el contenido que el frontend dibuja con ZXing; `date` llega como
- * texto ISO (yyyy-MM-dd) y se convierte a LocalDate en el mapper.
- * El contrato está PENDIENTE de acordar con backend.
+ * `code` es el contenido exacto que el frontend dibuja con ZXing (es el mismo
+ * valor que el backend valida al escanear); `visitDate` llega como texto ISO
+ * (yyyy-MM-dd) y se convierte a LocalDate en el mapper.
  */
 data class VisitorQrResponseDto(
-    val qrCode: String,
-    val date: String
+    val invitationId: String,
+    val code: String,
+    val visitDate: String
 )
 
 /**

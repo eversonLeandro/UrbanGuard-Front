@@ -6,21 +6,24 @@ import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorQrResponseDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface VisitorApi {
 
     // =========================================================================
-    // ENDPOINT PROVISIONAL: Crear pase QR de visitante
-    // POST /api/visitors/authorizations
-    // Body: { visitorName, guestCount, date, complexId }
-    // Éxito esperado: 201 Created con { qrCode, date }
-    // Errores: 400/401/403/404/422/500
-    // NOTA: el endpoint aún NO existe en el backend; mientras
-    // VisitorConstants.VISITORS_BACKEND_ENABLED esté en false el repositorio
-    // devuelve un pase simulado sin invocar este método.
+    // Crear pase QR de visitante
+    // POST api/complexes/{complexId}/visitor-invitations
+    // Body: { visitorName, guestCount, visitDate }  (parseo estricto, sin extras)
+    // Éxito: 201 Created con { invitationId, code, visitDate }
+    // Errores: 400/401/403/404/429/5xx
+    // `code` es el contenido del QR. La llamada se hace solo cuando
+    // VisitorConstants.VISITORS_BACKEND_ENABLED está en true.
     // =========================================================================
-    @POST("api/visitors/authorizations")
-    suspend fun generateVisitorQr(@Body request: VisitorQrRequestDto): VisitorQrResponseDto
+    @POST("api/complexes/{complexId}/visitor-invitations")
+    suspend fun generateVisitorQr(
+        @Path("complexId") complexId: String,
+        @Body request: VisitorQrRequestDto
+    ): VisitorQrResponseDto
 
     // =========================================================================
     // ENDPOINT PROVISIONAL: Historial de pases QR del conjunto
