@@ -7,39 +7,39 @@ import co.edu.unicauca.urbanguard.domain.model.VisitorAuthorization
 import java.time.LocalDate
 
 /**
- * Construye el body de POST /api/visitors/authorizations a partir de los datos
- * del formulario. La fecha viaja como texto ISO (yyyy-MM-dd), que es el formato
- * que espera el backend.
+ * Construye el body de POST `api/complexes/{complexId}/visitor-invitations` a
+ * partir de los datos del formulario. La fecha viaja como `visitDate` en texto
+ * ISO (yyyy-MM-dd), que es el formato que espera el backend; el `complexId` no
+ * forma parte del body porque va en la ruta.
  */
 fun toVisitorQrRequestDto(
     visitorName: String,
     guestCount: Int,
-    date: LocalDate,
-    complexId: String
+    date: LocalDate
 ): VisitorQrRequestDto = VisitorQrRequestDto(
     visitorName = visitorName,
     guestCount = guestCount,
-    date = date.toString(),
-    complexId = complexId
+    visitDate = date.toString()
 )
 
 /**
- * Convierte la respuesta del endpoint POST /api/visitors/authorizations
+ * Convierte la respuesta de POST `api/complexes/{complexId}/visitor-invitations`
  * (201 Created) en el modelo interno de dominio.
  *
- * La respuesta solo trae `qrCode` y `date`, así que el nombre y la cantidad de
- * invitados se toman de la misma solicitud que originó el pase, para que la
- * pantalla de resultado pueda describirlo y compartirlo.
+ * `code` es el contenido del QR, por eso se mapea a [VisitorAuthorization.qrCode].
+ * La respuesta no trae el nombre ni la cantidad de invitados, así que se toman
+ * de la misma solicitud que originó el pase, para que la pantalla de resultado
+ * pueda describirlo y compartirlo.
  *
- * Lanza [java.time.format.DateTimeParseException] si `date` no viene en formato
- * ISO; el repositorio captura ese error explícitamente.
+ * Lanza [java.time.format.DateTimeParseException] si `visitDate` no viene en
+ * formato ISO; el repositorio captura ese error explícitamente.
  */
 fun VisitorQrResponseDto.toDomain(
     visitorName: String,
     guestCount: Int
 ): VisitorAuthorization = VisitorAuthorization(
-    qrCode = qrCode,
-    validDate = LocalDate.parse(date),
+    qrCode = code,
+    validDate = LocalDate.parse(visitDate),
     visitorName = visitorName,
     guestCount = guestCount
 )
