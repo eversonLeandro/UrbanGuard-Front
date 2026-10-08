@@ -1,18 +1,20 @@
 package co.edu.unicauca.urbanguard.ui.features.visitors
 
-import co.edu.unicauca.urbanguard.domain.model.VisitorAuthorization
+import co.edu.unicauca.urbanguard.domain.model.VisitorInvitation
+
+import java.time.LocalDate
 
 /**
- * Estado de la pantalla de visitantes, que muestra el historial de pases QR
- * del conjunto activo.
- *
- * Mientras el endpoint `GET api/visitors/authorizations` no exista en el
- * backend, [passes] llega vacío y la pantalla muestra su estado vacío.
+ * Estado de la pantalla de visitantes: historial de invitaciones del
+ * residente en el conjunto activo, con su estado funcional.
  */
 data class VisitorPassListUiState(
     val isLoading: Boolean = false,
-    val passes: List<VisitorAuthorization> = emptyList(),
-    val errorMessage: String? = null
+    val allPasses: List<VisitorInvitation> = emptyList(),
+    val filteredPasses: List<VisitorInvitation> = emptyList(),
+    val errorMessage: String? = null,
+    val searchQuery: String = "",
+    val dateFilter: LocalDate? = null
 ) {
-    val isEmpty: Boolean = passes.isEmpty() && !isLoading && errorMessage == null
+    val isEmpty: Boolean = filteredPasses.isEmpty() && !isLoading && errorMessage == null
 }

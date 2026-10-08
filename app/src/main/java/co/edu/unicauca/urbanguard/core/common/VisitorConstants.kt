@@ -40,13 +40,6 @@ object VisitorConstants {
      */
     const val VISITORS_BACKEND_ENABLED = true
 
-    /**
-     * Activa la llamada real del historial de pases.
-     *
-     * Sigue en `false` porque su contrato con el backend aún no está adaptado.
-     */
-    const val VISITOR_HISTORY_BACKEND_ENABLED = false
-
     // ── Mensajes de validación ────────────────────────────────────────────
     const val MSG_NAME_REQUIRED = "Ingresa el nombre del visitante."
     const val MSG_GUESTS_RANGE = "El número de invitados debe estar entre $MIN_GUESTS y $MAX_GUESTS."

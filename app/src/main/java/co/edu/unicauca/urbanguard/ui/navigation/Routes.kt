@@ -16,6 +16,7 @@ object Routes {
     const val VISITORS = "visitors"
     const val VISITORS_NEW_PASS = "visitors/new_pass"
     const val VISITORS_PASS = "visitors/pass"
+    const val VISITORS_PASS_DETAIL = "visitors/pass_detail"
     const val SUPPORT = "support"
     const val CONJUNTO_INFO = "conjunto_info"
     const val RESERVATIONS = "reservations"

@@ -115,29 +115,42 @@ private fun PassFormContent(
 
         Spacer(Modifier.height(20.dp))
 
-        VisitorNameField(
-            value = uiState.visitorName,
-            isLoading = uiState.isLoading,
-            onValueChange = viewModel::onVisitorNameChange
-        )
+        androidx.compose.material3.Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
+            shape = RoundedCornerShape(16.dp),
+            elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            ) {
+                VisitorNameField(
+                    value = uiState.visitorName,
+                    isLoading = uiState.isLoading,
+                    onValueChange = viewModel::onVisitorNameChange
+                )
 
-        Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
 
-        GuestCountSelector(
-            guestCount = uiState.guestCount,
-            isLoading = uiState.isLoading,
-            onGuestCountChange = viewModel::onGuestCountChange
-        )
+                GuestCountSelector(
+                    guestCount = uiState.guestCount,
+                    isLoading = uiState.isLoading,
+                    onGuestCountChange = viewModel::onGuestCountChange
+                )
 
-        Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
 
-        DateSelectorField(
-            date = uiState.date,
-            isLoading = uiState.isLoading,
-            onDateChange = viewModel::onDateChange
-        )
+                DateSelectorField(
+                    date = uiState.date,
+                    isLoading = uiState.isLoading,
+                    onDateChange = viewModel::onDateChange
+                )
+            }
+        }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(24.dp))
 
         VisitorActionButton(
             text = "Generar QR",
@@ -293,14 +306,14 @@ private fun DateSelectorField(
 
     FieldLabel(text = "Fecha de vigencia")
     Spacer(Modifier.height(DATE_FIELD_LABEL_GAP))
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White, RoundedCornerShape(FIELD_CORNER_RADIUS))
             .border(1.dp, UgBorder, RoundedCornerShape(FIELD_CORNER_RADIUS))
             .clickable(enabled = !isLoading) { showDatePicker = true }
             .padding(horizontal = FIELD_HORIZONTAL_PADDING, vertical = FIELD_VERTICAL_PADDING),
-        contentAlignment = Alignment.CenterStart
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = Icons.Default.CalendarMonth,
