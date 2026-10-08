@@ -129,6 +129,8 @@ object NetworkErrorMapper {
         403 -> AppError.Forbidden(message ?: AppError.Forbidden.MESSAGE)
         404 -> AppError.NotFound(message ?: AppError.NotFound.MESSAGE)
         409 -> AppError.Conflict(message ?: AppError.Conflict.MESSAGE)
+        // 410 GONE: el backend lo usa para pases QR expirados (validación visitante).
+        410 -> AppError.Validation(message ?: "Este pase ya no es válido.")
         429 -> AppError.RateLimited(message ?: AppError.RateLimited.MESSAGE)
         500, 502, 503, 504 -> AppError.ServerError(message ?: AppError.ServerError.MESSAGE)
         else -> {

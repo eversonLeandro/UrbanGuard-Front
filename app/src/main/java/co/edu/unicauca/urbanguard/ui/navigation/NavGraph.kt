@@ -59,6 +59,7 @@ import co.edu.unicauca.urbanguard.ui.features.profile.ProfileScreen
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.GenerateQrScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.GeneratedPassScreen
+import co.edu.unicauca.urbanguard.ui.features.visitors.InvitationPassScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.VisitorPassListScreen
 
 // Clave en el savedStateHandle de PENDING_REQUESTS para recibir el
@@ -362,6 +363,9 @@ fun AppNavGraph(
             VisitorPassListScreen(
                 onGenerateNewClick = {
                     navController.navigate(Routes.VISITORS_NEW_PASS)
+                },
+                onInvitationClick = {
+                    navController.navigate(Routes.VISITORS_PASS_DETAIL)
                 }
             )
         }
@@ -383,6 +387,11 @@ fun AppNavGraph(
                 onGenerateAnotherClick = {
                     navController.navigate(Routes.VISITORS_NEW_PASS)
                 }
+            )
+        }
+        composable(Routes.VISITORS_PASS_DETAIL) {
+            InvitationPassScreen(
+                onBackClick = { navController.popBackStack() }
             )
         }
         composable(Routes.LINK_BY_CODE) {

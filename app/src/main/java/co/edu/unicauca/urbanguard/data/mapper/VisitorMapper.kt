@@ -1,9 +1,13 @@
 package co.edu.unicauca.urbanguard.data.mapper
 
-import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorQrItemDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorInvitationListItemDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorQrRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorQrResponseDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorValidationResponseDto
 import co.edu.unicauca.urbanguard.domain.model.VisitorAuthorization
+import co.edu.unicauca.urbanguard.domain.model.VisitorInvitation
+import co.edu.unicauca.urbanguard.domain.model.VisitorInvitationStatus
+import co.edu.unicauca.urbanguard.domain.model.VisitorValidationResult
 import java.time.LocalDate
 
 /**
@@ -45,15 +49,31 @@ fun VisitorQrResponseDto.toDomain(
 )
 
 /**
- * Convierte un elemento del historial de GET /api/visitors/authorizations en
- * el modelo interno de dominio.
+ * Convierte un elemento del listado GET
+ * `api/complexes/{complexId}/visitor-invitations` en el modelo de dominio.
  *
- * Lanza [java.time.format.DateTimeParseException] si `date` no viene en formato
- * ISO; el repositorio captura ese error explícitamente.
+ * Lanza [java.time.format.DateTimeParseException] si `visitDate` no viene en
+ * formato ISO; el repositorio captura ese error explícitamente.
  */
-fun VisitorQrItemDto.toDomain(): VisitorAuthorization = VisitorAuthorization(
-    qrCode = qrCode,
-    validDate = LocalDate.parse(date),
-    visitorName = visitorName,
-    guestCount = guestCount
-)
+fun VisitorInvitationListItemDto.toVisitorInvitation(): VisitorInvitation =
+    VisitorInvitation(
+        invitationId = invitationId,
+        visitorName = visitorName,
+        guestCount = guestCount,
+        visitDate = LocalDate.parse(visitDate),
+        status = VisitorInvitationStatus.fromBackend(status)
+    )
+
+/**
+ * Convierte la respuesta 200 de POST
+ * `api/complexes/{complexId}/visitor-invitations/validation` en el modelo
+ * de dominio. Lanza [java.time.format.DateTimeParseException] si `visitDate`
+ * no viene en ISO; el repositorio lo captura.
+ */
+fun VisitorValidationResponseDto.toVisitorValidationResult(): VisitorValidationResult =
+    VisitorValidationResult(
+        invitationId = invitationId,
+        visitorName = visitorName,
+        guestCount = guestCount,
+        visitDate = LocalDate.parse(visitDate)
+    )

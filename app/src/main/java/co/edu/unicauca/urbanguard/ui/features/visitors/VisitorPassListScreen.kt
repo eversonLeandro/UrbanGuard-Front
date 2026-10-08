@@ -5,29 +5,45 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,41 +51,47 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.core.common.VisitorConstants
-import co.edu.unicauca.urbanguard.domain.model.VisitorAuthorization
-import co.edu.unicauca.urbanguard.ui.components.QrCodeImage
+import co.edu.unicauca.urbanguard.domain.model.VisitorInvitation
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
 import co.edu.unicauca.urbanguard.ui.theme.UgInputBg
-import co.edu.unicauca.urbanguard.ui.theme.UgSurface
 import co.edu.unicauca.urbanguard.ui.theme.UgTextPrimary
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
+import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgBorder
+import co.edu.unicauca.urbanguard.ui.theme.UgDisabledText
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.Instant
 
-private val LIST_QR_SIZE = 56.dp
 private val LIST_PADDING = 20.dp
 private val LIST_GAP = 12.dp
 private val LIST_GAP_SMALL = 6.dp
 private val LIST_CORNER = 16.dp
 private val LIST_EMPTY_ICON = 72.dp
 private val LIST_EMPTY_ICON_SIZE = 32.dp
-private val LIST_META_ICON = 14.dp
-private val LIST_ICON_GAP = 6.dp
 
 /**
- * Pantalla de la pestaña Visitantes: historial de pases QR del conjunto y
- * acceso a la creación de uno nuevo.
+ * Pantalla de la pestaña Visitantes: historial de invitaciones del residente
+ * con su estado, y acceso a la creación de una nueva.
  *
- * El historial llega del backend mediante `GET api/visitors/authorizations`.
- * Mientras ese endpoint no exista, la lista llega vacía y se muestra el estado
- * vacío, no un error.
+ * El historial llega del backend mediante
+ * `GET api/complexes/{complexId}/visitor-invitations`. Pulsar una invitación
+ * activa o programada abre su código para volver a compartirlo.
  */
 @Composable
 fun VisitorPassListScreen(
     onGenerateNewClick: () -> Unit,
+    onInvitationClick: (String) -> Unit = {},
     viewModel: VisitorPassListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.onRefresh()
+    }
 
     Column(
         modifier = Modifier
@@ -85,35 +107,204 @@ fun VisitorPassListScreen(
         } else {
             PassListContent(
                 uiState = uiState,
-                onGenerateNewClick = onGenerateNewClick
+                onGenerateNewClick = onGenerateNewClick,
+                onRetryClick = viewModel::onRefresh,
+                onSearchQueryChange = viewModel::onSearchQueryChange,
+                onDateFilterChange = viewModel::onDateFilterChange,
+                onInvitationClick = { invitation ->
+                    viewModel.selectInvitation(invitation)
+                    onInvitationClick(invitation.invitationId)
+                }
             )
         }
     }
 }
 
 @Composable
+private fun VisitorListFilters(
+    uiState: VisitorPassListUiState,
+    onSearchQueryChange: (String) -> Unit,
+    onDateFilterChange: (LocalDate?) -> Unit
+) {
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = LIST_PADDING),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        SearchFilterField(
+            query = uiState.searchQuery,
+            onQueryChange = onSearchQueryChange,
+            modifier = Modifier.weight(1f).height(50.dp)
+        )
+
+        DateFilterField(
+            dateFilter = uiState.dateFilter,
+            onShowDatePicker = { showDatePicker = true },
+            onClearDate = { onDateFilterChange(null) }
+        )
+    }
+
+    if (showDatePicker) {
+        FilterDatePickerDialog(
+            initialDate = uiState.dateFilter,
+            onDateSelected = onDateFilterChange,
+            onDismiss = { showDatePicker = false }
+        )
+    }
+}
+
+@Composable
+private fun SearchFilterField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        placeholder = { Text("Buscar nombre", fontSize = 13.sp, color = UgDisabledText) },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = UgTextSecondary
+            )
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(10.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = androidx.compose.ui.graphics.Color.White,
+            unfocusedContainerColor = androidx.compose.ui.graphics.Color.White,
+            focusedBorderColor = UgNavy,
+            unfocusedBorderColor = UgBorder
+        ),
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun DateFilterField(
+    dateFilter: LocalDate?,
+    onShowDatePicker: () -> Unit,
+    onClearDate: () -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .width(140.dp)
+                .height(50.dp)
+                .background(androidx.compose.ui.graphics.Color.White, RoundedCornerShape(10.dp))
+                .border(1.dp, UgBorder, RoundedCornerShape(10.dp))
+                .clickable { onShowDatePicker() }
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.CalendarMonth,
+                contentDescription = null,
+                tint = UgTextSecondary,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = dateFilter?.format(VisitorConstants.DATE_LABEL_FORMAT) ?: "Fecha",
+                fontSize = 13.sp,
+                color = if (dateFilter != null) UgTextPrimary else UgDisabledText
+            )
+        }
+        if (dateFilter != null) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Limpiar fecha",
+                modifier = Modifier
+                    .size(32.dp)
+                    .clickable { onClearDate() }
+                    .padding(4.dp),
+                tint = UgTextSecondary
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FilterDatePickerDialog(
+    initialDate: LocalDate?,
+    onDateSelected: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val initialDateMillis = initialDate
+        ?.atStartOfDay(ZoneOffset.UTC)
+        ?.toInstant()
+        ?.toEpochMilli()
+
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDateMillis
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                datePickerState.selectedDateMillis?.let {
+                    onDateSelected(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate())
+                }
+                onDismiss()
+            }) {
+                Text("Aceptar", color = UgNavy, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = UgTextSecondary)
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
+    }
+}
+
+@Composable
 private fun PassListContent(
     uiState: VisitorPassListUiState,
-    onGenerateNewClick: () -> Unit
+    onGenerateNewClick: () -> Unit,
+    onRetryClick: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onDateFilterChange: (LocalDate?) -> Unit,
+    onInvitationClick: (VisitorInvitation) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
+        Spacer(Modifier.height(16.dp))
+
+        VisitorListFilters(
+            uiState = uiState,
+            onSearchQueryChange = onSearchQueryChange,
+            onDateFilterChange = onDateFilterChange
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        Box(modifier = Modifier.weight(1f)) {
+            when {
+                uiState.errorMessage != null -> ErrorState(message = uiState.errorMessage, onRetryClick = onRetryClick)
+                uiState.isEmpty -> EmptyState()
+                else -> PassesList(passes = uiState.filteredPasses, onInvitationClick = onInvitationClick)
+            }
+        }
+
         VisitorActionButton(
             text = "Generar nuevo QR",
             onClick = onGenerateNewClick,
             modifier = Modifier.padding(
                 start = LIST_PADDING,
                 end = LIST_PADDING,
-                top = LIST_PADDING
+                top = 12.dp,
+                bottom = LIST_PADDING
             )
         )
-
-        Spacer(Modifier.height(LIST_PADDING))
-
-        when {
-            uiState.errorMessage != null -> ErrorState(message = uiState.errorMessage)
-            uiState.isEmpty -> EmptyState()
-            else -> PassesList(passes = uiState.passes)
-        }
     }
 }
 
@@ -171,24 +362,41 @@ private fun EmptyState() {
 }
 
 @Composable
-private fun ErrorState(message: String) {
-    Box(
+private fun ErrorState(message: String, onRetryClick: () -> Unit) {
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = LIST_PADDING),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = message,
-            fontSize = 13.sp,
+            fontSize = 14.sp,
             color = UgErrorText,
             textAlign = TextAlign.Center
         )
+
+        Spacer(Modifier.height(16.dp))
+
+        OutlinedButton(
+            onClick = onRetryClick,
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = UgNavy),
+            border = ButtonDefaults.outlinedButtonBorder.copy(
+                brush = androidx.compose.ui.graphics.SolidColor(UgNavy)
+            )
+        ) {
+            Text("Reintentar", fontWeight = FontWeight.Medium)
+        }
     }
 }
 
 @Composable
-private fun PassesList(passes: List<VisitorAuthorization>) {
+private fun PassesList(
+    passes: List<VisitorInvitation>,
+    onInvitationClick: (VisitorInvitation) -> Unit
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -198,65 +406,11 @@ private fun PassesList(passes: List<VisitorAuthorization>) {
         ),
         verticalArrangement = Arrangement.spacedBy(LIST_GAP)
     ) {
-        items(passes) { pass -> PassListItem(pass = pass) }
-    }
-}
-
-@Composable
-private fun PassListItem(pass: VisitorAuthorization) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(UgSurface, RoundedCornerShape(LIST_CORNER))
-            .padding(LIST_GAP),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        QrCodeImage(qrCode = pass.qrCode, size = LIST_QR_SIZE)
-
-        Spacer(Modifier.width(LIST_GAP))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = pass.visitorName,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = UgTextPrimary
-            )
-
-            Spacer(Modifier.height(LIST_ICON_GAP))
-
-            PassMetaRow(
-                icon = Icons.Default.Group,
-                text = guestCountText(guestCount = pass.guestCount)
-            )
-
-            Spacer(Modifier.height(LIST_ICON_GAP))
-
-            PassMetaRow(
-                icon = Icons.Default.CalendarMonth,
-                text = pass.validDate.format(VisitorConstants.DATE_LABEL_FORMAT)
+        items(passes, key = { it.invitationId }) { invitation ->
+            InvitationListItem(
+                invitation = invitation,
+                onShareClick = { onInvitationClick(invitation) }
             )
         }
     }
 }
-
-@Composable
-private fun PassMetaRow(icon: ImageVector, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = UgTextSecondary,
-            modifier = Modifier.size(LIST_META_ICON)
-        )
-        Spacer(Modifier.width(LIST_ICON_GAP))
-        Text(
-            text = text,
-            fontSize = 12.sp,
-            color = UgTextSecondary
-        )
-    }
-}
-
-private fun guestCountText(guestCount: Int): String =
-    if (guestCount == 1) "1 invitado" else "$guestCount invitados"

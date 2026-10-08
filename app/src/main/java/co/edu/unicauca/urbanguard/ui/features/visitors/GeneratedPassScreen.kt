@@ -100,42 +100,76 @@ private fun PassContent(
             .padding(horizontal = PASS_PADDING, vertical = PASS_PADDING),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = pass.visitorName,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = UgTextPrimary
-        )
+        androidx.compose.material3.Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = androidx.compose.material3.CardDefaults.cardColors(
+                containerColor = androidx.compose.ui.graphics.Color.White
+            ),
+            elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = pass.visitorName,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UgTextPrimary
+                )
 
-        Spacer(Modifier.height(PASS_GAP))
+                Spacer(Modifier.height(PASS_GAP))
 
-        Text(
-            text = "Muestra este código en la portería para autorizar el ingreso.",
-            fontSize = 12.sp,
-            color = UgTextSecondary
-        )
+                Text(
+                    text = "Muestra este código en la portería para autorizar el ingreso.",
+                    fontSize = 13.sp,
+                    color = UgTextSecondary,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
 
-        Spacer(Modifier.height(PASS_GAP_LARGE))
+                Spacer(Modifier.height(PASS_GAP_LARGE))
 
-        QrCodeImage(qrCode = pass.qrCode, size = PASS_QR_SIZE)
+                Box(
+                    modifier = Modifier
+                        .background(UgBackground, RoundedCornerShape(16.dp))
+                        .padding(16.dp)
+                ) {
+                    QrCodeImage(qrCode = pass.qrCode, size = PASS_QR_SIZE)
+                }
 
-        Spacer(Modifier.height(PASS_GAP_LARGE))
+                Spacer(Modifier.height(PASS_GAP_LARGE))
 
-        PassSummary(pass = pass)
+                PassSummary(pass = pass)
+            }
+        }
 
         Spacer(Modifier.height(PASS_GAP_LARGE))
 
         VisitorActionButton(
-            text = "Compartir",
+            text = "Compartir QR",
             onClick = onShareClick
         )
 
         Spacer(Modifier.height(PASS_GAP))
 
-        VisitorActionButton(
-            text = "Generar otro pase",
-            onClick = onGenerateAnotherClick
-        )
+        androidx.compose.material3.OutlinedButton(
+            onClick = onGenerateAnotherClick,
+            shape = RoundedCornerShape(10.dp),
+            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                contentColor = co.edu.unicauca.urbanguard.ui.theme.UgNavy
+            ),
+            border = androidx.compose.material3.ButtonDefaults.outlinedButtonBorder.copy(
+                brush = androidx.compose.ui.graphics.SolidColor(co.edu.unicauca.urbanguard.ui.theme.UgNavy)
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Text("Generar otro pase", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+        }
     }
 }
 

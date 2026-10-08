@@ -1,12 +1,21 @@
 package co.edu.unicauca.urbanguard.data.repository
 
+import android.util.Log
 import co.edu.unicauca.urbanguard.core.common.VisitorConstants
 import co.edu.unicauca.urbanguard.core.network.NetworkErrorMapper
 import co.edu.unicauca.urbanguard.data.mapper.toDomain
+import co.edu.unicauca.urbanguard.data.mapper.toVisitorInvitation
 import co.edu.unicauca.urbanguard.data.mapper.toVisitorQrRequestDto
+import co.edu.unicauca.urbanguard.data.mapper.toVisitorValidationResult
 import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorQrResponseDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorValidationRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.service.VisitorApi
+import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.VisitorAuthorization
+import co.edu.unicauca.urbanguard.domain.model.VisitorInvitation
+import co.edu.unicauca.urbanguard.domain.model.VisitorValidationFailure
+import co.edu.unicauca.urbanguard.domain.model.VisitorValidationResult
+import co.edu.unicauca.urbanguard.domain.model.sortedForResident
 import co.edu.unicauca.urbanguard.domain.repository.VisitorRepository
 import java.io.IOException
 import java.time.LocalDate
@@ -62,34 +71,147 @@ class VisitorRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Historial de pases del conjunto activo.
+     * Historial de invitaciones del residente en el conjunto activo.
      *
-     * Mientras [VisitorConstants.VISITOR_HISTORY_BACKEND_ENABLED] sea `false`
-     * se devuelve una lista vacía sin invocar el `GET`, cuyo contrato con el
-     * backend todavía no está adaptado: así la pantalla de visitantes muestra
-     * su estado vacío en vez de un error de red. Al activar el flag se consulta
-     * el endpoint real.
+     * Llama a `GET api/complexes/{complexId}/visitor-invitations` y ordena
+     * para la pantalla (activas y programadas primero).
      */
-    override suspend fun getVisitorAuthorizations(): Result<List<VisitorAuthorization>> {
-        if (!VisitorConstants.VISITOR_HISTORY_BACKEND_ENABLED) {
-            return Result.success(emptyList())
+    override suspend fun getVisitorInvitations(
+        complexId: String
+    ): Result<List<VisitorInvitation>> {
+        if (complexId.isBlank()) {
+            return Result.failure(
+                Exception(VisitorConstants.MSG_NO_ACTIVE_COMPLEX)
+            )
         }
         return try {
-            Result.success(api.getVisitorAuthorizations().map { it.toDomain() })
+            Result.success(
+                api.getInvitations(complexId).map { it.toVisitorInvitation() }
+                    .sortedForResident()
+            )
         } catch (e: HttpException) {
             Result.failure(Exception(NetworkErrorMapper.map(e), e))
         } catch (e: IOException) {
+            Log.w(TAG, "Sin conexión al cargar invitaciones", e)
             Result.failure(Exception(NetworkErrorMapper.map(e), e))
         } catch (e: DateTimeParseException) {
             Result.failure(Exception(NetworkErrorMapper.map(e), e))
         }
     }
 
+    /**
+     * Recupera el código de una invitación para recompartirla.
+     *
+     * Llama a `GET .../{invitationId}/code`; si el backend responde 410 el
+     * [NetworkErrorMapper] lo traduce al mensaje de negocio ("ya no está
+     * disponible").
+     */
+    override suspend fun getInvitationCode(
+        complexId: String,
+        invitationId: String
+    ): Result<String> {
+        if (complexId.isBlank() || invitationId.isBlank()) {
+            return Result.failure(
+                Exception(VisitorConstants.MSG_NO_ACTIVE_COMPLEX)
+            )
+        }
+        return try {
+            Result.success(api.getInvitationCode(complexId, invitationId).code)
+        } catch (e: HttpException) {
+            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+        } catch (e: IOException) {
+            Log.w(TAG, "Sin conexión al recuperar código de invitación", e)
+            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+        }
+    }
+
     override fun lastGeneratedPass(): VisitorAuthorization? = lastGenerated
+
+    private var selected: VisitorInvitation? = null
+
+    override fun setSelectedInvitation(
+        invitation: VisitorInvitation?
+    ) {
+        selected = invitation
+    }
+
+    override fun selectedInvitation(): VisitorInvitation? =
+        selected
+
+    /**
+     * Valida un pase QR contra el backend (el pase se consume, un solo uso).
+     *
+     * Pre-valida el formato local (22 chars base64url) para no gastar una
+     * llamada; el `reason` del backend se mapea a [VisitorValidationFailure]
+     * y viaja en el mensaje del [AppException] como `FAILURE|mensaje` para que
+     * el ViewModel lo recupere sin comparar textos de UI.
+     */
+    override suspend fun validateVisitorQr(
+        code: String,
+        complexId: String
+    ): Result<VisitorValidationResult> {
+        val trimmed = code.trim()
+        if (complexId.isBlank()) {
+            return Result.failure(
+                AppException(
+                    co.edu.unicauca.urbanguard.domain.model.AppError.Validation(
+                        VisitorConstants.MSG_NO_ACTIVE_COMPLEX
+                    )
+                ).withFailure(VisitorValidationFailure.NO_ACTIVE_COMPLEX)
+            )
+        }
+        if (!isValidCodeFormat(trimmed)) {
+            return Result.failure(
+                AppException(
+                    co.edu.unicauca.urbanguard.domain.model.AppError.Validation(
+                        "El código QR escaneado no tiene un formato válido."
+                    )
+                ).withFailure(VisitorValidationFailure.INVALID_FORMAT)
+            )
+        }
+        return try {
+            val response = api.validateVisitorQr(complexId, VisitorValidationRequestDto(trimmed))
+            if (response.isSuccessful) {
+                val body = response.body()
+                    ?: return Result.failure(
+                        AppException(
+                            co.edu.unicauca.urbanguard.domain.model.AppError.ServerError(
+                                co.edu.unicauca.urbanguard.domain.model.AppError.ServerError.MESSAGE
+                            )
+                        ).withFailure(VisitorValidationFailure.SERVER_ERROR)
+                    )
+                Result.success(body.toVisitorValidationResult())
+            } else {
+                Result.failure(mapValidationError(response.code(), response.errorBody()?.string()))
+            }
+        } catch (e: HttpException) {
+            Result.failure(mapValidationError(e.code(), e.response()?.errorBody()?.string()))
+        } catch (e: IOException) {
+            Log.w(TAG, "Sin conexión al validar pase QR", e)
+            Result.failure(
+                AppException(
+                    co.edu.unicauca.urbanguard.domain.model.AppError.NoConnection(
+                        co.edu.unicauca.urbanguard.domain.model.AppError.NoConnection.MESSAGE
+                    )
+                ).withFailure(VisitorValidationFailure.NO_CONNECTION)
+            )
+        } catch (e: DateTimeParseException) {
+            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+        }
+    }
+
+    private fun isValidCodeFormat(code: String): Boolean {
+        if (code.length != 22) return false
+        return code.all { it.isLetterOrDigit() || it == '-' || it == '_' }
+    }
 
     private fun sampleResponse(visitDate: String): VisitorQrResponseDto = VisitorQrResponseDto(
         invitationId = UUID.randomUUID().toString(),
         code = VisitorConstants.SAMPLE_QR_CODE,
         visitDate = visitDate
     )
+
+    private companion object {
+        const val TAG = "VisitorRepo"
+    }
 }

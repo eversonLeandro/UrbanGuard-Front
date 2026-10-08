@@ -31,21 +31,3 @@ data class VisitorQrResponseDto(
     val code: String,
     val visitDate: String
 )
-
-/**
- * Elemento del historial de pases QR de visitante.
- *
- * Endpoint PROVISIONAL: GET api/visitors/authorizations
- * Body: [ { "id": ..., "visitorName": String, "guestCount": Int, "qrCode": String, "date": "yyyy-MM-dd" } ]
- *
- * El alta (POST) solo devuelve `qrCode` y `date`, así que el listado necesita
- * además el nombre y la cantidad de invitados para poder describir el pase.
- * Ese contrato ampliado está PENDIENTE de acordar con backend.
- */
-data class VisitorQrItemDto(
-    val id: String,
-    val visitorName: String,
-    val guestCount: Int,
-    val qrCode: String,
-    val date: String
-)
