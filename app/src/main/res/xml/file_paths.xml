@@ -5,4 +5,8 @@
     <cache-path
         name="qr"
         path="qr/" />
+    <!-- Carpeta donde PhotoCapture guarda las fotos de novedades. -->
+    <cache-path
+        name="incidents"
+        path="incidents/" />
 </paths>
