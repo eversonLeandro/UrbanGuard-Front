@@ -44,6 +44,11 @@ import co.edu.unicauca.urbanguard.ui.features.auth.RegisterScreen
 import co.edu.unicauca.urbanguard.ui.features.guard.GuardHomeScreen
 import co.edu.unicauca.urbanguard.ui.features.guard.GuardScanQrScreen
 import co.edu.unicauca.urbanguard.ui.features.guard.GuardSeguridadScreen
+import co.edu.unicauca.urbanguard.ui.features.guard.RoundActiveScreen
+import co.edu.unicauca.urbanguard.ui.features.guard.RoundSummaryScreen
+import co.edu.unicauca.urbanguard.ui.features.incidents.IncidentDetailScreen
+import co.edu.unicauca.urbanguard.ui.features.incidents.IncidentFormScreen
+import co.edu.unicauca.urbanguard.ui.features.incidents.IncidentsScreen
 import co.edu.unicauca.urbanguard.ui.features.guard.GuardVisitantesScreen
 import co.edu.unicauca.urbanguard.ui.features.home.HomeScreen
 import co.edu.unicauca.urbanguard.ui.features.news.NewsFeedScreen
@@ -55,6 +60,10 @@ import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkRequestDetailScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.PendingRequestsScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.RegisterConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolHistoryScreen
+import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolPointFormScreen
+import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolPointsScreen
+import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolRouteFormScreen
+import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolRoutesScreen
 import co.edu.unicauca.urbanguard.ui.features.profile.ProfileScreen
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.GenerateQrScreen
@@ -335,6 +344,12 @@ fun AppNavGraph(
                 },
                 onNavigateToPatrolHistory = {
                     navController.navigate(Routes.PATROL_HISTORY)
+                },
+                onNavigateToPatrolPoints = {
+                    navController.navigate(Routes.PATROL_POINTS)
+                },
+                onNavigateToPatrolRoutes = {
+                    navController.navigate(Routes.PATROL_ROUTES)
                 }
             )
         }
@@ -349,6 +364,76 @@ fun AppNavGraph(
 
         composable(Routes.REGISTER_GUARD) {
             RegisterGuardScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.PATROL_POINTS) {
+            PatrolPointsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onAddClick = {
+                    navController.navigate("patrol_point_form")
+                },
+                onEditClick = { pointId ->
+                    navController.navigate("patrol_point_form?pointId=$pointId")
+                }
+            )
+        }
+
+        composable(
+            route = Routes.PATROL_POINT_FORM,
+            arguments = listOf(
+                navArgument("pointId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            PatrolPointFormScreen(
+                pointId = backStackEntry.arguments?.getString("pointId"),
+                onSaved = {
+                    navController.popBackStack()
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.PATROL_ROUTES) {
+            PatrolRoutesScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onAddClick = {
+                    navController.navigate("patrol_route_form")
+                },
+                onEditClick = { routeId ->
+                    navController.navigate("patrol_route_form?routeId=$routeId")
+                }
+            )
+        }
+
+        composable(
+            route = Routes.PATROL_ROUTE_FORM,
+            arguments = listOf(
+                navArgument("routeId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            PatrolRouteFormScreen(
+                routeId = backStackEntry.arguments?.getString("routeId"),
+                onSaved = {
+                    navController.popBackStack()
+                },
                 onNavigateBack = {
                     navController.popBackStack()
                 }
@@ -477,6 +562,9 @@ fun AppNavGraph(
                 onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
                 onScanQr = {
                     navController.navigate(Routes.GUARD_SCAN_QR)
+                },
+                onReportIncident = {
+                    navController.navigate(Routes.GUARD_INCIDENTS)
                 }
             )
         }
@@ -492,7 +580,10 @@ fun AppNavGraph(
 
         composable(Routes.GUARD_SEGURIDAD) {
             GuardSeguridadScreen(
-                onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) }
+                onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
+                onActiveRound = {
+                    navController.navigate(Routes.GUARD_ROUND_ACTIVE)
+                }
             )
         }
 
@@ -509,6 +600,84 @@ fun AppNavGraph(
         composable(Routes.GUARD_SCAN_QR) {
             GuardScanQrScreen(
                 onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.GUARD_ROUND_ACTIVE) {
+            RoundActiveScreen(
+                onFinished = {
+                    navController.navigate(Routes.GUARD_ROUND_SUMMARY) {
+                        popUpTo(Routes.GUARD_ROUND_ACTIVE) { inclusive = true }
+                    }
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onReportIncident = { pointId ->
+                    navController.navigate(
+                        if (pointId == null) {
+                            "guard_incident_form"
+                        } else {
+                            "guard_incident_form?pointId=$pointId"
+                        }
+                    )
+                }
+            )
+        }
+
+        composable(Routes.GUARD_ROUND_SUMMARY) {
+            RoundSummaryScreen(
+                onBackClick = {
+                    navController.popBackStack(
+                        Routes.GUARD_SEGURIDAD,
+                        inclusive = false
+                    )
+                }
+            )
+        }
+
+        composable(Routes.GUARD_INCIDENTS) {
+            IncidentsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onAddClick = {
+                    navController.navigate("guard_incident_form")
+                },
+                onIncidentClick = {
+                    navController.navigate(Routes.GUARD_INCIDENT_DETAIL)
+                }
+            )
+        }
+
+        composable(
+            route = Routes.GUARD_INCIDENT_FORM,
+            arguments = listOf(
+                navArgument("pointId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            IncidentFormScreen(
+                pointId = backStackEntry.arguments?.getString("pointId"),
+                onSaved = {
+                    navController.navigate(Routes.GUARD_INCIDENTS) {
+                        popUpTo(Routes.GUARD_INCIDENTS) { inclusive = true }
+                    }
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.GUARD_INCIDENT_DETAIL) {
+            IncidentDetailScreen(
+                onBackClick = {
                     navController.popBackStack()
                 }
             )

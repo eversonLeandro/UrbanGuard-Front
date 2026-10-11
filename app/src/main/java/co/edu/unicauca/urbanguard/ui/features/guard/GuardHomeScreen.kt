@@ -59,6 +59,7 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 fun GuardHomeScreen(
     onNotificationsClick: (() -> Unit)? = null,
     onScanQr: () -> Unit = {},
+    onReportIncident: () -> Unit = {},
     viewModel: GuardHomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -122,7 +123,7 @@ fun GuardHomeScreen(
             // ── Accesos Rápidos de Guardia ──────────────────────────
             Text("Acciones Rápidas", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = UgNavy)
 
-            GuardQuickActions(onScanQr = onScanQr)
+            GuardQuickActions(onScanQr = onScanQr, onReportIncident = onReportIncident)
 
             // ── Bitácora Reciente ───────────────────────────────────
             Text(
@@ -224,13 +225,10 @@ private fun GuardWelcomeCard(userName: String) {
 }
 
 /**
- * Acciones rapidas del guardia.
- *
- * El boton de incidentes sigue sin accion: el reporte de incidentes no entra en
- * este sprint, asi que su onClick continua vacio a proposito.
+ * Acciones rapidas del guardia: escaneo QR y reporte de novedades.
  */
 @Composable
-private fun GuardQuickActions(onScanQr: () -> Unit) {
+private fun GuardQuickActions(onScanQr: () -> Unit, onReportIncident: () -> Unit) {
     Button(
         onClick = onScanQr,
         shape = RoundedCornerShape(18.dp),
@@ -260,7 +258,7 @@ private fun GuardQuickActions(onScanQr: () -> Unit) {
     }
 
     OutlinedButton(
-        onClick = {},
+        onClick = onReportIncident,
         shape = RoundedCornerShape(18.dp),
         border = androidx.compose.foundation.BorderStroke(1.5.dp, UgAmber),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = UgAmber),
@@ -276,7 +274,7 @@ private fun GuardQuickActions(onScanQr: () -> Unit) {
         )
         Spacer(Modifier.width(10.dp))
         Text(
-            "Registrar Incidente de Seguridad",
+            "Reportar novedad",
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = UgNavy

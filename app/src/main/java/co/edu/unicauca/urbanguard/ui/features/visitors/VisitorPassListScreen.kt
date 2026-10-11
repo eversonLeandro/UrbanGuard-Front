@@ -195,7 +195,8 @@ private fun DateFilterField(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Row(
             modifier = Modifier
-                .width(140.dp)
+                .
+                width(140.dp)
                 .height(50.dp)
                 .background(androidx.compose.ui.graphics.Color.White, RoundedCornerShape(10.dp))
                 .border(1.dp, UgBorder, RoundedCornerShape(10.dp))
