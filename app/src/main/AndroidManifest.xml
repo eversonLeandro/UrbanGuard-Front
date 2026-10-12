@@ -5,7 +5,9 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- Necesario en Android 13+ para mostrar notificaciones push (FCM). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.NFC" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.nfc" android:required="false" />
     <application
         android:name=".UrbanGuardApp"
         android:allowBackup="true"

@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Nfc
+import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,7 +45,9 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 @Composable
 fun AdminSecurityMenuScreen(
     onNavigateToRegisterGuard: () -> Unit = {},
-    onNavigateToPatrolHistory: () -> Unit = {}
+    onNavigateToPatrolHistory: () -> Unit = {},
+    onNavigateToPatrolPoints: () -> Unit = {},
+    onNavigateToPatrolRoutes: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -84,11 +87,17 @@ fun AdminSecurityMenuScreen(
             )
 
             SecurityOptionCard(
-                title = "Hacer ronda de patrullaje",
-                subtitle = "Registrar puntos de control mediante NFC",
+                title = "Puntos de control NFC",
+                subtitle = "Registrar y ordenar la ruta de patrullaje",
                 icon = Icons.Default.Nfc,
-                // Pendiente: la ronda de patrullaje aún no está implementada.
-                onClick = {}
+                onClick = onNavigateToPatrolPoints
+            )
+
+            SecurityOptionCard(
+                title = "Rutas de patrullaje",
+                subtitle = "Armar rutas con puntos y horarios",
+                icon = Icons.Default.Route,
+                onClick = onNavigateToPatrolRoutes
             )
         }
     }

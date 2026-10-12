@@ -30,6 +30,10 @@ object Routes {
     const val ADMIN = "admin"
     const val REGISTER_GUARD = "register_guard"
     const val PATROL_HISTORY = "patrol_history"
+    const val PATROL_POINTS = "patrol_points"
+    const val PATROL_POINT_FORM = "patrol_point_form?pointId={pointId}"
+    const val PATROL_ROUTES = "patrol_routes"
+    const val PATROL_ROUTE_FORM = "patrol_route_form?routeId={routeId}"
 
     // Rutas del Vigilante (barra de navegación inferior del rol GUARD)
     const val GUARD_HOME = "guard_home"
@@ -37,4 +41,9 @@ object Routes {
     const val GUARD_SEGURIDAD = "guard_seguridad"
     const val GUARD_PERFIL = "guard_perfil"
     const val GUARD_SCAN_QR = "guard_scan_qr"
+    const val GUARD_ROUND_ACTIVE = "guard_round_active"
+    const val GUARD_ROUND_SUMMARY = "guard_round_summary"
+    const val GUARD_INCIDENTS = "guard_incidents"
+    const val GUARD_INCIDENT_FORM = "guard_incident_form?pointId={pointId}"
+    const val GUARD_INCIDENT_DETAIL = "guard_incident_detail"
 }
