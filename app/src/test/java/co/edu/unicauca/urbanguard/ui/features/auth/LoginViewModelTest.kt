@@ -6,6 +6,7 @@ import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
 import co.edu.unicauca.urbanguard.domain.repository.AuthRepository
 import co.edu.unicauca.urbanguard.domain.usecase.auth.LoginUseCase
+import co.edu.unicauca.urbanguard.core.push.PushRegistrar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -35,7 +36,11 @@ class LoginViewModelTest {
 
     @Test
     fun `onLoginHandled clears the success flag after a successful login`() = runTest {
-        val viewModel = LoginViewModel(LoginUseCase(FakeAuthRepository()), SessionManager(NoOpRolePersistence))
+        val viewModel = LoginViewModel(
+            LoginUseCase(FakeAuthRepository()),
+            SessionManager(NoOpRolePersistence),
+            NoOpPushRegistrar
+        )
 
         viewModel.onEmailChange("admin@urbanguard.co")
         viewModel.onPasswordChange("password123")
@@ -52,7 +57,11 @@ class LoginViewModelTest {
     @Test
     fun `login with superadmin returns SUPERADMIN userRole in uiState`() = runTest {
         val superadminRepo = FakeAuthRepository(role = UserRole.SUPERADMIN)
-        val viewModel = LoginViewModel(LoginUseCase(superadminRepo), SessionManager(NoOpRolePersistence))
+        val viewModel = LoginViewModel(
+            LoginUseCase(superadminRepo),
+            SessionManager(NoOpRolePersistence),
+            NoOpPushRegistrar
+        )
 
         viewModel.onEmailChange("superadmin@urbanguard.com")
         viewModel.onPasswordChange("password123")
@@ -71,7 +80,11 @@ class LoginViewModelTest {
     @Test
     fun `login with no business role returns USER sentinel in uiState`() = runTest {
         val noRoleRepo = FakeAuthRepository(role = UserRole.USER)
-        val viewModel = LoginViewModel(LoginUseCase(noRoleRepo), SessionManager(NoOpRolePersistence))
+        val viewModel = LoginViewModel(
+            LoginUseCase(noRoleRepo),
+            SessionManager(NoOpRolePersistence),
+            NoOpPushRegistrar
+        )
 
         viewModel.onEmailChange("nuevo@urbanguard.com")
         viewModel.onPasswordChange("password123")
@@ -83,7 +96,8 @@ class LoginViewModelTest {
     }
 
     private class FakeAuthRepository(private val role: UserRole = UserRole.ADMIN) : AuthRepository {
-        override suspend fun login(email: String, password: String): Result<UserSession> {
+
+    override suspend fun login(email: String, password: String): Result<UserSession> {
             return Result.success(
                 UserSession(
                     token = "token-123",
@@ -108,5 +122,12 @@ class LoginViewModelTest {
         override suspend fun restoreSession(): UserSession? = null
 
         override suspend fun logout() = Unit
+    }
+
+    private object NoOpPushRegistrar : PushRegistrar {
+        override fun registerActiveConjunto() = Unit
+        override fun registerForConjunto(conjuntoId: String) = Unit
+        override fun onTokenRotated(token: String) = Unit
+        override fun unregisterCurrent(onComplete: () -> Unit) = onComplete()
     }
 }

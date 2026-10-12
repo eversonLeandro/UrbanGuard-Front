@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.core.push.PushRegistrar
 import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GetMyConjuntosUseCase
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ConjuntoSelectionViewModel @Inject constructor(
     private val sessionManager: SessionManager,
-    private val getMyConjuntosUseCase: GetMyConjuntosUseCase
+    private val getMyConjuntosUseCase: GetMyConjuntosUseCase,
+    private val pushRegistrar: PushRegistrar
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ConjuntoSelectionUiState())
@@ -61,6 +63,8 @@ class ConjuntoSelectionViewModel @Inject constructor(
     fun onConjuntoSelected(conjuntoId: String): UserRole? {
         sessionManager.setActiveConjunto(conjuntoId)
         _uiState.value = _uiState.value.copy(conjuntoActivoId = conjuntoId)
+        // El token debe atarse al conjunto recién activado (par token-conjunto).
+        pushRegistrar.registerActiveConjunto()
         return currentRole()
     }
 

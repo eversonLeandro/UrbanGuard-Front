@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.ui.features.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.edu.unicauca.urbanguard.core.push.PushRegistrar
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.RequestLinkUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.SearchConjuntoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,7 +15,8 @@ import javax.inject.Inject
 @HiltViewModel
 class LinkByCodeViewModel @Inject constructor(
     private val searchConjuntoUseCase: SearchConjuntoUseCase,
-    private val requestLinkUseCase: RequestLinkUseCase
+    private val requestLinkUseCase: RequestLinkUseCase,
+    private val pushRegistrar: PushRegistrar
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LinkByCodeUiState())
@@ -111,6 +113,10 @@ class LinkByCodeViewModel @Inject constructor(
             )
             requestLinkUseCase(conjuntoId, unidad.id).fold(
                 onSuccess = { request ->
+                    // El solicitante todavía no es miembro de este conjunto. El
+                    // backend guarda el token como provisional para poder
+                    // notificarle la decisión del administrador.
+                    pushRegistrar.registerForConjunto(conjuntoId)
                     _uiState.value = _uiState.value.copy(
                         isRequesting = false,
                         linkRequest = request,

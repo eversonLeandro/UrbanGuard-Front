@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Necesario en Android 13+ para mostrar notificaciones push (FCM). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.nfc" android:required="false" />
@@ -21,6 +23,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.UrbanGuard"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -28,7 +31,27 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Deep links del backend (data.deepLink, p. ej.
+                 urbanguard://visitors/{id}): abren la pantalla de visitantes. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="urbanguard" />
+            </intent-filter>
         </activity>
+
+        <!-- Recepción de push (FCM): declarar el servicio es obligatorio para
+             que el sistema lo invoque con la app cerrada o en segundo plano. -->
+        <service
+            android:name=".core.push.UrbanGuardMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <!-- Expone la imagen PNG del pase QR escrita en la caché para poder
              compartirla con otras apps. Las rutas válidas están en
