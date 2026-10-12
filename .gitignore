@@ -20,3 +20,10 @@ prompts/
 # Reportes de detekt (generados por la tarea :app:detekt)
 detekt-report.txt
 build/reports/detekt/
+
+# Configuracion de Firebase: cada desarrollador usa la suya.
+# Copia app/google-services.json.example a app/google-services.json y rellena los
+# valores de tu proyecto (Firebase > Configuracion del proyecto > Tus apps >
+# Android > google-services.json). Sin ese fichero el plugin
+# com.google.gms.google-services no deja compilar.
+app/google-services.json
