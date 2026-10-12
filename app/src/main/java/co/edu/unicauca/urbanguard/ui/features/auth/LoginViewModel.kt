@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.usecase.auth.LoginUseCase
+import co.edu.unicauca.urbanguard.core.push.PushRegistrar
 import co.edu.unicauca.urbanguard.domain.validation.InputValidators
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val pushRegistrar: PushRegistrar
 ) : ViewModel() {
 
     companion object {
@@ -77,6 +79,9 @@ class LoginViewModel @Inject constructor(
                         TAG,
                         "Login correcto: userId=${userSession.userId}, role=${userSession.role}"
                     )
+                    // Best-effort y silencioso: si ya hay conjunto activo el
+                    // token queda registrado; si no, se registra al elegirlo.
+                    pushRegistrar.registerActiveConjunto()
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         loginSuccess = true,

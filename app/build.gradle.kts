@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.dagger.hilt)
     alias(libs.plugins.ksp)
+    id("com.google.gms.google-services")
 }
 
 val detektVersion = "1.23.6"
@@ -169,4 +170,12 @@ dependencies {
 
     // ML Kit Barcode for QR decoding
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
+
+    //Dependencias de Firebase
+    // El BOM controla las versiones compatibles de todas las librerías de Firebase
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+
+    //Agrega los módulos específicos que vas a usar en UrbanGuard
+    // (Ejemplo: Firebase Cloud Messaging para notificaciones push desde tu backend)
+    implementation("com.google.firebase:firebase-messaging")
 }
