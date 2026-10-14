@@ -2,10 +2,15 @@ package co.edu.unicauca.urbanguard.ui.features.guard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.edu.unicauca.urbanguard.core.common.PatrolConstants
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
+import co.edu.unicauca.urbanguard.domain.model.availableFrom
+import co.edu.unicauca.urbanguard.domain.model.coveringOccurrence
 import co.edu.unicauca.urbanguard.domain.model.isFinished
+import co.edu.unicauca.urbanguard.domain.model.nextOccurrenceAfter
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolEntryUseCase
+import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolRoutesUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.StartRoundUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -15,6 +20,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.ZoneId
 import javax.inject.Inject
 
 /** Eventos de una sola entrega de la entrada de patrullaje. */
@@ -26,6 +33,7 @@ sealed interface GuardSeguridadEvent {
 @HiltViewModel
 class GuardSeguridadViewModel @Inject constructor(
     private val getPatrolEntryUseCase: GetPatrolEntryUseCase,
+    private val getPatrolRoutesUseCase: GetPatrolRoutesUseCase,
     private val startRoundUseCase: StartRoundUseCase,
     private val sessionManager: SessionManager
 ) : ViewModel() {
@@ -71,20 +79,54 @@ class GuardSeguridadViewModel @Inject constructor(
                 }
                 return
             }
+        val zone = ZoneId.systemDefault()
+        val now = LocalDateTime.now(zone)
+        val availableFrom = route.availableFrom(
+            now.toLocalDate(),
+            PatrolConstants.ROUND_EARLY_START_MINUTES
+        )
+        if (availableFrom != null && now.toLocalTime().isBefore(availableFrom)) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "Disponible desde las " +
+                    availableFrom.format(
+                        java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+                    )
+            )
+            return
+        }
         if (starting) return
         starting = true
         viewModelScope.launch {
-            runCatching {
-                startRoundUseCase(complexId, route.id, route.name, route.pointIds.size)
-            }.onSuccess {
-                eventChannel.send(GuardSeguridadEvent.GoToActiveRound)
-            }.onFailure { error ->
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = error.message ?: "No se pudo iniciar la ronda."
-                )
-            }
+            runCatching { openRound(complexId, route) }
+                .onSuccess { eventChannel.send(GuardSeguridadEvent.GoToActiveRound) }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = error.message ?: "No se pudo iniciar la ronda."
+                    )
+                }
             starting = false
         }
+    }
+
+    /**
+     * Abre la ronda cubriendo la cita correspondiente (o libre si aún no
+     * abre ninguna) y con vencimiento en la siguiente cita programada.
+     */
+    private suspend fun openRound(complexId: String, route: PatrolRoute) {
+        val zone = ZoneId.systemDefault()
+        val now = LocalDateTime.now(zone)
+        val early = PatrolConstants.ROUND_EARLY_START_MINUTES
+        val routes = getPatrolRoutesUseCase(complexId).getOrThrow()
+        val occurrence = coveringOccurrence(route, now, early)
+        val due = occurrence?.let { nextOccurrenceAfter(routes, it) }
+        startRoundUseCase(
+            complexId = complexId,
+            routeId = route.id,
+            routeName = route.name,
+            totalPoints = route.pointIds.size,
+            scheduledAt = occurrence?.atZone(zone)?.toInstant(),
+            dueAt = due?.atZone(zone)?.toInstant()
+        )
     }
 
     fun onContinueRound() {

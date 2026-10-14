@@ -36,8 +36,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import co.edu.unicauca.urbanguard.domain.model.IncompleteReason
 import co.edu.unicauca.urbanguard.domain.model.PatrolRound
+import co.edu.unicauca.urbanguard.domain.model.RoundStatus
 import co.edu.unicauca.urbanguard.domain.model.donePointIds
+import co.edu.unicauca.urbanguard.domain.model.status
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.features.visitors.VisitorActionButton
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
@@ -96,6 +99,20 @@ private fun durationLabel(round: PatrolRound): String {
     return if (minutes < 1) "Menos de un minuto" else "$minutes min"
 }
 
+private fun incompleteReasonLabel(round: PatrolRound): String? {
+    if (round.status() != RoundStatus.INCOMPLETE) return null
+    return when (round.incompleteReason) {
+        IncompleteReason.TIME_OUT -> {
+            val due = round.dueAt?.let { summaryTimeFormat.format(it) } ?: "el límite"
+            "Se acabó el tiempo ($due)"
+        }
+        else -> {
+            val missing = (round.totalPoints - round.donePointIds().size).coerceAtLeast(0)
+            if (missing <= 0) "Terminada fuera de horario" else "Faltaron $missing puntos"
+        }
+    }
+}
+
 @Composable
 private fun SummaryContent(
     uiState: RoundSummaryUiState,
@@ -138,6 +155,15 @@ private fun SummaryContent(
                     fontSize = 14.sp,
                     color = Color.White.copy(alpha = 0.85f)
                 )
+                incompleteReasonLabel(round)?.let { reason ->
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = reason,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFCDD2)
+                    )
+                }
             }
         }
 

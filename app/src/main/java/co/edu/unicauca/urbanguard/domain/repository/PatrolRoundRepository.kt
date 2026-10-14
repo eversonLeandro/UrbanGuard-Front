@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.domain.repository
 
 import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
 import co.edu.unicauca.urbanguard.domain.model.PatrolRound
+import java.time.Instant
 
 /**
  * Rondas de patrullaje del guardia (UG-41).
@@ -16,8 +17,16 @@ interface PatrolRoundRepository {
         complexId: String,
         routeId: String,
         routeName: String,
-        totalPoints: Int
+        totalPoints: Int,
+        scheduledAt: Instant?,
+        dueAt: Instant?
     ): PatrolRound
+
+    /**
+     * Cierra como vencidas las abiertas que pasaron su límite. Devuelve la
+     * más reciente cerrada (para mostrar su resumen) o null.
+     */
+    suspend fun closeOverdueRounds(complexId: String): PatrolRound?
 
     /** Ronda abierta del conjunto, o null si no hay ninguna. */
     suspend fun activeRound(complexId: String): PatrolRound?

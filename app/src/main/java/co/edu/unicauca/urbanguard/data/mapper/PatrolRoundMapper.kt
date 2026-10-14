@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.data.mapper
 
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRoundDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolScanDto
+import co.edu.unicauca.urbanguard.domain.model.IncompleteReason
 import co.edu.unicauca.urbanguard.domain.model.PatrolRound
 import co.edu.unicauca.urbanguard.domain.model.PatrolScan
 import java.time.Instant
@@ -35,7 +36,10 @@ fun PatrolRound.toDto(): PatrolRoundDto = PatrolRoundDto(
     startedAt = startedAt.toString(),
     finishedAt = finishedAt?.toString(),
     scans = scans.map { it.toDto() },
-    totalPoints = totalPoints
+    totalPoints = totalPoints,
+    scheduledAt = scheduledAt?.toString(),
+    dueAt = dueAt?.toString(),
+    incompleteReason = incompleteReason?.name
 )
 
 fun PatrolRoundDto.toDomain(complexId: String): PatrolRound = PatrolRound(
@@ -46,5 +50,10 @@ fun PatrolRoundDto.toDomain(complexId: String): PatrolRound = PatrolRound(
     startedAt = runCatching { Instant.parse(startedAt) }.getOrDefault(Instant.EPOCH),
     finishedAt = finishedAt?.let { runCatching { Instant.parse(it) }.getOrNull() },
     scans = scans.map { it.toDomain() },
-    totalPoints = totalPoints
+    totalPoints = totalPoints,
+    scheduledAt = scheduledAt?.let { runCatching { Instant.parse(it) }.getOrNull() },
+    dueAt = dueAt?.let { runCatching { Instant.parse(it) }.getOrNull() },
+    incompleteReason = incompleteReason?.let {
+        runCatching { IncompleteReason.valueOf(it) }.getOrNull()
+    }
 )

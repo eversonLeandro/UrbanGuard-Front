@@ -6,10 +6,14 @@ import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
 import co.edu.unicauca.urbanguard.domain.model.PatrolRound
 import co.edu.unicauca.urbanguard.domain.model.PatrolScan
 import co.edu.unicauca.urbanguard.domain.model.RoundStatus
+import co.edu.unicauca.urbanguard.domain.model.availableFrom
+import co.edu.unicauca.urbanguard.domain.model.coveringOccurrence
 import co.edu.unicauca.urbanguard.domain.model.donePointIds
 import co.edu.unicauca.urbanguard.domain.model.forDay
 import co.edu.unicauca.urbanguard.domain.model.isFinished
+import co.edu.unicauca.urbanguard.domain.model.isOverdue
 import co.edu.unicauca.urbanguard.domain.model.matchScan
+import co.edu.unicauca.urbanguard.domain.model.nextOccurrenceAfter
 import co.edu.unicauca.urbanguard.domain.model.status
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
 import co.edu.unicauca.urbanguard.domain.model.PatrolSchedule
@@ -21,6 +25,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.DayOfWeek
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 
 /**
@@ -146,4 +152,74 @@ class PatrolRoundMapperTest {
 
     private fun schedule(days: Set<DayOfWeek>) =
         PatrolSchedule(time = LocalTime.of(22, 0), days = days)
+
+    private fun routeWith(vararg times: LocalTime) = PatrolRoute(
+        id = "rt1",
+        complexId = "c1",
+        name = "Nocturna",
+        pointIds = listOf("p1"),
+        schedules = times.map {
+            PatrolSchedule(time = it, days = DayOfWeek.values().toSet())
+        },
+        isActive = true
+    )
+
+    @Test
+    fun coveringOccurrence_earlyStart_coversUpcoming() {
+        val route = routeWith(LocalTime.of(22, 0))
+        val now = LocalDateTime.of(2026, 2, 10, 21, 35)
+
+        val covered = coveringOccurrence(route, now, 30)
+
+        assertEquals(LocalDateTime.of(2026, 2, 10, 22, 0), covered)
+    }
+
+    @Test
+    fun coveringOccurrence_tooEarly_returnsNull() {
+        val sundayOnly = PatrolRoute(
+            id = "rt1",
+            complexId = "c1",
+            name = "Dominical",
+            pointIds = listOf("p1"),
+            schedules = listOf(
+                PatrolSchedule(time = LocalTime.of(10, 0), days = setOf(DayOfWeek.SUNDAY))
+            ),
+            isActive = true
+        )
+        // Martes 09:00: sin cita cercana en la ventana de búsqueda.
+        val now = LocalDateTime.of(2026, 2, 10, 9, 0)
+
+        assertEquals(null, coveringOccurrence(sundayOnly, now, 30))
+    }
+
+    @Test
+    fun nextOccurrenceAfter_jumpsToNextSchedule() {
+        val routes = listOf(
+            routeWith(LocalTime.of(10, 0)),
+            routeWith(LocalTime.of(22, 0))
+        )
+        val after = LocalDateTime.of(2026, 2, 10, 10, 30)
+
+        val next = nextOccurrenceAfter(routes, after)
+
+        assertEquals(LocalDateTime.of(2026, 2, 10, 22, 0), next)
+    }
+
+    @Test
+    fun availableFrom_isThirtyMinutesBefore() {
+        val route = routeWith(LocalTime.of(22, 0))
+        val monday = LocalDate.of(2026, 2, 9)
+
+        assertEquals(LocalTime.of(21, 30), route.availableFrom(monday, 30))
+    }
+
+    @Test
+    fun isOverdue_openPastDue_isTrue() {
+        val round = roundWith().copy(
+            dueAt = Instant.parse("2026-02-10T22:00:00Z")
+        )
+
+        assertTrue(round.isOverdue(Instant.parse("2026-02-10T23:00:00Z")))
+        assertFalse(round.isOverdue(Instant.parse("2026-02-10T21:00:00Z")))
+    }
 }

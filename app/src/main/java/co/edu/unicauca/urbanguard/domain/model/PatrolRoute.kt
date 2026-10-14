@@ -1,7 +1,6 @@
 package co.edu.unicauca.urbanguard.domain.model
 
 import java.time.DayOfWeek
-import java.time.LocalDate
 import java.time.LocalTime
 
 /**
@@ -73,20 +72,6 @@ fun DayOfWeek.shortLabel(): String = when (this) {
 /** Días ordenados de lunes a domingo (DayOfWeek es 1-7 ISO). */
 fun weekDays(): List<DayOfWeek> =
     DayOfWeek.values().toList().sortedBy { it.value }
-
-/**
- * Próximo horario de hoy aún no pasado, o null si ya pasaron todos (o no
- * hay horario hoy). Sirve la tarjeta "Ronda de hoy" del guardia.
- */
-fun PatrolRoute.nextTimeToday(
-    now: LocalTime = LocalTime.now(),
-    day: DayOfWeek = LocalDate.now().dayOfWeek
-): LocalTime? =
-    schedules
-        .filter { it.days.contains(day) }
-        .map { it.time }
-        .filter { !it.isBefore(now) }
-        .minOrNull()
 
 /**
  * Operaciones puras sobre los horarios en edición. Viven aquí (y no en el

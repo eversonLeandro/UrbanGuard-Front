@@ -14,7 +14,8 @@ import javax.inject.Inject
 class RoundActions @Inject constructor(
     private val getActiveRoundUseCase: GetActiveRoundUseCase,
     private val registerScanUseCase: RegisterScanUseCase,
-    private val finishRoundUseCase: FinishRoundUseCase
+    private val finishRoundUseCase: FinishRoundUseCase,
+    private val closeOverdueRoundsUseCase: CloseOverdueRoundsUseCase
 ) {
     suspend fun activeRound(complexId: String): PatrolRound? =
         getActiveRoundUseCase(complexId)
@@ -27,4 +28,7 @@ class RoundActions @Inject constructor(
 
     suspend fun finish(complexId: String): Result<PatrolRound> =
         finishRoundUseCase(complexId)
+
+    suspend fun closeOverdue(complexId: String): PatrolRound? =
+        closeOverdueRoundsUseCase(complexId)
 }

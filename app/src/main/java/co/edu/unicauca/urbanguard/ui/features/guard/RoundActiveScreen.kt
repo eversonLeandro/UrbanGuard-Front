@@ -42,6 +42,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -56,6 +57,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.core.nfc.NfcReaderEffect
 import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
@@ -83,6 +87,17 @@ fun RoundActiveScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val haptics = LocalHapticFeedback.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Al volver (p. ej. de reportar novedad) se recarga: si venció, se
+    // cierra sola y navega al resumen.
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.onRefresh()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -165,7 +180,12 @@ private fun ActiveContent(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item(key = "progress") {
-            ProgressHeader(done = done, total = total, progress = round.progressOf(total))
+            ProgressHeader(
+                done = done,
+                total = total,
+                progress = round.progressOf(total),
+                dueLabel = round.dueAt?.let { timeLabel(it.toEpochMilli()) }
+            )
         }
 
         item(key = "scanner") {
@@ -234,7 +254,7 @@ private fun ActiveContent(
 }
 
 @Composable
-private fun ProgressHeader(done: Int, total: Int, progress: Float) {
+private fun ProgressHeader(done: Int, total: Int, progress: Float, dueLabel: String?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -255,6 +275,15 @@ private fun ProgressHeader(done: Int, total: Int, progress: Float) {
                 fontWeight = FontWeight.Bold,
                 color = Color.White.copy(alpha = 0.85f)
             )
+        }
+        if (dueLabel != null) {
+            Spacer(Modifier.height(2.dp))
+                Text(
+                    text = "Vence $dueLabel",
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White.copy(alpha = 0.85f)
+                )
         }
         Spacer(Modifier.height(10.dp))
         LinearProgressIndicator(
@@ -398,10 +427,10 @@ private fun scanFeedback(
         return "Tag no registrado" to
             "Ese tag no pertenece a ninguna ruta del conjunto."
     }
-    return lastScanName to "Registrado a las ${scanTimeLabel(lastScanAt)}."
+    return lastScanName to "Registrado a las ${timeLabel(lastScanAt)}."
 }
 
-private fun scanTimeLabel(millis: Long): String {
+private fun timeLabel(millis: Long): String {
     if (millis <= 0L) return ""
     val formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
         .withZone(java.time.ZoneId.systemDefault())

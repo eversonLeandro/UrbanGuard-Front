@@ -25,7 +25,10 @@ data class PatrolRoundDto(
     val startedAt: String,
     val finishedAt: String? = null,
     val scans: List<PatrolScanDto> = emptyList(),
-    val totalPoints: Int = 0
+    val totalPoints: Int = 0,
+    val scheduledAt: String? = null,
+    val dueAt: String? = null,
+    val incompleteReason: String? = null
 )
 
 /**

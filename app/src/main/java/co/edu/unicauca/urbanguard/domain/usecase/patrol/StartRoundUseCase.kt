@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.domain.usecase.patrol
 
 import co.edu.unicauca.urbanguard.domain.model.PatrolRound
 import co.edu.unicauca.urbanguard.domain.repository.PatrolRoundRepository
+import java.time.Instant
 import javax.inject.Inject
 
 /** Abre una ronda para la ruta indicada. */
@@ -12,8 +13,17 @@ class StartRoundUseCase @Inject constructor(
         complexId: String,
         routeId: String,
         routeName: String,
-        totalPoints: Int
+        totalPoints: Int,
+        scheduledAt: Instant?,
+        dueAt: Instant?
     ): PatrolRound {
-        return repository.startRound(complexId, routeId, routeName, totalPoints)
+        return repository.startRound(
+            complexId,
+            routeId,
+            routeName,
+            totalPoints,
+            scheduledAt,
+            dueAt
+        )
     }
 }

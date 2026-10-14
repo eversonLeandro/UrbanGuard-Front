@@ -22,8 +22,20 @@ data class PatrolRound(
      * cuántos comparar al cerrar: es lo que distingue COMPLETADA de
      * INCOMPLETA. En rondas viejas vale 0 y toda cerrada cuenta completada.
      */
-    val totalPoints: Int = 0
+    val totalPoints: Int = 0,
+    /** Cita que cubre (null = ronda libre, sin vencimiento). */
+    val scheduledAt: Instant? = null,
+    /** Límite: fecha-hora de la siguiente ronda programada (null = libre). */
+    val dueAt: Instant? = null,
+    /** Por qué quedó incompleta (null si completada o abierta). */
+    val incompleteReason: IncompleteReason? = null
 )
+
+/** Motivo de la incompleta: cerrada a medias o vencida por tiempo. */
+enum class IncompleteReason {
+    POINTS_MISSING,
+    TIME_OUT
+}
 
 /** Una lectura de tag durante la ronda. */
 data class PatrolScan(
@@ -45,6 +57,12 @@ fun PatrolRound.progressOf(totalPoints: Int): Float {
 
 /** Verdadero si la ronda ya se cerró. */
 fun PatrolRound.isFinished(): Boolean = finishedAt != null
+
+/** Verdadero si sigue abierta pero ya pasó su límite. */
+fun PatrolRound.isOverdue(now: Instant = Instant.now()): Boolean {
+    val due = dueAt ?: return false
+    return !isFinished() && now.isAfter(due)
+}
 
 /** Semáforo de la ronda para el historial. */
 enum class RoundStatus {
