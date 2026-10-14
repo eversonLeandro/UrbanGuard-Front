@@ -34,6 +34,9 @@ object Routes {
     const val PATROL_POINT_FORM = "patrol_point_form?pointId={pointId}"
     const val PATROL_ROUTES = "patrol_routes"
     const val PATROL_ROUTE_FORM = "patrol_route_form?routeId={routeId}"
+    const val PATROL_SHIFT_DETAIL =
+        "patrol_shift_detail?shiftType={shiftType}&date={date}&from={from}&to={to}"
+    const val PATROL_GUARD_SUMMARY = "patrol_guard_summary?guardId={guardId}&from={from}&to={to}"
 
     // Rutas del Vigilante (barra de navegación inferior del rol GUARD)
     const val GUARD_HOME = "guard_home"

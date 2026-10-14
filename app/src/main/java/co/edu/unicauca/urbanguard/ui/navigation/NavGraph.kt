@@ -59,11 +59,13 @@ import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkByCodeScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.LinkRequestDetailScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.PendingRequestsScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.RegisterConjuntoScreen
+import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolGuardSummaryScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolHistoryScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolPointFormScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolPointsScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolRouteFormScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolRoutesScreen
+import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolShiftDetailScreen
 import co.edu.unicauca.urbanguard.ui.features.profile.ProfileScreen
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.GenerateQrScreen
@@ -356,6 +358,50 @@ fun AppNavGraph(
 
         composable(Routes.PATROL_HISTORY) {
             PatrolHistoryScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onShiftClick = { shiftType, date, from, to ->
+                    navController.navigate(
+                        "patrol_shift_detail?shiftType=${shiftType.name}" +
+                            "&date=$date&from=$from&to=$to"
+                    )
+                }
+            )
+        }
+
+        composable(
+            route = Routes.PATROL_SHIFT_DETAIL,
+            arguments = listOf(
+                navArgument("shiftType") { type = NavType.StringType },
+                navArgument("date") { type = NavType.StringType },
+                navArgument("from") { type = NavType.StringType },
+                navArgument("to") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val from = backStackEntry.arguments?.getString("from").orEmpty()
+            val to = backStackEntry.arguments?.getString("to").orEmpty()
+            PatrolShiftDetailScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onGuardClick = { guardId ->
+                    navController.navigate(
+                        "patrol_guard_summary?guardId=$guardId&from=$from&to=$to"
+                    )
+                }
+            )
+        }
+
+        composable(
+            route = Routes.PATROL_GUARD_SUMMARY,
+            arguments = listOf(
+                navArgument("guardId") { type = NavType.StringType },
+                navArgument("from") { type = NavType.StringType },
+                navArgument("to") { type = NavType.StringType }
+            )
+        ) {
+            PatrolGuardSummaryScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

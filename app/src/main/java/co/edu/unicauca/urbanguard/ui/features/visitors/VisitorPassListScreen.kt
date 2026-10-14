@@ -22,20 +22,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.TextButton
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,6 +41,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.core.common.VisitorConstants
 import co.edu.unicauca.urbanguard.domain.model.VisitorInvitation
+import co.edu.unicauca.urbanguard.ui.components.DateFilterField
+import co.edu.unicauca.urbanguard.ui.components.FilterDatePickerDialog
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
@@ -63,8 +54,6 @@ import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 import co.edu.unicauca.urbanguard.ui.theme.UgBorder
 import co.edu.unicauca.urbanguard.ui.theme.UgDisabledText
 import java.time.LocalDate
-import java.time.ZoneOffset
-import java.time.Instant
 
 private val LIST_PADDING = 20.dp
 private val LIST_GAP = 12.dp
@@ -141,7 +130,7 @@ private fun VisitorListFilters(
         )
 
         DateFilterField(
-            dateFilter = uiState.dateFilter,
+            date = uiState.dateFilter,
             onShowDatePicker = { showDatePicker = true },
             onClearDate = { onDateFilterChange(null) }
         )
@@ -184,88 +173,6 @@ private fun SearchFilterField(
         ),
         modifier = modifier
     )
-}
-
-@Composable
-private fun DateFilterField(
-    dateFilter: LocalDate?,
-    onShowDatePicker: () -> Unit,
-    onClearDate: () -> Unit
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Row(
-            modifier = Modifier
-                .
-                width(140.dp)
-                .height(50.dp)
-                .background(androidx.compose.ui.graphics.Color.White, RoundedCornerShape(10.dp))
-                .border(1.dp, UgBorder, RoundedCornerShape(10.dp))
-                .clickable { onShowDatePicker() }
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.CalendarMonth,
-                contentDescription = null,
-                tint = UgTextSecondary,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = dateFilter?.format(VisitorConstants.DATE_LABEL_FORMAT) ?: "Fecha",
-                fontSize = 13.sp,
-                color = if (dateFilter != null) UgTextPrimary else UgDisabledText
-            )
-        }
-        if (dateFilter != null) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Limpiar fecha",
-                modifier = Modifier
-                    .size(32.dp)
-                    .clickable { onClearDate() }
-                    .padding(4.dp),
-                tint = UgTextSecondary
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FilterDatePickerDialog(
-    initialDate: LocalDate?,
-    onDateSelected: (LocalDate) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val initialDateMillis = initialDate
-        ?.atStartOfDay(ZoneOffset.UTC)
-        ?.toInstant()
-        ?.toEpochMilli()
-
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialDateMillis
-    )
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                datePickerState.selectedDateMillis?.let {
-                    onDateSelected(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate())
-                }
-                onDismiss()
-            }) {
-                Text("Aceptar", color = UgNavy, fontWeight = FontWeight.Bold)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = UgTextSecondary)
-            }
-        }
-    ) {
-        DatePicker(state = datePickerState)
-    }
 }
 
 @Composable
