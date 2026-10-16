@@ -15,6 +15,12 @@ object PatrolConstants {
     /** Activa las llamadas reales al backend de patrullaje. */
     const val PATROL_BACKEND_ENABLED = false
 
+    /**
+     * La ronda puede iniciarse este tiempo antes de su horario (ventana de
+     * apertura). Más temprano aparece "Disponible desde…".
+     */
+    const val ROUND_EARLY_START_MINUTES = 30L
+
     // ── Mensajes de validación ───────────────────────────────────────────
     const val MSG_NAME_REQUIRED = "Ponle un nombre al punto (p. ej. Portería norte)."
     const val MSG_NAME_TOO_LONG = "El nombre no puede pasar de 100 caracteres."

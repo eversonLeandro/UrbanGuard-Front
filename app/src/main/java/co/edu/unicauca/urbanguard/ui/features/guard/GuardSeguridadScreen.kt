@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Route
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -44,11 +43,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import co.edu.unicauca.urbanguard.domain.model.PatrolRound
+import co.edu.unicauca.urbanguard.core.common.PatrolConstants
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
-import co.edu.unicauca.urbanguard.domain.model.RoundStatus
-import co.edu.unicauca.urbanguard.domain.model.donePointIds
-import co.edu.unicauca.urbanguard.domain.model.status
+import co.edu.unicauca.urbanguard.domain.model.availableFrom
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
@@ -58,11 +55,9 @@ import co.edu.unicauca.urbanguard.ui.theme.UgNavyGradient
 import co.edu.unicauca.urbanguard.ui.theme.UgTextPrimary
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 import java.time.LocalDate
-import java.time.ZoneId
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-private val dayLabelFormat: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("d MMM, HH:mm").withZone(ZoneId.systemDefault())
 private val hourLabelFormat: DateTimeFormatter =
     DateTimeFormatter.ofPattern("HH:mm")
 
@@ -221,6 +216,12 @@ private fun TodayRoutesSection(
 @Composable
 private fun TodayRouteCard(route: PatrolRoute, onStart: () -> Unit) {
     val summary = todayScheduleSummary(route)
+    val availableFrom = route.availableFrom(
+        LocalDate.now(),
+        PatrolConstants.ROUND_EARLY_START_MINUTES
+    )
+    val enabled = availableFrom == null ||
+        !LocalTime.now().isBefore(availableFrom)
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -269,80 +270,50 @@ private fun TodayRouteCard(route: PatrolRoute, onStart: () -> Unit) {
 
             Spacer(Modifier.height(14.dp))
 
-            Button(
-                onClick = onStart,
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-            ) {
-                Icon(
-                    Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text("Iniciar ronda", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-            }
+            RouteStartAction(
+                enabled = enabled,
+                availableFrom = availableFrom,
+                onStart = onStart
+            )
         }
     }
 }
 
 @Composable
-private fun RecentRoundRow(round: PatrolRound) {
-    val status = round.status()
-    val badgeColor = when (status) {
-        RoundStatus.IN_PROGRESS -> UgNavy
-        RoundStatus.COMPLETED -> UgEmerald
-        RoundStatus.INCOMPLETE -> Color(0xFFF57C00)
-    }
-    val badgeText = when (status) {
-        RoundStatus.IN_PROGRESS -> "EN CURSO"
-        RoundStatus.COMPLETED -> "COMPLETADA"
-        RoundStatus.INCOMPLETE -> "INCOMPLETA"
-    }
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+private fun RouteStartAction(
+    enabled: Boolean,
+    availableFrom: LocalTime?,
+    onStart: () -> Unit
+) {
+    Column {
+        if (!enabled && availableFrom != null) {
+            Text(
+                text = "Disponible desde las " +
+                    availableFrom.format(hourLabelFormat),
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = UgTextSecondary
+            )
+            Spacer(Modifier.height(8.dp))
+        }
+
+        Button(
+            onClick = onStart,
+            enabled = enabled,
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.Schedule,
+                Icons.Default.PlayArrow,
                 contentDescription = null,
-                tint = UgNavy,
+                tint = Color.White,
                 modifier = Modifier.size(22.dp)
             )
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = round.routeName,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    color = UgTextPrimary
-                )
-                Text(
-                    text = roundHistoryLabel(round),
-                    fontSize = 12.sp,
-                    color = UgTextSecondary
-                )
-            }
-            Text(
-                text = badgeText,
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.Bold,
-                color = badgeColor,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(badgeColor.copy(alpha = 0.12f))
-                    .padding(horizontal = 9.dp, vertical = 4.dp)
-            )
+            Spacer(Modifier.width(8.dp))
+            Text("Iniciar ronda", fontWeight = FontWeight.Bold, fontSize = 15.sp)
         }
     }
 }
@@ -360,15 +331,6 @@ private fun todayScheduleSummary(route: PatrolRoute): Pair<String, String> {
     val label = times.joinToString(", ") { it.format(hourLabelFormat) }.ifBlank { "—" }
     val count = if (times.size == 1) "1 horario hoy" else "${times.size} horarios hoy"
     return label to count
-}
-
-private fun roundHistoryLabel(round: PatrolRound): String {    val date = dayLabelFormat.format(round.startedAt)
-    val done = round.donePointIds().size
-    return if (round.totalPoints > 0) {
-        "$date · $done/${round.totalPoints} puntos"
-    } else {
-        "$date · ${round.scans.size} lecturas"
-    }
 }
 
 @Composable

@@ -11,9 +11,11 @@ import javax.inject.Inject
 class GetPatrolEntryUseCase @Inject constructor(
     private val getTodayRoutesUseCase: GetTodayRoutesUseCase,
     private val getActiveRoundUseCase: GetActiveRoundUseCase,
-    private val getMyRoundsUseCase: GetMyRoundsUseCase
+    private val getMyRoundsUseCase: GetMyRoundsUseCase,
+    private val closeOverdueRoundsUseCase: CloseOverdueRoundsUseCase
 ) {
     suspend operator fun invoke(complexId: String): PatrolEntry {
+        closeOverdueRoundsUseCase(complexId)
         val today = getTodayRoutesUseCase(complexId).getOrDefault(emptyList())
         val active = runCatching { getActiveRoundUseCase(complexId) }.getOrNull()
         val recent = getMyRoundsUseCase(complexId)

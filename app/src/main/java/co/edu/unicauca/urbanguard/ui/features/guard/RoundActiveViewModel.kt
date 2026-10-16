@@ -40,7 +40,11 @@ class RoundActiveViewModel @Inject constructor(
     private var lastTag: String = ""
     private var lastTagAt: Long = 0L
 
-    init {
+    /**
+     * La pantalla lo llama en cada ON_RESUME (entrada y vuelta), así la
+     * ronda vencida se cierra sola al volver a ella.
+     */
+    fun onRefresh() {
         load()
     }
 
@@ -98,6 +102,13 @@ class RoundActiveViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
+            // Si se pasó el límite, se cierra sola como vencida y se va al
+            // resumen en vez de seguir escaneando.
+            val autoClosed = roundActions.closeOverdue(complexId)
+            if (autoClosed != null) {
+                eventChannel.send(RoundActiveEvent.RoundFinished)
+                return@launch
+            }
             val round = roundActions.activeRound(complexId)
             if (round == null) {
                 eventChannel.send(RoundActiveEvent.NoActiveRound)
