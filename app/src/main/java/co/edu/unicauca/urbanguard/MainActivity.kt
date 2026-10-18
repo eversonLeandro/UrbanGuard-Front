@@ -21,7 +21,7 @@ import androidx.navigation.compose.rememberNavController
 import co.edu.unicauca.urbanguard.core.push.UrbanGuardMessagingService
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.ui.components.MainScaffold
-import co.edu.unicauca.urbanguard.ui.navigation.Routes
+import co.edu.unicauca.urbanguard.ui.navigation.routeForDeepLink
 import co.edu.unicauca.urbanguard.ui.theme.UrbanGuardFrontendTheme
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
@@ -66,14 +66,12 @@ class MainActivity : ComponentActivity() {
                 // - urbanguard://requests/{id} → estado de vinculación del
                 //   solicitante: la decisión del administrador cambia su rol y
                 //   sus conjuntos, y esa pantalla es la que los refleja.
+                // - urbanguard://patrol/{roundId} → bandeja de notificaciones
+                //   (aviso de recorrido no completado, HU-A): aún no hay
+                //   endpoint GET por id de ronda, así que no hay detalle.
                 val deepLink by pendingDeepLink
                 LaunchedEffect(deepLink) {
-                    val target = when {
-                        deepLink == null -> null
-                        deepLink!!.startsWith("urbanguard://visitors") -> Routes.VISITORS
-                        deepLink!!.startsWith("urbanguard://requests") -> Routes.CONJUNTO_SELECTION
-                        else -> null
-                    }
+                    val target = routeForDeepLink(deepLink)
                     if (target != null) {
                         navController.navigate(target) {
                             launchSingleTop = true
