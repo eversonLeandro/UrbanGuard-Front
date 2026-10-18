@@ -4,14 +4,12 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apartment
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.runtime.Composable
@@ -35,7 +33,6 @@ import androidx.navigation.navArgument
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.components.PlaceholderScreen
-import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.features.admin.AdminSecurityMenuScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.RegisterGuardScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.SuperAdminScreen
@@ -52,6 +49,7 @@ import co.edu.unicauca.urbanguard.ui.features.incidents.IncidentsScreen
 import co.edu.unicauca.urbanguard.ui.features.guard.GuardVisitantesScreen
 import co.edu.unicauca.urbanguard.ui.features.home.HomeScreen
 import co.edu.unicauca.urbanguard.ui.features.news.NewsFeedScreen
+import co.edu.unicauca.urbanguard.ui.features.notifications.NotificationInboxScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ActivateConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoCodeScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoSelectionScreen
@@ -570,16 +568,17 @@ fun AppNavGraph(
         }
 
         composable(Routes.NOTIFICATIONS) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                UrbanGuardTopBar(
-                    title = "Notificaciones",
-                    onNavigateBack = { navController.popBackStack() }
-                )
-                PlaceholderScreen(
-                    title = "Notificaciones",
-                    icon = Icons.Default.Notifications
-                )
-            }
+            NotificationInboxScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onOpenDeepLink = { deepLink ->
+                    routeForDeepLink(deepLink)?.let { route ->
+                        navController.navigate(route) {
+                            popUpTo(Routes.NOTIFICATIONS) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+            )
         }
 
         composable(Routes.PROFILE) {

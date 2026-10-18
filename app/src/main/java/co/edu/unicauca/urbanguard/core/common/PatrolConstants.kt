@@ -13,7 +13,7 @@ object PatrolConstants {
     const val MAX_NAME_LENGTH = 100
 
     /** Activa las llamadas reales al backend de patrullaje. */
-    const val PATROL_BACKEND_ENABLED = false
+    const val PATROL_BACKEND_ENABLED = true
 
     /**
      * La ronda puede iniciarse este tiempo antes de su horario (ventana de

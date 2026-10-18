@@ -17,6 +17,8 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -36,7 +38,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.R
+import co.edu.unicauca.urbanguard.ui.features.notifications.NotificationBadgeViewModel
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
@@ -177,16 +182,32 @@ private fun BoxScope.TopBarActions(
         modifier = Modifier.align(Alignment.CenterEnd)
     ) {
         if (onNotificationsClick != null) {
+            val badgeViewModel: NotificationBadgeViewModel = hiltViewModel()
+            val unreadCount by badgeViewModel.unreadCount.collectAsStateWithLifecycle()
             IconButton(
                 onClick = onNotificationsClick,
                 modifier = Modifier.size(38.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Notificaciones",
-                    tint = UgEmerald,
-                    modifier = Modifier.size(20.dp)
-                )
+                BadgedBox(
+                    badge = {
+                        if (unreadCount > 0) {
+                            Badge(containerColor = UgErrorText) {
+                                Text(
+                                    text = if (unreadCount > 99) "99+" else unreadCount.toString(),
+                                    color = Color.White,
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "Notificaciones",
+                        tint = UgEmerald,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
 
