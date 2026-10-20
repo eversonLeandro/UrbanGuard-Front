@@ -3,9 +3,8 @@ package co.edu.unicauca.urbanguard.data.repository
 import android.util.Log
 import co.edu.unicauca.urbanguard.core.common.PatrolConstants
 import co.edu.unicauca.urbanguard.core.network.NetworkErrorMapper
-import co.edu.unicauca.urbanguard.data.local.patrol.PatrolPointLocalStore
+import co.edu.unicauca.urbanguard.data.local.patrol.PatrolLocalMigration
 import co.edu.unicauca.urbanguard.data.local.patrol.PatrolRoundLocalStore
-import co.edu.unicauca.urbanguard.data.local.patrol.PatrolRouteLocalStore
 import co.edu.unicauca.urbanguard.data.mapper.toDomain
 import co.edu.unicauca.urbanguard.data.mapper.toDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.RegisterScanRequestDto
@@ -19,6 +18,7 @@ import co.edu.unicauca.urbanguard.domain.model.donePointIds
 import co.edu.unicauca.urbanguard.domain.model.isFinished
 import co.edu.unicauca.urbanguard.domain.model.isOverdue
 import co.edu.unicauca.urbanguard.domain.model.matchScan
+import co.edu.unicauca.urbanguard.domain.model.normalizeNfcUid
 import co.edu.unicauca.urbanguard.domain.repository.PatrolRoundRepository
 import java.io.IOException
 import java.time.Instant
@@ -29,8 +29,7 @@ import retrofit2.HttpException
 class PatrolRoundRepositoryImpl @Inject constructor(
     private val api: PatrolRoundApi,
     private val localStore: PatrolRoundLocalStore,
-    private val pointStore: PatrolPointLocalStore,
-    private val routeStore: PatrolRouteLocalStore
+    private val migration: PatrolLocalMigration
 ) : PatrolRoundRepository {
 
     private var lastFinished: PatrolRound? = null
@@ -39,7 +38,7 @@ class PatrolRoundRepositoryImpl @Inject constructor(
         complexId: String,
         routeId: String,
         routeName: String,
-        totalPoints: Int,
+        points: List<PatrolControlPoint>,
         scheduledAt: Instant?,
         dueAt: Instant?
     ): PatrolRound {
@@ -49,11 +48,11 @@ class PatrolRoundRepositoryImpl @Inject constructor(
             routeId = routeId,
             routeName = routeName,
             startedAt = Instant.now(),
-            totalPoints = totalPoints,
+            points = points,
             scheduledAt = scheduledAt,
             dueAt = dueAt
         )
-        if (PatrolConstants.PATROL_BACKEND_ENABLED) {
+        if (PatrolConstants.PATROL_ROUNDS_REMOTE) {
             return try {
                 api.startRound(complexId, StartRoundRequestDto(routeId))
                     .toDomain(complexId)
@@ -72,8 +71,10 @@ class PatrolRoundRepositoryImpl @Inject constructor(
         return round
     }
 
-    override suspend fun activeRound(complexId: String): PatrolRound? =
-        localRounds(complexId).firstOrNull { !it.isFinished() }
+    override suspend fun activeRound(complexId: String): PatrolRound? {
+        migration.migrate(complexId)
+        return localRounds(complexId).firstOrNull { !it.isFinished() }
+    }
 
     override suspend fun registerScan(
         complexId: String,
@@ -81,12 +82,11 @@ class PatrolRoundRepositoryImpl @Inject constructor(
     ): Result<Pair<PatrolRound, PatrolControlPoint?>> {
         val round = activeRound(complexId)
             ?: return Result.failure(Exception("No hay una ronda abierta."))
-        val normalized = tagId.trim().uppercase()
+        val normalized = normalizeNfcUid(tagId)
         if (normalized.isEmpty()) {
             return Result.failure(Exception("El tag leído está vacío."))
         }
-        val points = pointStore.load(complexId).map { it.toDomain(complexId) }
-        val match = matchScan(normalized, points)
+        val match = matchScan(normalized, round.points)
         val scan = PatrolScan(
             pointId = match?.id,
             tagId = normalized,
@@ -95,7 +95,7 @@ class PatrolRoundRepositoryImpl @Inject constructor(
         )
         val updated = round.copy(scans = round.scans + scan)
         persist(updated)
-        if (PatrolConstants.PATROL_BACKEND_ENABLED) {
+        if (PatrolConstants.PATROL_ROUNDS_REMOTE) {
             syncBestEffort("enviar la lectura") {
                 api.registerScan(
                     complexId,
@@ -124,7 +124,7 @@ class PatrolRoundRepositoryImpl @Inject constructor(
         val finished = round.copy(finishedAt = Instant.now(), incompleteReason = reason)
         persist(finished)
         lastFinished = finished
-        if (PatrolConstants.PATROL_BACKEND_ENABLED) {
+        if (PatrolConstants.PATROL_ROUNDS_REMOTE) {
             syncBestEffort("cerrar la ronda en el backend") {
                 api.finishRound(complexId, finished.id)
             }
@@ -146,7 +146,7 @@ class PatrolRoundRepositoryImpl @Inject constructor(
             if (latest == null || finished.startedAt.isAfter(latest.startedAt)) {
                 latest = finished
             }
-            if (PatrolConstants.PATROL_BACKEND_ENABLED) {
+            if (PatrolConstants.PATROL_ROUNDS_REMOTE) {
                 syncBestEffort("cerrar la ronda en el backend") {
                     api.finishRound(complexId, finished.id)
                 }
@@ -160,13 +160,13 @@ class PatrolRoundRepositoryImpl @Inject constructor(
         if (complexId.isBlank()) {
             return Result.failure(Exception(PatrolConstants.MSG_NO_ACTIVE_COMPLEX))
         }
-        if (!PatrolConstants.PATROL_BACKEND_ENABLED) {
+        migration.migrate(complexId)
+        if (!PatrolConstants.PATROL_ROUNDS_REMOTE) {
             return Result.success(localRounds(complexId))
         }
         return try {
             val remote = api.getRounds(complexId)
                 .map { it.toDomain(complexId) }
-                .map { backfillTotal(complexId, it, routeStore) }
             localStore.save(complexId, remote.map { it.toDto() })
             Result.success(remote.sortedByDescending { it.startedAt })
         } catch (e: HttpException) {
@@ -182,7 +182,6 @@ class PatrolRoundRepositoryImpl @Inject constructor(
     private fun localRounds(complexId: String): List<PatrolRound> =
         localStore.load(complexId)
             .map { it.toDomain(complexId) }
-            .map { backfillTotal(complexId, it, routeStore) }
             .sortedByDescending { it.startedAt }
 
     private fun persist(round: PatrolRound) {
@@ -209,25 +208,4 @@ class PatrolRoundRepositoryImpl @Inject constructor(
     private companion object {
         const val TAG = "PatrolRoundRepo"
     }
-}
-
-/**
- * Rondas cerradas de antes del contador: se comparan contra los puntos que
- * la ruta tiene hoy. Si la ruta ya no existe, quedan como estaban.
- *
- * Función de nivel superior para no superar el máximo de funciones por
- * clase de detekt.
- */
-private fun backfillTotal(
-    complexId: String,
-    round: PatrolRound,
-    routeStore: PatrolRouteLocalStore
-): PatrolRound {
-    if (!round.isFinished() || round.totalPoints > 0) return round
-    val count = routeStore.load(complexId)
-        .firstOrNull { it.id == round.routeId }
-        ?.pointIds
-        ?.size
-        ?: return round
-    return round.copy(totalPoints = count)
 }

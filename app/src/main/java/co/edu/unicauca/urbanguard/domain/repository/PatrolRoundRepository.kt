@@ -7,17 +7,17 @@ import java.time.Instant
 /**
  * Rondas de patrullaje del guardia (UG-41).
  *
- * Hoy resuelve contra el almacén local del equipo; mañana sincroniza con el
- * backend sin cambiar la firma.
+ * Hoy se guardan en local; el snapshot de puntos es parte de la ronda para
+ * que el resumen no dependa de la ruta actual.
  */
 interface PatrolRoundRepository {
 
-    /** Abre una ronda para la ruta indicada. */
+    /** Abre una ronda con la foto fija de puntos de la ruta. */
     suspend fun startRound(
         complexId: String,
         routeId: String,
         routeName: String,
-        totalPoints: Int,
+        points: List<PatrolControlPoint>,
         scheduledAt: Instant?,
         dueAt: Instant?
     ): PatrolRound
@@ -33,7 +33,7 @@ interface PatrolRoundRepository {
 
     /**
      * Registra una lectura y devuelve la ronda actualizada junto al punto
-     * coincidente (null si el tag no es de ninguna ruta del conjunto).
+     * coincidente (null si el tag no pertenece al snapshot de la ronda).
      */
     suspend fun registerScan(
         complexId: String,

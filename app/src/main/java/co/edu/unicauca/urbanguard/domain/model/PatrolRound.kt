@@ -6,8 +6,8 @@ import java.time.Instant
 /**
  * Ronda de patrullaje en curso o terminada (UG-41).
  *
- * Guarda los datos de la ruta para mostrarlos sin depender del listado, y
- * cada lectura con su hora: es la constancia del paso del guardia.
+ * Guarda los datos de la ruta y una foto fija de sus puntos al abrir, para
+ * que el resumen siga siendo correcto aunque luego se edite la ruta.
  */
 data class PatrolRound(
     val id: String,
@@ -17,19 +17,18 @@ data class PatrolRound(
     val startedAt: Instant,
     val finishedAt: Instant? = null,
     val scans: List<PatrolScan> = emptyList(),
-    /**
-     * Puntos de la ruta al abrir (foto fija). Sin esto no se sabría contra
-     * cuántos comparar al cerrar: es lo que distingue COMPLETADA de
-     * INCOMPLETA. En rondas viejas vale 0 y toda cerrada cuenta completada.
-     */
-    val totalPoints: Int = 0,
+    /** Puntos de la ruta al abrir (foto fija). */
+    val points: List<PatrolControlPoint> = emptyList(),
     /** Cita que cubre (null = ronda libre, sin vencimiento). */
     val scheduledAt: Instant? = null,
     /** Límite: fecha-hora de la siguiente ronda programada (null = libre). */
     val dueAt: Instant? = null,
     /** Por qué quedó incompleta (null si completada o abierta). */
     val incompleteReason: IncompleteReason? = null
-)
+) {
+    /** Total derivado de la foto fija, nunca un contador aparte. */
+    val totalPoints: Int get() = points.size
+}
 
 /** Motivo de la incompleta: cerrada a medias o vencida por tiempo. */
 enum class IncompleteReason {
@@ -45,9 +44,13 @@ data class PatrolScan(
     val known: Boolean
 )
 
-/** Puntos distintos efectivamente marcados (ignora repetidos y ajenos). */
-fun PatrolRound.donePointIds(): Set<String> =
-    scans.filter { it.known }.mapNotNull { it.pointId }.toSet()
+/** Puntos de la foto fija efectivamente marcados (ignora repetidos y ajenos). */
+fun PatrolRound.donePointIds(): Set<String> {
+    val snapshotIds = points.mapTo(mutableSetOf()) { it.id }
+    return scans.filter { it.known }.mapNotNull { it.pointId }
+        .filter { it in snapshotIds }
+        .toSet()
+}
 
 /** Progreso 0..1 sobre el total de puntos de la ruta. */
 fun PatrolRound.progressOf(totalPoints: Int): Float {
@@ -83,16 +86,16 @@ fun PatrolRound.status(): RoundStatus =
     }
 
 /**
- * Busca el punto cuyo tag coincide (insensible a mayúsculas) o null si el
- * tag no pertenece a la ruta.
+ * Busca el punto cuyo tag coincide (insensible a mayúsculas y separadores) o
+ * null si el tag no pertenece a la ruta.
  */
 fun matchScan(
     tagId: String,
     points: List<PatrolControlPoint>
 ): PatrolControlPoint? {
-    val normalized = tagId.trim().uppercase()
+    val normalized = normalizeNfcUid(tagId)
     if (normalized.isEmpty()) return null
-    return points.firstOrNull { it.nfcTagId.trim().uppercase() == normalized }
+    return points.firstOrNull { normalizeNfcUid(it.nfcTagId) == normalized }
 }
 
 /** Rutas con al menos un horario el día indicado. */

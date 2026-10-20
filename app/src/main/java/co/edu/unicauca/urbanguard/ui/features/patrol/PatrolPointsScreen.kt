@@ -14,18 +14,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Nfc
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -42,7 +40,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.core.common.PatrolConstants
-import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.features.visitors.VisitorActionButton
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
@@ -54,10 +51,10 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextPrimary
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 /**
- * Lista de puntos de control NFC del conjunto en orden de ronda (UG-40).
+ * Lista de checkpoints NFC del conjunto (UG-40).
  *
- * El admin ve la ruta numerada, reordena con las flechas, activa o elimina
- * cada parada, y agrega nuevas con el botón flotante.
+ * El admin edita, activa o desactiva cada punto y agrega nuevos con el botón
+ * flotante. El orden de las paradas se define en cada ruta.
  */
 @Composable
 fun PatrolPointsScreen(
@@ -128,18 +125,7 @@ fun PatrolPointsScreen(
                 else -> PointsContent(
                     uiState = uiState,
                     onEditClick = onEditClick,
-                    onMove = viewModel::onMove,
-                    onToggleActive = viewModel::onToggleActive,
-                    onDelete = viewModel::onRequestDelete
-                )
-            }
-
-            val pending = uiState.pendingDelete
-            if (pending != null) {
-                DeletePointDialog(
-                    pointName = pending.name,
-                    onConfirm = viewModel::onConfirmDelete,
-                    onDismiss = viewModel::onDismissDelete
+                    onToggleActive = viewModel::onToggleActive
                 )
             }
         }
@@ -150,12 +136,10 @@ fun PatrolPointsScreen(
 private fun PointsContent(
     uiState: PatrolPointsUiState,
     onEditClick: (String) -> Unit,
-    onMove: (String, Int) -> Unit,
-    onToggleActive: (String, Boolean) -> Unit,
-    onDelete: (PatrolControlPoint) -> Unit
+    onToggleActive: (String, Boolean) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        RouteSummaryCard(
+        PointsSummaryCard(
             total = uiState.points.size,
             active = uiState.activeCount,
             modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 18.dp)
@@ -166,29 +150,25 @@ private fun PointsContent(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 96.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        itemsIndexed(uiState.points, key = { _, point -> point.id }) { index, point ->
-            Box(Modifier.animateItem()) {
-                PatrolPointListItem(
-                    point = point,
-                    position = index,
-                    total = uiState.points.size,
-                    actions = PatrolPointActions(
-                        onEdit = { onEditClick(point.id) },
-                        onMove = { delta -> onMove(point.id, delta) },
-                        onToggleActive = { onToggleActive(point.id, it) },
-                        onDelete = { onDelete(point) }
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(uiState.points, key = { it.id }) { point ->
+                Box(Modifier.animateItem()) {
+                    PatrolPointListItem(
+                        point = point,
+                        actions = PatrolPointActions(
+                            onEdit = { onEditClick(point.id) },
+                            onToggleActive = { onToggleActive(point.id, it) }
+                        )
                     )
-                )
+                }
             }
         }
     }
 }
-}
 
 @Composable
-private fun RouteSummaryCard(total: Int, active: Int, modifier: Modifier = Modifier) {
+private fun PointsSummaryCard(total: Int, active: Int, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -205,7 +185,7 @@ private fun RouteSummaryCard(total: Int, active: Int, modifier: Modifier = Modif
         Spacer(modifier = Modifier.width(14.dp))
         Column {
             Text(
-                text = "Ruta de patrullaje",
+                text = "Puntos NFC",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -291,25 +271,3 @@ private fun PointsError(message: String, onRetryClick: () -> Unit) {
     }
 }
 
-@Composable
-private fun DeletePointDialog(
-    pointName: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Eliminar punto", fontWeight = FontWeight.Bold, color = UgNavy) },
-        text = {
-            Text("¿Eliminar \"$pointName\" de la ruta? Esta acción no se puede deshacer.")
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text("Eliminar", color = UgErrorText, fontWeight = FontWeight.Bold)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar", color = UgNavy) }
-        }
-    )
-}

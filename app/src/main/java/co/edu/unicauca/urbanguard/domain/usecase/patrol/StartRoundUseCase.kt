@@ -1,5 +1,6 @@
 package co.edu.unicauca.urbanguard.domain.usecase.patrol
 
+import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
 import co.edu.unicauca.urbanguard.domain.model.PatrolRound
 import co.edu.unicauca.urbanguard.domain.repository.PatrolRoundRepository
 import java.time.Instant
@@ -13,7 +14,7 @@ class StartRoundUseCase @Inject constructor(
         complexId: String,
         routeId: String,
         routeName: String,
-        totalPoints: Int,
+        points: List<PatrolControlPoint>,
         scheduledAt: Instant?,
         dueAt: Instant?
     ): PatrolRound {
@@ -21,7 +22,7 @@ class StartRoundUseCase @Inject constructor(
             complexId,
             routeId,
             routeName,
-            totalPoints,
+            points,
             scheduledAt,
             dueAt
         )

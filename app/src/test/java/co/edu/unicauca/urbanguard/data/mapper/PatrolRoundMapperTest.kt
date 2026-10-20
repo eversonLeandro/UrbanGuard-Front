@@ -1,6 +1,7 @@
 package co.edu.unicauca.urbanguard.data.mapper
 
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRoundDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRoundPointDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolScanDto
 import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
 import co.edu.unicauca.urbanguard.domain.model.PatrolRound
@@ -34,28 +35,31 @@ import java.time.LocalTime
  */
 class PatrolRoundMapperTest {
 
-    private fun point(id: String = "p1", tag: String = "04A3F2") = PatrolControlPoint(
+    private fun point(id: String = "p1", tag: String = "04A3F2B1") = PatrolControlPoint(
         id = id,
         complexId = "c1",
         name = "Portería",
         location = "",
         nfcTagId = tag,
-        order = 0,
         isActive = true
     )
 
-    private fun roundWith(vararg scans: PatrolScan) = PatrolRound(
+    private fun roundWith(
+        vararg scans: PatrolScan,
+        points: List<PatrolControlPoint> = listOf(point())
+    ) = PatrolRound(
         id = "r1",
         complexId = "c1",
         routeId = "rt1",
         routeName = "Nocturna",
         startedAt = Instant.parse("2026-02-10T22:00:00Z"),
-        scans = scans.toList()
+        scans = scans.toList(),
+        points = points
     )
 
     @Test
     fun matchScan_caseInsensitive_findsPoint() {
-        assertEquals(point(), matchScan("04a3f2", listOf(point())))
+        assertEquals(point(), matchScan("04:a3:f2:b1", listOf(point())))
     }
 
     @Test
@@ -95,19 +99,32 @@ class PatrolRoundMapperTest {
     fun status_finishedAllPoints_isCompleted() {
         val round = roundWith(
             PatrolScan("p1", "A", Instant.EPOCH, true),
-            PatrolScan("p2", "B", Instant.EPOCH, true)
-        ).copy(finishedAt = Instant.parse("2026-02-10T23:00:00Z"), totalPoints = 2)
+            PatrolScan("p2", "B", Instant.EPOCH, true),
+            points = listOf(point("p1"), point("p2"))
+        ).copy(finishedAt = Instant.parse("2026-02-10T23:00:00Z"))
 
+        assertEquals(2, round.totalPoints)
         assertEquals(RoundStatus.COMPLETED, round.status())
     }
 
     @Test
     fun status_finishedMissingPoints_isIncomplete() {
         val round = roundWith(
-            PatrolScan("p1", "A", Instant.EPOCH, true)
-        ).copy(finishedAt = Instant.parse("2026-02-10T23:00:00Z"), totalPoints = 3)
+            PatrolScan("p1", "A", Instant.EPOCH, true),
+            points = listOf(point("p1"), point("p2"), point("p3"))
+        ).copy(finishedAt = Instant.parse("2026-02-10T23:00:00Z"))
 
         assertEquals(RoundStatus.INCOMPLETE, round.status())
+    }
+
+    @Test
+    fun donePointIds_ignoresScansOutsideSnapshot() {
+        val round = roundWith(
+            PatrolScan("old-point", "A", Instant.EPOCH, true),
+            points = listOf(point("p1"))
+        )
+
+        assertTrue(round.donePointIds().isEmpty())
     }
 
     @Test
@@ -136,7 +153,15 @@ class PatrolRoundMapperTest {
             startedAt = "2026-02-10T22:00:00Z",
             finishedAt = null,
             scans = listOf(
-                PatrolScanDto("p1", "04A3", "2026-02-10T22:05:00Z", true)
+                PatrolScanDto("p1", "04A3F2B1", "2026-02-10T22:05:00Z", true)
+            ),
+            points = listOf(
+                PatrolRoundPointDto(
+                    id = "p1",
+                    name = "Portería",
+                    description = "",
+                    nfcTagId = "04A3F2B1"
+                )
             )
         )
 
@@ -145,6 +170,7 @@ class PatrolRoundMapperTest {
         assertEquals("r1", domain.id)
         assertEquals("Nocturna", domain.routeName)
         assertEquals(1, domain.scans.size)
+        assertEquals(1, domain.totalPoints)
         assertEquals("p1", domain.scans.first().pointId)
         assertTrue(domain.scans.first().known)
         assertEquals(dto, domain.toDto())

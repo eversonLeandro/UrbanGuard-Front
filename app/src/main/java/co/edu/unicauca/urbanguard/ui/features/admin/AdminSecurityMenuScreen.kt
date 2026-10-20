@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.edu.unicauca.urbanguard.core.common.PatrolConstants
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
 import co.edu.unicauca.urbanguard.ui.theme.UgIconMuted
@@ -79,16 +80,18 @@ fun AdminSecurityMenuScreen(
                 onClick = onNavigateToRegisterGuard
             )
 
-            SecurityOptionCard(
-                title = "Historial de patrullaje",
-                subtitle = "Ver el registro de rondas de los guardias",
-                icon = Icons.Default.History,
-                onClick = onNavigateToPatrolHistory
-            )
+            if (PatrolConstants.PATROL_HISTORY_REMOTE) {
+                SecurityOptionCard(
+                    title = "Historial de patrullaje",
+                    subtitle = "Ver el registro de rondas de los guardias",
+                    icon = Icons.Default.History,
+                    onClick = onNavigateToPatrolHistory
+                )
+            }
 
             SecurityOptionCard(
                 title = "Puntos de control NFC",
-                subtitle = "Registrar y ordenar la ruta de patrullaje",
+                subtitle = "Registrar y editar los puntos del conjunto",
                 icon = Icons.Default.Nfc,
                 onClick = onNavigateToPatrolPoints
             )

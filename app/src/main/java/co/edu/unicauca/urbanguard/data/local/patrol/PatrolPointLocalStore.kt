@@ -2,7 +2,7 @@ package co.edu.unicauca.urbanguard.data.local.patrol
 
 import android.content.Context
 import android.util.Log
-import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolPointResponseDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.CheckpointResponseDto
 import com.auth0.android.authentication.storage.SharedPreferencesStorage
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -11,12 +11,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Guarda los puntos de control por conjunto en almacenamiento cifrado.
+ * Caché local de checkpoints por conjunto.
  *
- * No hay dependencia de Room en el proyecto, así que se reutiliza el mismo
- * mecanismo cifrado de la sesión (Auth0 `SharedPreferencesStorage`) con un
- * archivo propio: la lista viaja como JSON bajo la clave del conjunto. Cuando
- * el backend esté listo, esta clase sigue como caché sin cambiar su firma.
+ * La clave cambió a `points_v2_` porque el contrato anterior incluía `id`,
+ * `order` y `nfcTagId` planos. Los datos viejos se leen desde la clave
+ * heredada únicamente para migrar rutas y rondas.
  */
 @Singleton
 class PatrolPointLocalStore @Inject constructor(
@@ -28,35 +27,61 @@ class PatrolPointLocalStore @Inject constructor(
     }
     private val gson = Gson()
 
-    /** Puntos del conjunto, o lista vacía si aún no hay ninguno. */
+    /** Checkpoints actuales del conjunto. */
     @Suppress("TooGenericExceptionCaught")
-    fun load(complexId: String): List<PatrolPointResponseDto> {
+    fun load(complexId: String): List<CheckpointResponseDto> {
         return try {
             val raw = storage.retrieveString(keyFor(complexId)) ?: return emptyList()
             if (raw.isBlank()) return emptyList()
-            val type = object : TypeToken<List<PatrolPointResponseDto>>() {}.type
-            gson.fromJson<List<PatrolPointResponseDto>>(raw, type) ?: emptyList()
+            val type = object : TypeToken<List<CheckpointResponseDto>>() {}.type
+            gson.fromJson<List<CheckpointResponseDto>>(raw, type) ?: emptyList()
         } catch (e: Exception) {
-            Log.w(TAG, "No se pudieron leer los puntos de control", e)
+            Log.w(TAG, "No se pudieron leer los checkpoints", e)
             emptyList()
         }
     }
 
-    /** Reemplaza los puntos del conjunto. */
+    /** Reemplaza la caché del conjunto. */
     @Suppress("TooGenericExceptionCaught")
-    fun save(complexId: String, points: List<PatrolPointResponseDto>) {
+    fun save(complexId: String, points: List<CheckpointResponseDto>) {
         try {
             storage.store(keyFor(complexId), gson.toJson(points))
         } catch (e: Exception) {
-            Log.w(TAG, "No se pudieron guardar los puntos de control", e)
+            Log.w(TAG, "No se pudieron guardar los checkpoints", e)
+        }
+    }
+
+    /** Puntos del formato anterior; se conservan solo hasta completar la migración. */
+    @Suppress("TooGenericExceptionCaught")
+    fun loadLegacy(complexId: String): List<PatrolLegacyPointDto> {
+        return try {
+            val raw = storage.retrieveString(legacyKeyFor(complexId)) ?: return emptyList()
+            if (raw.isBlank()) return emptyList()
+            val type = object : TypeToken<List<PatrolLegacyPointDto>>() {}.type
+            gson.fromJson<List<PatrolLegacyPointDto>>(raw, type) ?: emptyList()
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudieron leer los puntos heredados", e)
+            emptyList()
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    fun clearLegacy(complexId: String) {
+        try {
+            storage.store(legacyKeyFor(complexId), "")
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudo limpiar la caché heredada", e)
         }
     }
 
     private fun keyFor(complexId: String): String = "$KEY_PREFIX$complexId"
 
+    private fun legacyKeyFor(complexId: String): String = "$LEGACY_KEY_PREFIX$complexId"
+
     private companion object {
         const val TAG = "PatrolStore"
         const val PREFS_NAME = "urbanguard_patrol_points"
-        const val KEY_PREFIX = "points_"
+        const val KEY_PREFIX = "points_v2_"
+        const val LEGACY_KEY_PREFIX = "points_"
     }
 }

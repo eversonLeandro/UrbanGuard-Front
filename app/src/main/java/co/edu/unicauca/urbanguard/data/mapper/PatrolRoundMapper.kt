@@ -1,17 +1,21 @@
 package co.edu.unicauca.urbanguard.data.mapper
 
+import co.edu.unicauca.urbanguard.data.remote.api.dto.CheckpointResponseDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRoundDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRoundPointDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolScanDto
 import co.edu.unicauca.urbanguard.domain.model.IncompleteReason
+import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
 import co.edu.unicauca.urbanguard.domain.model.PatrolRound
 import co.edu.unicauca.urbanguard.domain.model.PatrolScan
+import co.edu.unicauca.urbanguard.domain.model.normalizeNfcUid
 import java.time.Instant
 
 /**
  * Mapeo de rondas y lecturas (mismo contrato que usará el backend).
  *
- * Archivo propio para no superar el máximo de funciones de detekt en
- * `PatrolMapper.kt`.
+ * Cada ronda guarda la foto fija de puntos con la que se abrió; el total se
+ * deriva de esa lista y no se persiste como contador independiente.
  */
 
 /** Instantes en ISO-8601 (`Instant.toString` / `Instant.parse`). */
@@ -29,6 +33,35 @@ fun PatrolScanDto.toDomain(): PatrolScan = PatrolScan(
     known = known
 )
 
+fun PatrolControlPoint.toRoundPointDto(): PatrolRoundPointDto = PatrolRoundPointDto(
+    id = id,
+    name = name,
+    location = location,
+    description = description,
+    nfcTagId = nfcTagId,
+    active = isActive
+)
+
+fun CheckpointResponseDto.toRoundPointDto(): PatrolRoundPointDto = PatrolRoundPointDto(
+    id = checkpointId,
+    name = name,
+    location = location.orEmpty(),
+    description = description,
+    nfcTagId = normalizeNfcUid(currentTag?.uid.orEmpty()),
+    active = active
+)
+
+fun PatrolRoundPointDto.toDomain(complexId: String): PatrolControlPoint =
+    PatrolControlPoint(
+        id = id,
+        complexId = complexId,
+        name = name,
+        location = location,
+        description = description.orEmpty(),
+        nfcTagId = nfcTagId,
+        isActive = active
+    )
+
 fun PatrolRound.toDto(): PatrolRoundDto = PatrolRoundDto(
     id = id,
     routeId = routeId,
@@ -36,7 +69,7 @@ fun PatrolRound.toDto(): PatrolRoundDto = PatrolRoundDto(
     startedAt = startedAt.toString(),
     finishedAt = finishedAt?.toString(),
     scans = scans.map { it.toDto() },
-    totalPoints = totalPoints,
+    points = points.map { it.toRoundPointDto() },
     scheduledAt = scheduledAt?.toString(),
     dueAt = dueAt?.toString(),
     incompleteReason = incompleteReason?.name
@@ -50,7 +83,7 @@ fun PatrolRoundDto.toDomain(complexId: String): PatrolRound = PatrolRound(
     startedAt = runCatching { Instant.parse(startedAt) }.getOrDefault(Instant.EPOCH),
     finishedAt = finishedAt?.let { runCatching { Instant.parse(it) }.getOrNull() },
     scans = scans.map { it.toDomain() },
-    totalPoints = totalPoints,
+    points = points.orEmpty().map { it.toDomain(complexId) },
     scheduledAt = scheduledAt?.let { runCatching { Instant.parse(it) }.getOrNull() },
     dueAt = dueAt?.let { runCatching { Instant.parse(it) }.getOrNull() },
     incompleteReason = incompleteReason?.let {

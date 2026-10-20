@@ -12,8 +12,18 @@ object PatrolConstants {
     /** Máximo de caracteres del nombre del punto. */
     const val MAX_NAME_LENGTH = 100
 
-    /** Activa las llamadas reales al backend de patrullaje. */
-    const val PATROL_BACKEND_ENABLED = true
+    /**
+     * El backend ya expone los puntos de control como checkpoints
+     * (`/api/complexes/{complexId}/checkpoints`).
+     */
+    const val PATROL_POINTS_REMOTE = true
+
+    /** Rutas y rondas todavía no tienen endpoint: siguen siendo locales. */
+    const val PATROL_ROUTES_REMOTE = false
+    const val PATROL_ROUNDS_REMOTE = false
+
+    /** El historial por turnos depende de un backend que aún no está disponible. */
+    const val PATROL_HISTORY_REMOTE = false
 
     /**
      * La ronda puede iniciarse este tiempo antes de su horario (ventana de
@@ -25,10 +35,12 @@ object PatrolConstants {
     const val MSG_NAME_REQUIRED = "Ponle un nombre al punto (p. ej. Portería norte)."
     const val MSG_NAME_TOO_LONG = "El nombre no puede pasar de 100 caracteres."
     const val MSG_TAG_REQUIRED = "Acerca el tag NFC para vincularlo al punto."
+    const val MSG_TAG_INVALID =
+        "El UID debe tener 8, 14 o 20 caracteres hexadecimales."
     const val MSG_NO_ACTIVE_COMPLEX = "No tienes un conjunto activo seleccionado."
     const val MSG_SAVE_ERROR = "No se pudo guardar el punto. Intenta de nuevo."
     const val MSG_LIST_ERROR = "No se pudieron cargar los puntos de control."
-    const val MSG_DELETE_ERROR = "No se pudo eliminar el punto. Intenta de nuevo."
+    const val MSG_DELETE_ROUTE_ERROR = "No se pudo eliminar la ruta. Intenta de nuevo."
     const val MSG_DUPLICATE_TAG = "Ese tag ya está vinculado a otro punto."
 
     // ── Historial / lista ────────────────────────────────────────────────

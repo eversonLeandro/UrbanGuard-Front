@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -211,10 +212,11 @@ private fun ActiveContent(
             )
         }
 
-        items(uiState.points, key = { it.id }) { point ->
+        itemsIndexed(uiState.points, key = { _, point -> point.id }) { index, point ->
             val isDone = round.donePointIds().contains(point.id)
             RoundPointRow(
                 point = point,
+                position = index,
                 isDone = isDone,
                 isNext = !isDone && point.id == nextId
             )
@@ -438,7 +440,12 @@ private fun timeLabel(millis: Long): String {
 }
 
 @Composable
-private fun RoundPointRow(point: PatrolControlPoint, isDone: Boolean, isNext: Boolean) {
+private fun RoundPointRow(
+    point: PatrolControlPoint,
+    position: Int,
+    isDone: Boolean,
+    isNext: Boolean
+) {
     Card(
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
@@ -473,7 +480,7 @@ private fun RoundPointRow(point: PatrolControlPoint, isDone: Boolean, isNext: Bo
                     )
                 } else {
                     Text(
-                        text = "${point.order + 1}",
+                        text = "${position + 1}",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White

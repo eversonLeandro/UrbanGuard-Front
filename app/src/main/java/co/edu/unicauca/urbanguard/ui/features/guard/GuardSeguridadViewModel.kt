@@ -6,12 +6,9 @@ import co.edu.unicauca.urbanguard.core.common.PatrolConstants
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
 import co.edu.unicauca.urbanguard.domain.model.availableFrom
-import co.edu.unicauca.urbanguard.domain.model.coveringOccurrence
 import co.edu.unicauca.urbanguard.domain.model.isFinished
-import co.edu.unicauca.urbanguard.domain.model.nextOccurrenceAfter
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolEntryUseCase
-import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolRoutesUseCase
-import co.edu.unicauca.urbanguard.domain.usecase.patrol.StartRoundUseCase
+import co.edu.unicauca.urbanguard.domain.usecase.patrol.StartScheduledRoundUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -33,8 +30,7 @@ sealed interface GuardSeguridadEvent {
 @HiltViewModel
 class GuardSeguridadViewModel @Inject constructor(
     private val getPatrolEntryUseCase: GetPatrolEntryUseCase,
-    private val getPatrolRoutesUseCase: GetPatrolRoutesUseCase,
-    private val startRoundUseCase: StartRoundUseCase,
+    private val startScheduledRoundUseCase: StartScheduledRoundUseCase,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -113,20 +109,7 @@ class GuardSeguridadViewModel @Inject constructor(
      * abre ninguna) y con vencimiento en la siguiente cita programada.
      */
     private suspend fun openRound(complexId: String, route: PatrolRoute) {
-        val zone = ZoneId.systemDefault()
-        val now = LocalDateTime.now(zone)
-        val early = PatrolConstants.ROUND_EARLY_START_MINUTES
-        val routes = getPatrolRoutesUseCase(complexId).getOrThrow()
-        val occurrence = coveringOccurrence(route, now, early)
-        val due = occurrence?.let { nextOccurrenceAfter(routes, it) }
-        startRoundUseCase(
-            complexId = complexId,
-            routeId = route.id,
-            routeName = route.name,
-            totalPoints = route.pointIds.size,
-            scheduledAt = occurrence?.atZone(zone)?.toInstant(),
-            dueAt = due?.atZone(zone)?.toInstant()
-        )
+        startScheduledRoundUseCase(complexId, route)
     }
 
     fun onContinueRound() {

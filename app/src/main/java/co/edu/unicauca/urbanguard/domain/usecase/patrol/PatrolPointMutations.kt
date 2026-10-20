@@ -3,22 +3,14 @@ package co.edu.unicauca.urbanguard.domain.usecase.patrol
 import javax.inject.Inject
 
 /**
- * Mutaciones de la ruta desde la lista (eliminar, mover, activar).
+ * Mutaciones de la lista de puntos.
  *
- * Agrupa los casos de uso para que el ViewModel no supere el máximo de
- * parámetros del constructor de detekt.
+ * El orden pertenece a cada ruta y el backend no expone borrado de
+ * checkpoints, así que solo queda activar/desactivar.
  */
 class PatrolPointMutations @Inject constructor(
-    private val deletePatrolPointUseCase: DeletePatrolPointUseCase,
-    private val movePatrolPointUseCase: MovePatrolPointUseCase,
     private val setPatrolPointActiveUseCase: SetPatrolPointActiveUseCase
 ) {
-    suspend fun delete(complexId: String, pointId: String): Result<Unit> =
-        deletePatrolPointUseCase(complexId, pointId)
-
-    suspend fun move(complexId: String, pointId: String, toOrder: Int): Result<Unit> =
-        movePatrolPointUseCase(complexId, pointId, toOrder)
-
     suspend fun setActive(
         complexId: String,
         pointId: String,

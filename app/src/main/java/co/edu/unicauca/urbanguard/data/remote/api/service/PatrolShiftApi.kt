@@ -9,6 +9,7 @@ import retrofit2.http.Query
 
 /**
  * Historial de patrullaje por turno (HU-034 / HU-032), vía API Gateway.
+ * El gateway enruta estas rutas al `security-service`.
  *
  * La BASE_URL ya apunta al gateway y el `AuthInterceptor` inyecta el JWT; el
  * rol ADMIN y el `complexId` viajan en la ruta, nunca la identidad del usuario.
@@ -19,7 +20,7 @@ import retrofit2.http.Query
  */
 interface PatrolShiftApi {
 
-    @GET("api/complexes/{complexId}/patrol-shifts")
+    @GET(PatrolApiPaths.SHIFTS)
     suspend fun getShifts(
         @Path("complexId") complexId: String,
         @Query("from") from: String,
@@ -28,14 +29,14 @@ interface PatrolShiftApi {
         @Query("onlyIncomplete") onlyIncomplete: Boolean? = null
     ): List<PatrolShiftSummaryDto>
 
-    @GET("api/complexes/{complexId}/patrol-shifts/detail")
+    @GET(PatrolApiPaths.SHIFT_DETAIL)
     suspend fun getShiftDetail(
         @Path("complexId") complexId: String,
         @Query("shiftType") shiftType: String,
         @Query("date") date: String
     ): PatrolShiftDetailDto
 
-    @GET("api/complexes/{complexId}/patrol-guards/{guardId}/summary")
+    @GET(PatrolApiPaths.GUARD_SUMMARY)
     suspend fun getGuardSummary(
         @Path("complexId") complexId: String,
         @Path("guardId") guardId: String,

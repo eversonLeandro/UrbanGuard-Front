@@ -1,79 +1,82 @@
 package co.edu.unicauca.urbanguard.data.remote.api.service
 
 import co.edu.unicauca.urbanguard.core.common.PatrolConstants
-import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolPointRequestDto
-import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolPointResponseDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.CheckpointResponseDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.CreateCheckpointRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRouteDto
-import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRouteOrderDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRouteRequestDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.ReplaceCheckpointTagRequestDto
+import com.google.gson.JsonObject
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
 /**
- * Puntos de control NFC de la ruta de patrullaje (UG-40 / UG-93).
+ * Checkpoints NFC y rutas de patrullaje.
  *
- * Contrato propuesto para el backend. Mientras
- * [PatrolConstants.PATROL_BACKEND_ENABLED] esté apagado el repositorio no
- * invoca estos métodos y trabaja contra el almacén local.
+ * Los puntos usan el contrato real de `security-service`. Las rutas todavía
+ * no tienen endpoint: su repositorio solo llama estos métodos si
+ * [PatrolConstants.PATROL_ROUTES_REMOTE] se enciende en el futuro.
  */
 interface PatrolApi {
 
-    @GET("api/complexes/{complexId}/patrol-points")
+    @GET(PatrolApiPaths.POINTS)
     suspend fun getPoints(
         @Path("complexId") complexId: String
-    ): List<PatrolPointResponseDto>
+    ): List<CheckpointResponseDto>
 
-    @POST("api/complexes/{complexId}/patrol-points")
+    @GET(PatrolApiPaths.POINT)
+    suspend fun getPoint(
+        @Path("complexId") complexId: String,
+        @Path("checkpointId") checkpointId: String
+    ): CheckpointResponseDto
+
+    @POST(PatrolApiPaths.POINTS)
     suspend fun createPoint(
         @Path("complexId") complexId: String,
-        @Body request: PatrolPointRequestDto
-    ): PatrolPointResponseDto
+        @Body request: CreateCheckpointRequestDto
+    ): CheckpointResponseDto
 
-    @PUT("api/complexes/{complexId}/patrol-points/{pointId}")
+    @PATCH(PatrolApiPaths.POINT)
     suspend fun updatePoint(
         @Path("complexId") complexId: String,
-        @Path("pointId") pointId: String,
-        @Body request: PatrolPointRequestDto
-    ): PatrolPointResponseDto
+        @Path("checkpointId") checkpointId: String,
+        @Body request: JsonObject
+    ): CheckpointResponseDto
 
-    @DELETE("api/complexes/{complexId}/patrol-points/{pointId}")
-    suspend fun deletePoint(
+    @POST(PatrolApiPaths.TAG_ASSIGNMENTS)
+    suspend fun replaceTag(
         @Path("complexId") complexId: String,
-        @Path("pointId") pointId: String
-    ): Response<Unit>
+        @Path("checkpointId") checkpointId: String,
+        @Body request: ReplaceCheckpointTagRequestDto
+    ): CheckpointResponseDto
 
-    @PUT("api/complexes/{complexId}/patrol-points/order")
-    suspend fun updateOrder(
-        @Path("complexId") complexId: String,
-        @Body request: PatrolRouteOrderDto
-    ): Response<Unit>
+    // ── Rutas programadas (sin backend todavía) ─────────────────────────
 
-    // ── Rutas programadas (contrato propuesto) ──────────────────────────
-
-    @GET("api/complexes/{complexId}/patrol-routes")
+    @GET(PatrolApiPaths.ROUTES)
     suspend fun getRoutes(
         @Path("complexId") complexId: String
     ): List<PatrolRouteDto>
 
-    @POST("api/complexes/{complexId}/patrol-routes")
+    @POST(PatrolApiPaths.ROUTES)
     suspend fun createRoute(
         @Path("complexId") complexId: String,
         @Body request: PatrolRouteRequestDto
     ): PatrolRouteDto
 
-    @PUT("api/complexes/{complexId}/patrol-routes/{routeId}")
+    @PUT(PatrolApiPaths.ROUTE)
     suspend fun updateRoute(
         @Path("complexId") complexId: String,
         @Path("routeId") routeId: String,
         @Body request: PatrolRouteRequestDto
     ): PatrolRouteDto
 
-    @DELETE("api/complexes/{complexId}/patrol-routes/{routeId}")
+    @DELETE(PatrolApiPaths.ROUTE)
     suspend fun deleteRoute(
         @Path("complexId") complexId: String,
         @Path("routeId") routeId: String

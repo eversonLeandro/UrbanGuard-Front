@@ -10,6 +10,7 @@ data class PatrolPointFormUiState(
     val step: Int = 0,
     val name: String = "",
     val location: String = "",
+    val description: String = "",
     val nfcTagId: String = "",
     val isActive: Boolean = true,
     val nfcState: NfcReadState = NfcReadState.IDLE,

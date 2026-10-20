@@ -7,7 +7,6 @@ import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
 import co.edu.unicauca.urbanguard.domain.model.PatrolRouteValidation
 import co.edu.unicauca.urbanguard.domain.model.PatrolSchedule
-import co.edu.unicauca.urbanguard.domain.model.sortedByPointOrder
 import co.edu.unicauca.urbanguard.domain.model.validatePatrolRoute
 import co.edu.unicauca.urbanguard.domain.model.weekDays
 import co.edu.unicauca.urbanguard.domain.model.withAddedSchedule
@@ -83,7 +82,7 @@ class PatrolRouteFormViewModel @Inject constructor(
             getPatrolPointsUseCase(complexId).fold(
                 onSuccess = { points ->
                     val options = points.map {
-                        PatrolPointOption(id = it.id, name = it.name, order = it.order)
+                        PatrolPointOption(id = it.id, name = it.name)
                     }
                     _uiState.value = _uiState.value.copy(availablePointIds = options)
                     loadRoute(complexId, routeId)
@@ -108,11 +107,18 @@ class PatrolRouteFormViewModel @Inject constructor(
         } else {
             current.remove(pointId)
         }
-        val orderById = _uiState.value.availablePointIds.associate { it.id to it.order }
-        _uiState.value = _uiState.value.copy(
-            selectedIds = current.sortedByPointOrder(orderById),
-            formError = null
-        )
+        _uiState.value = _uiState.value.copy(selectedIds = current, formError = null)
+    }
+
+    /** Mueve una parada dentro de [PatrolRouteFormUiState.selectedIds]. */
+    fun onMovePoint(pointId: String, delta: Int) {
+        val current = _uiState.value.selectedIds.toMutableList()
+        val from = current.indexOf(pointId)
+        val to = from + delta
+        if (from == -1 || to !in current.indices) return
+        val moved = current.removeAt(from)
+        current.add(to, moved)
+        _uiState.value = _uiState.value.copy(selectedIds = current, formError = null)
     }
 
     fun onScheduleEvent(event: RouteScheduleEvent) {

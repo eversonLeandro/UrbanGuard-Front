@@ -3,7 +3,7 @@ package co.edu.unicauca.urbanguard.ui.features.guard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
-import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolPointsUseCase
+import co.edu.unicauca.urbanguard.domain.model.normalizeNfcUid
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.RoundActions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -27,7 +27,6 @@ sealed interface RoundActiveEvent {
 @HiltViewModel
 class RoundActiveViewModel @Inject constructor(
     private val roundActions: RoundActions,
-    private val getPatrolPointsUseCase: GetPatrolPointsUseCase,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -50,7 +49,7 @@ class RoundActiveViewModel @Inject constructor(
 
     fun onTagScanned(tagId: String) {
         val complexId = sessionManager.getActiveConjunto()?.conjuntoId ?: return
-        val normalized = tagId.trim().uppercase()
+        val normalized = normalizeNfcUid(tagId)
         if (normalized.isEmpty() || isDuplicateRead(normalized)) return
         viewModelScope.launch {
             roundActions.registerScan(complexId, normalized).fold(
@@ -114,8 +113,7 @@ class RoundActiveViewModel @Inject constructor(
                 eventChannel.send(RoundActiveEvent.NoActiveRound)
                 return@launch
             }
-            val points = getPatrolPointsUseCase(complexId).getOrDefault(emptyList())
-            _uiState.value = RoundActiveUiState(round = round, points = points)
+            _uiState.value = RoundActiveUiState(round = round, points = round.points)
         }
     }
 
