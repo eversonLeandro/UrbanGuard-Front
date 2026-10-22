@@ -1,28 +1,23 @@
 package co.edu.unicauca.urbanguard.ui.features.guard
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.repository.PatrolRoundRepository
-import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolPointsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
  * Entrega la última ronda cerrada para el resumen.
  *
  * Viaja por memoria del repositorio (igual que el pase generado), así la
- * pantalla no necesita argumentos de navegación.
+ * pantalla no necesita argumentos de navegación. Los nombres salen del
+ * snapshot de puntos de la propia ronda.
  */
 @HiltViewModel
 class RoundSummaryViewModel @Inject constructor(
-    private val repository: PatrolRoundRepository,
-    private val getPatrolPointsUseCase: GetPatrolPointsUseCase,
-    private val sessionManager: SessionManager
+    private val repository: PatrolRoundRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RoundSummaryUiState())
@@ -30,23 +25,16 @@ class RoundSummaryViewModel @Inject constructor(
 
     init {
         val round = repository.lastFinishedRound()
-        if (round == null) {
-            _uiState.value = RoundSummaryUiState(
+        _uiState.value = if (round == null) {
+            RoundSummaryUiState(
                 errorMessage = "No hay una ronda terminada para mostrar."
             )
         } else {
-            _uiState.value = RoundSummaryUiState(round = round)
-            val complexId = sessionManager.getActiveConjunto()?.conjuntoId
-            if (complexId != null) {
-                viewModelScope.launch {
-                    val points = getPatrolPointsUseCase(complexId).getOrDefault(emptyList())
-                    _uiState.value = RoundSummaryUiState(
-                        round = round,
-                        pointNames = points.associate { it.id to it.name },
-                        pointOrder = points.map { it.id }
-                    )
-                }
-            }
+            RoundSummaryUiState(
+                round = round,
+                pointNames = round.points.associate { it.id to it.name },
+                pointOrder = round.points.map { it.id }
+            )
         }
     }
 }

@@ -6,6 +6,8 @@ import co.edu.unicauca.urbanguard.core.common.PatrolConstants
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
 import co.edu.unicauca.urbanguard.domain.model.PatrolPointValidation
+import co.edu.unicauca.urbanguard.domain.model.isValidNfcUid
+import co.edu.unicauca.urbanguard.domain.model.normalizeNfcUid
 import co.edu.unicauca.urbanguard.domain.model.validatePatrolPoint
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolPointsUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.SavePatrolPointUseCase
@@ -39,7 +41,6 @@ class PatrolPointFormViewModel @Inject constructor(
     val events: Flow<PatrolPointFormEvent> = eventChannel.receiveAsFlow()
 
     private var pointId: String = ""
-    private var order: Int = 0
 
     fun load(pointId: String?) {
         this.pointId = pointId.orEmpty()
@@ -59,17 +60,24 @@ class PatrolPointFormViewModel @Inject constructor(
         }
     }
 
-    fun onNameChange(name: String) {
-        _uiState.value = _uiState.value.copy(name = name, nameError = null, errorMessage = null)
-    }
-
-    fun onLocationChange(location: String) {
-        _uiState.value = _uiState.value.copy(location = location, errorMessage = null)
+    fun onFieldChange(
+        name: String? = null,
+        location: String? = null,
+        description: String? = null
+    ) {
+        val state = _uiState.value
+        _uiState.value = state.copy(
+            name = name ?: state.name,
+            location = location ?: state.location,
+            description = description ?: state.description,
+            nameError = if (name != null) null else state.nameError,
+            errorMessage = null
+        )
     }
 
     fun onTagIdChange(tagId: String) {
         _uiState.value = _uiState.value.copy(
-            nfcTagId = tagId.trim().uppercase(),
+            nfcTagId = normalizeNfcUid(tagId),
             nfcState = NfcReadState.READ,
             tagError = null,
             errorMessage = null
@@ -106,6 +114,10 @@ class PatrolPointFormViewModel @Inject constructor(
                 _uiState.value = state.copy(tagError = PatrolConstants.MSG_TAG_REQUIRED)
                 return
             }
+            if (!isValidNfcUid(state.nfcTagId)) {
+                _uiState.value = state.copy(tagError = PatrolConstants.MSG_TAG_INVALID)
+                return
+            }
             _uiState.value = state.copy(step = 2, tagError = null)
         }
     }
@@ -129,6 +141,8 @@ class PatrolPointFormViewModel @Inject constructor(
                 _uiState.value = state.copy(nameError = PatrolConstants.MSG_NAME_TOO_LONG)
             PatrolPointValidation.TAG_REQUIRED ->
                 _uiState.value = state.copy(tagError = PatrolConstants.MSG_TAG_REQUIRED)
+            PatrolPointValidation.TAG_INVALID ->
+                _uiState.value = state.copy(tagError = PatrolConstants.MSG_TAG_INVALID)
             PatrolPointValidation.VALID -> {
                 _uiState.value = state.copy(isSaving = true, errorMessage = null)
                 viewModelScope.launch {
@@ -138,8 +152,8 @@ class PatrolPointFormViewModel @Inject constructor(
                             complexId = complexId,
                             name = state.name.trim(),
                             location = state.location.trim(),
-                            nfcTagId = state.nfcTagId.trim().uppercase(),
-                            order = order,
+                            description = state.description.trim(),
+                            nfcTagId = normalizeNfcUid(state.nfcTagId),
                             isActive = state.isActive
                         )
                     ).fold(
@@ -158,10 +172,10 @@ class PatrolPointFormViewModel @Inject constructor(
     }
 
     private fun applyPoint(point: PatrolControlPoint) {
-        order = point.order
         _uiState.value = PatrolPointFormUiState(
             name = point.name,
             location = point.location,
+            description = point.description,
             nfcTagId = point.nfcTagId,
             isActive = point.isActive,
             nfcState = NfcReadState.READ

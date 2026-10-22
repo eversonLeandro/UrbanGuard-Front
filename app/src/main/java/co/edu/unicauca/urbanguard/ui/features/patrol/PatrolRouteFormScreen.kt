@@ -122,7 +122,8 @@ fun PatrolRouteFormScreen(
             RoutePointsSection(
                 options = uiState.availablePointIds,
                 selectedIds = uiState.selectedIds,
-                onTogglePoint = viewModel::onTogglePoint
+                onTogglePoint = viewModel::onTogglePoint,
+                onMovePoint = viewModel::onMovePoint
             )
 
             Spacer(Modifier.height(20.dp))
@@ -193,7 +194,8 @@ private fun RouteNameField(
 private fun RoutePointsSection(
     options: List<PatrolPointOption>,
     selectedIds: List<String>,
-    onTogglePoint: (String, Boolean) -> Unit
+    onTogglePoint: (String, Boolean) -> Unit,
+    onMovePoint: (String, Int) -> Unit
 ) {
     RouteSectionTitle("Puntos de la ruta")
 
@@ -207,10 +209,11 @@ private fun RoutePointsSection(
         )
     }
     options.forEach { option ->
+        val position = selectedIds.indexOf(option.id).takeIf { it >= 0 }
         PointCheckRow(
             name = option.name,
-            order = option.order,
-            checked = selectedIds.contains(option.id),
+            position = position,
+            checked = position != null,
             onCheckedChange = { onTogglePoint(option.id, it) }
         )
     }
@@ -218,10 +221,8 @@ private fun RoutePointsSection(
     Spacer(Modifier.height(10.dp))
 
     SelectedRouteStrip(
-        names = options
-            .filter { selectedIds.contains(it.id) }
-            .sortedBy { it.order }
-            .map { it.name }
+        points = selectedIds.mapNotNull { id -> options.firstOrNull { it.id == id } },
+        onMove = onMovePoint
     )
 }
 
@@ -331,7 +332,7 @@ private fun RouteSectionTitle(text: String) {
 @Composable
 private fun PointCheckRow(
     name: String,
-    order: Int,
+    position: Int?,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
@@ -345,7 +346,7 @@ private fun PointCheckRow(
             colors = CheckboxDefaults.colors(checkedColor = UgEmerald)
         )
         Text(
-            text = "${order + 1}. $name",
+            text = position?.let { "${it + 1}. $name" } ?: name,
             fontSize = 14.sp,
             color = UgNavy,
             modifier = Modifier.weight(1f)

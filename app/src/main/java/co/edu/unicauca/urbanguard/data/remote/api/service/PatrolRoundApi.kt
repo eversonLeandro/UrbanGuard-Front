@@ -14,31 +14,31 @@ import retrofit2.http.Path
 /**
  * Rondas de patrullaje del guardia (UG-41 / UG-95).
  *
- * Contrato propuesto para el backend. Mientras
- * [PatrolConstants.PATROL_BACKEND_ENABLED] esté apagado el repositorio no
+ * El backend de rondas todavía no existe. Mientras
+ * [PatrolConstants.PATROL_ROUNDS_REMOTE] esté apagado el repositorio no
  * invoca estos métodos y trabaja contra el almacén local.
  */
 interface PatrolRoundApi {
 
-    @GET("api/complexes/{complexId}/patrol-rounds")
+    @GET(PatrolApiPaths.ROUNDS)
     suspend fun getRounds(
         @Path("complexId") complexId: String
     ): List<PatrolRoundDto>
 
-    @POST("api/complexes/{complexId}/patrol-rounds")
+    @POST(PatrolApiPaths.ROUNDS)
     suspend fun startRound(
         @Path("complexId") complexId: String,
         @Body request: StartRoundRequestDto
     ): PatrolRoundDto
 
-    @POST("api/complexes/{complexId}/patrol-rounds/{roundId}/scans")
+    @POST(PatrolApiPaths.ROUND_SCANS)
     suspend fun registerScan(
         @Path("complexId") complexId: String,
         @Path("roundId") roundId: String,
         @Body request: RegisterScanRequestDto
     ): Response<Unit>
 
-    @PUT("api/complexes/{complexId}/patrol-rounds/{roundId}/finish")
+    @PUT(PatrolApiPaths.ROUND_FINISH)
     suspend fun finishRound(
         @Path("complexId") complexId: String,
         @Path("roundId") roundId: String

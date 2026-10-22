@@ -129,8 +129,10 @@ fun PatrolPointFormScreen(
                     name = uiState.name,
                     nameError = uiState.nameError,
                     location = uiState.location,
-                    onNameChange = viewModel::onNameChange,
-                    onLocationChange = viewModel::onLocationChange
+                    description = uiState.description,
+                    onNameChange = { viewModel.onFieldChange(name = it) },
+                    onLocationChange = { viewModel.onFieldChange(location = it) },
+                    onDescriptionChange = { viewModel.onFieldChange(description = it) }
                 )
                 1 -> NfcStep(
                     nfcState = uiState.nfcState,
@@ -143,6 +145,7 @@ fun PatrolPointFormScreen(
                 else -> ReviewStep(
                     name = uiState.name,
                     location = uiState.location,
+                    description = uiState.description,
                     tagId = uiState.nfcTagId,
                     isActive = uiState.isActive,
                     onActiveChange = viewModel::onActiveChange
@@ -223,8 +226,10 @@ private fun DatosStep(
     name: String,
     nameError: String?,
     location: String,
+    description: String,
     onNameChange: (String) -> Unit,
-    onLocationChange: (String) -> Unit
+    onLocationChange: (String) -> Unit,
+    onDescriptionChange: (String) -> Unit
 ) {
     OutlinedTextField(
         value = name,
@@ -252,6 +257,25 @@ private fun DatosStep(
         label = { Text("Ubicación (opcional)") },
         placeholder = { Text("Torre 2, piso 1") },
         singleLine = true,
+        shape = RoundedCornerShape(16.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White,
+            focusedBorderColor = UgNavy,
+            unfocusedBorderColor = UgBorder
+        ),
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(Modifier.height(12.dp))
+
+    OutlinedTextField(
+        value = description,
+        onValueChange = onDescriptionChange,
+        label = { Text("Descripción (opcional)") },
+        placeholder = { Text("Entrada de vehículos") },
+        minLines = 2,
+        maxLines = 3,
         shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = Color.White,
@@ -304,6 +328,7 @@ private fun NfcStep(
 private fun ReviewStep(
     name: String,
     location: String,
+    description: String,
     tagId: String,
     isActive: Boolean,
     onActiveChange: (Boolean) -> Unit
@@ -330,6 +355,10 @@ private fun ReviewStep(
         if (location.isNotBlank()) {
             Spacer(Modifier.height(2.dp))
             Text(text = location, fontSize = 13.sp, color = UgTextSecondary)
+        }
+        if (description.isNotBlank()) {
+            Spacer(Modifier.height(4.dp))
+            Text(text = description, fontSize = 12.5.sp, color = UgTextSecondary)
         }
         Spacer(Modifier.height(8.dp))
         Text(

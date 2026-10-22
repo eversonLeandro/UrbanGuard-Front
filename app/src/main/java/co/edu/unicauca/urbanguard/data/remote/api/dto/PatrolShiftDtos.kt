@@ -12,7 +12,7 @@ package co.edu.unicauca.urbanguard.data.remote.api.dto
  */
 
 /**
- * Turno del listado: `GET api/complexes/{complexId}/patrol-shifts`.
+ * Turno del listado: `GET api/security/complexes/{complexId}/patrol-shifts`.
  *
  * [goalMet] es null mientras el turno está pendiente. El orden de la lista es
  * el que entrega el backend.
@@ -30,7 +30,7 @@ data class PatrolShiftSummaryDto(
 
 /**
  * Detalle de un turno:
- * `GET api/complexes/{complexId}/patrol-shifts/detail?shiftType&date`.
+ * `GET api/security/complexes/{complexId}/patrol-shifts/detail?shiftType&date`.
  *
  * No repite `shiftType` ni `date`: ambos ya viajan en la petición.
  */
@@ -71,7 +71,7 @@ data class PatrolGuardRefDto(
 
 /**
  * Resumen de un vigilante:
- * `GET api/complexes/{complexId}/patrol-guards/{guardId}/summary?from&to`.
+ * `GET api/security/complexes/{complexId}/patrol-guards/{guardId}/summary?from&to`.
  */
 data class PatrolGuardSummaryDto(
     val guardName: String? = null,

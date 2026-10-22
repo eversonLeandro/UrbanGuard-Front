@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,13 +13,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -35,23 +31,32 @@ import androidx.compose.ui.unit.sp
 import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
 import co.edu.unicauca.urbanguard.ui.theme.UgBorderSoft
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
-import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
-/**
- * Fila de la ruta: número de parada con línea de recorrido, tarjeta con los
- * datos del punto y acciones (subir, bajar, activar, eliminar).
- */
+/** Tarjeta de un checkpoint con su tag y el interruptor de activo. */
 @Composable
 fun PatrolPointListItem(
     point: PatrolControlPoint,
-    position: Int,
-    total: Int,
     actions: PatrolPointActions
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
-        OrderRail(number = position + 1, dimmed = !point.isActive)
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .background(
+                    if (point.isActive) UgNavy else UgTextSecondary.copy(alpha = 0.3f),
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Nfc,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(19.dp)
+            )
+        }
 
         Spacer(Modifier.width(12.dp))
 
@@ -62,78 +67,74 @@ fun PatrolPointListItem(
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             modifier = Modifier.weight(1f)
         ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = point.name,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = UgNavy,
-                        modifier = Modifier.weight(1f)
-                    )
-                    PointActiveBadge(isActive = point.isActive)
-                }
-
-                if (point.location.isNotBlank()) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = point.location,
-                        fontSize = 12.5.sp,
-                        color = UgTextSecondary
-                    )
-                }
-
-                Spacer(Modifier.height(4.dp))
-
-                Text(
-                    text = "Tag ${point.nfcTagId}",
-                    fontSize = 11.5.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = UgTextSecondary,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(UgBorderSoft)
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                ListItemActions(
-                    canMoveUp = position > 0,
-                    canMoveDown = position < total - 1,
-                    isActive = point.isActive,
-                    actions = actions
-                )
-            }
+            PointCardBody(point = point, actions = actions)
         }
     }
 }
 
 @Composable
-private fun OrderRail(number: Int, dimmed: Boolean) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .background(
-                    if (dimmed) UgTextSecondary.copy(alpha = 0.25f) else UgNavy,
-                    CircleShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
+private fun PointCardBody(
+    point: PatrolControlPoint,
+    actions: PatrolPointActions
+) {
+    Column(modifier = Modifier.padding(14.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "$number",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White
+                text = point.name,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = UgNavy,
+                modifier = Modifier.weight(1f)
+            )
+            PointActiveBadge(isActive = point.isActive)
+        }
+
+        if (point.location.isNotBlank()) {
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = point.location,
+                fontSize = 12.5.sp,
+                color = UgTextSecondary
             )
         }
-        Box(
+
+        if (point.description.isNotBlank()) {
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = point.description,
+                fontSize = 12.sp,
+                color = UgTextSecondary
+            )
+        }
+
+        Spacer(Modifier.height(4.dp))
+
+        Text(
+            text = "Tag ${point.nfcTagId}",
+            fontSize = 11.5.sp,
+            fontWeight = FontWeight.Medium,
+            color = UgTextSecondary,
             modifier = Modifier
-                .width(2.dp)
-                .fillMaxHeight()
+                .clip(RoundedCornerShape(8.dp))
                 .background(UgBorderSoft)
+                .padding(horizontal = 8.dp, vertical = 3.dp)
         )
+
+        Spacer(Modifier.height(8.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "Activo en rutas",
+                fontSize = 13.sp,
+                color = UgTextSecondary,
+                modifier = Modifier.weight(1f)
+            )
+            Switch(
+                checked = point.isActive,
+                onCheckedChange = actions.onToggleActive,
+                colors = SwitchDefaults.colors(checkedTrackColor = UgEmerald)
+            )
+        }
     }
 }
 
@@ -150,42 +151,4 @@ private fun PointActiveBadge(isActive: Boolean) {
             .background(color.copy(alpha = 0.12f))
             .padding(horizontal = 9.dp, vertical = 4.dp)
     )
-}
-
-@Composable
-private fun ListItemActions(
-    canMoveUp: Boolean,
-    canMoveDown: Boolean,
-    isActive: Boolean,
-    actions: PatrolPointActions
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = { actions.onMove(-1) }, enabled = canMoveUp) {
-            Icon(
-                imageVector = Icons.Default.ArrowUpward,
-                contentDescription = "Subir en la ruta",
-                tint = if (canMoveUp) UgNavy else UgTextSecondary.copy(alpha = 0.4f)
-            )
-        }
-        IconButton(onClick = { actions.onMove(1) }, enabled = canMoveDown) {
-            Icon(
-                imageVector = Icons.Default.ArrowDownward,
-                contentDescription = "Bajar en la ruta",
-                tint = if (canMoveDown) UgNavy else UgTextSecondary.copy(alpha = 0.4f)
-            )
-        }
-        Spacer(Modifier.weight(1f))
-        Switch(
-            checked = isActive,
-            onCheckedChange = actions.onToggleActive,
-            colors = SwitchDefaults.colors(checkedTrackColor = UgEmerald)
-        )
-        IconButton(onClick = actions.onDelete) {
-            Icon(
-                imageVector = Icons.Default.DeleteOutline,
-                contentDescription = "Eliminar punto",
-                tint = UgErrorText
-            )
-        }
-    }
 }

@@ -3,6 +3,7 @@ package co.edu.unicauca.urbanguard.data.repository
 import android.util.Log
 import co.edu.unicauca.urbanguard.core.common.PatrolConstants
 import co.edu.unicauca.urbanguard.core.network.NetworkErrorMapper
+import co.edu.unicauca.urbanguard.data.local.patrol.PatrolLocalMigration
 import co.edu.unicauca.urbanguard.data.local.patrol.PatrolRouteLocalStore
 import co.edu.unicauca.urbanguard.data.mapper.toDomain
 import co.edu.unicauca.urbanguard.data.mapper.toDto
@@ -17,14 +18,16 @@ import retrofit2.HttpException
 
 class PatrolRouteRepositoryImpl @Inject constructor(
     private val api: PatrolApi,
-    private val localStore: PatrolRouteLocalStore
+    private val localStore: PatrolRouteLocalStore,
+    private val migration: PatrolLocalMigration
 ) : PatrolRouteRepository {
 
     override suspend fun getRoutes(complexId: String): Result<List<PatrolRoute>> {
         if (complexId.isBlank()) {
             return Result.failure(Exception(PatrolConstants.MSG_NO_ACTIVE_COMPLEX))
         }
-        if (!PatrolConstants.PATROL_BACKEND_ENABLED) {
+        migration.migrate(complexId)
+        if (!PatrolConstants.PATROL_ROUTES_REMOTE) {
             return Result.success(localRoutes(complexId))
         }
         return try {
@@ -44,7 +47,7 @@ class PatrolRouteRepositoryImpl @Inject constructor(
             return Result.failure(Exception(PatrolConstants.MSG_NO_ACTIVE_COMPLEX))
         }
         return try {
-            val saved = if (!PatrolConstants.PATROL_BACKEND_ENABLED) {
+            val saved = if (!PatrolConstants.PATROL_ROUTES_REMOTE) {
                 saveLocal(route)
             } else if (route.id.isBlank()) {
                 api.createRoute(route.complexId, route.toRequestDto())
@@ -69,7 +72,7 @@ class PatrolRouteRepositoryImpl @Inject constructor(
             return Result.failure(Exception(PatrolConstants.MSG_NO_ACTIVE_COMPLEX))
         }
         return try {
-            if (PatrolConstants.PATROL_BACKEND_ENABLED) {
+            if (PatrolConstants.PATROL_ROUTES_REMOTE) {
                 api.deleteRoute(complexId, routeId)
                 refreshLocal(complexId)
             } else {

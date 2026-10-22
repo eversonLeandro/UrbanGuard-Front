@@ -1,49 +1,65 @@
 package co.edu.unicauca.urbanguard.data.mapper
 
-import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolPointRequestDto
-import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolPointResponseDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.CheckpointResponseDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.CreateCheckpointRequestDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.CurrentTagDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRouteDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRouteRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolScheduleDto
 import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
 import co.edu.unicauca.urbanguard.domain.model.PatrolSchedule
+import co.edu.unicauca.urbanguard.domain.model.normalizeNfcUid
+import com.google.gson.JsonObject
 import java.time.DayOfWeek
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Mapeo entre el modelo de dominio y los DTOs de puntos de control.
+ * Mapeo entre el modelo de dominio y los DTOs de checkpoints.
  *
- * Hoy lo usa el almacén local; cuando se encienda el backend, el mismo
- * mapeo sirve para `PatrolApi` sin cambios.
+ * El backend es la fuente de verdad de los puntos; esta capa también
+ * construye el PATCH parcial para no borrar campos que el formulario no tocó.
  */
-fun PatrolControlPoint.toRequestDto(): PatrolPointRequestDto = PatrolPointRequestDto(
-    name = name.trim(),
-    location = location.trim(),
-    nfcTagId = nfcTagId.trim().uppercase(),
-    order = order,
-    isActive = isActive
-)
-
-fun PatrolPointResponseDto.toDomain(complexId: String): PatrolControlPoint =
-    PatrolControlPoint(
-        id = id,
-        complexId = complexId,
-        name = name,
-        location = location,
-        nfcTagId = nfcTagId,
-        order = order,
-        isActive = isActive
+fun PatrolControlPoint.toCreateDto(): CreateCheckpointRequestDto =
+    CreateCheckpointRequestDto(
+        name = name.trim(),
+        description = description.trim().takeIf { it.isNotEmpty() },
+        location = location.trim().takeIf { it.isNotEmpty() },
+        uid = normalizeNfcUid(nfcTagId)
     )
 
-fun PatrolControlPoint.toResponseDto(): PatrolPointResponseDto = PatrolPointResponseDto(
-    id = id,
+fun PatrolControlPoint.toPatchBody(current: PatrolControlPoint): JsonObject =
+    JsonObject().apply {
+        if (name.trim() != current.name) addProperty("name", name.trim())
+        if (description.trim() != current.description) {
+            addProperty("description", description.trim().takeIf { it.isNotEmpty() })
+        }
+        if (location.trim() != current.location) {
+            addProperty("location", location.trim().takeIf { it.isNotEmpty() })
+        }
+        if (isActive != current.isActive) addProperty("active", isActive)
+    }
+
+fun CheckpointResponseDto.toDomain(complexId: String): PatrolControlPoint =
+    PatrolControlPoint(
+        id = checkpointId,
+        complexId = complexId,
+        name = name,
+        location = location.orEmpty(),
+        description = description.orEmpty(),
+        nfcTagId = normalizeNfcUid(currentTag?.uid.orEmpty()),
+        isActive = active
+    )
+
+/** DTO equivalente para guardar la caché local con la misma forma del backend. */
+fun PatrolControlPoint.toResponseDto(): CheckpointResponseDto = CheckpointResponseDto(
+    checkpointId = id,
     name = name,
-    location = location,
-    nfcTagId = nfcTagId,
-    order = order,
-    isActive = isActive
+    description = description.takeIf { it.isNotBlank() },
+    location = location.takeIf { it.isNotBlank() },
+    active = isActive,
+    currentTag = CurrentTagDto(uid = normalizeNfcUid(nfcTagId))
 )
 
 private val scheduleTimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")

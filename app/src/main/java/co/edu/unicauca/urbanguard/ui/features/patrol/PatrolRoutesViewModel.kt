@@ -77,7 +77,7 @@ class PatrolRoutesViewModel @Inject constructor(
                 onSuccess = { onRefresh() },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: PatrolConstants.MSG_DELETE_ERROR
+                        errorMessage = error.message ?: PatrolConstants.MSG_DELETE_ROUTE_ERROR
                     )
                 }
             )

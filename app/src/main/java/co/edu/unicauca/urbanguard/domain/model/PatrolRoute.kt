@@ -108,6 +108,3 @@ fun List<PatrolSchedule>.withToggledDay(
     return toMutableList().also { it[index] = it[index].copy(days = days) }
 }
 
-/** Ordena ids de puntos según el orden de la ronda. */
-fun List<String>.sortedByPointOrder(orderById: Map<String, Int>): List<String> =
-    sortedBy { orderById[it] ?: Int.MAX_VALUE }

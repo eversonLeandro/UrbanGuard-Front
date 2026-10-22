@@ -1,46 +1,48 @@
 package co.edu.unicauca.urbanguard.data.remote.api.dto
 
 /**
- * Cuerpo para crear o actualizar un punto de control NFC.
+ * Cuerpo para crear un checkpoint NFC.
  *
- * POST `api/complexes/{complexId}/patrol-points` y
- * PUT `api/complexes/{complexId}/patrol-points/{pointId}` (contrato propuesto
- * para UG-93; hoy el flag [PATROL_BACKEND_ENABLED] está apagado y no se usa).
+ * POST `api/complexes/{complexId}/checkpoints`.
  */
-data class PatrolPointRequestDto(
+data class CreateCheckpointRequestDto(
     val name: String,
-    val location: String,
-    val nfcTagId: String,
-    val order: Int,
-    val isActive: Boolean
+    val description: String? = null,
+    val location: String? = null,
+    val uid: String
+)
+
+/** Cuerpo para reemplazar el tag activo de un checkpoint. */
+data class ReplaceCheckpointTagRequestDto(
+    val uid: String
+)
+
+/** Tag NFC vigente de un checkpoint. */
+data class CurrentTagDto(
+    val assignmentId: String = "",
+    val uid: String = "",
+    val assignedAt: String? = null
 )
 
 /**
- * Punto de control devuelto por el backend (contrato propuesto).
+ * Checkpoint devuelto por `security-service`.
  *
- * GET `api/complexes/{complexId}/patrol-points` → 200 OK con la lista.
+ * GET `api/complexes/{complexId}/checkpoints` → 200 con la lista,
+ * o `200 []` si el conjunto aún no tiene puntos.
  */
-data class PatrolPointResponseDto(
-    val id: String,
-    val name: String,
-    val location: String,
-    val nfcTagId: String,
-    val order: Int,
-    val isActive: Boolean
+data class CheckpointResponseDto(
+    val checkpointId: String = "",
+    val name: String = "",
+    val description: String? = null,
+    val location: String? = null,
+    val active: Boolean = true,
+    val currentTag: CurrentTagDto? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null
 )
 
 /**
- * Nuevo orden de la ruta tras reordenar.
- *
- * PUT `api/complexes/{complexId}/patrol-points/order`
- * Body: { "pointIds": ["uuid-1", "uuid-2", ...] } en el orden deseado.
- */
-data class PatrolRouteOrderDto(
-    val pointIds: List<String>
-)
-
-/**
- * Un horario de una ruta (contrato propuesto para UG-93).
+ * Un horario de una ruta (contrato futuro para UG-93).
  *
  * `time` en "HH:mm" (24h) y `days` con los días ISO 1-7 (lunes-domingo).
  */
@@ -50,9 +52,9 @@ data class PatrolScheduleDto(
 )
 
 /**
- * Ruta de patrullaje (contrato propuesto para UG-93).
+ * Ruta de patrullaje (contrato futuro para UG-93).
  *
- * GET `api/complexes/{complexId}/patrol-routes` → 200 OK con la lista.
+ * Mientras no exista el endpoint, el frontend la guarda en local.
  */
 data class PatrolRouteDto(
     val id: String,
@@ -62,12 +64,7 @@ data class PatrolRouteDto(
     val isActive: Boolean
 )
 
-/**
- * Cuerpo para crear o actualizar una ruta (contrato propuesto).
- *
- * POST `api/complexes/{complexId}/patrol-routes` y
- * PUT `api/complexes/{complexId}/patrol-routes/{routeId}`.
- */
+/** Cuerpo para crear o actualizar una ruta (contrato futuro). */
 data class PatrolRouteRequestDto(
     val name: String,
     val pointIds: List<String>,
