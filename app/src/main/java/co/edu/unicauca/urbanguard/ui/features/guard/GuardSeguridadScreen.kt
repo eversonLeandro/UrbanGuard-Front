@@ -27,10 +27,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.core.common.PatrolConstants
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
 import co.edu.unicauca.urbanguard.domain.model.availableFrom
+import co.edu.unicauca.urbanguard.domain.model.isFinished
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
@@ -100,52 +103,131 @@ fun GuardSeguridadScreen(
         )
 
         when {
-            uiState.isLoading -> LoadingRounds()
-            errorMessage != null && uiState.todayRoutes.isEmpty() ->
-                RoundsError(
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = UgEmerald)
+                }
+            }
+            errorMessage != null && uiState.todayRoutes.isEmpty() -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = errorMessage,
+                        fontSize = 14.sp,
+                        color = UgErrorText
+                    )
+                    Spacer(Modifier.height(20.dp))
+                    Button(
+                        onClick = viewModel::onRefresh,
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        Text("Reintentar", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    }
+                }
+            }
+            else -> GuardSeguridadContent(
+                uiState = uiState,
+                onDismissError = viewModel::onDismissError,
+                onContinueRound = viewModel::onContinueRound,
+                onStartRoute = viewModel::onStartRoute
+            )
+        }
+    }
+}
+
+@Composable
+private fun GuardSeguridadContent(
+    uiState: GuardSeguridadUiState,
+    onDismissError: () -> Unit,
+    onContinueRound: () -> Unit,
+    onStartRoute: (PatrolRoute) -> Unit
+) {
+    val errorMessage = uiState.errorMessage
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = 20.dp,
+            end = 20.dp,
+            top = 18.dp,
+            bottom = 28.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        if (errorMessage != null) {
+            item(key = "error-banner") {
+                ErrorBanner(
                     message = errorMessage,
-                    onRetryClick = viewModel::onRefresh
+                    onDismiss = onDismissError
                 )
-            else -> LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = 20.dp,
-                    end = 20.dp,
-                    top = 18.dp,
-                    bottom = 28.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                uiState.activeRound?.let { round ->
-                    item(key = "active") {
-                        ActiveRoundBanner(
-                            roundName = round.routeName,
-                            onContinue = viewModel::onContinueRound
-                        )
-                    }
-                }
+            }
+        }
 
-                item(key = "today-title") {
-                    SectionTitle(
-                        if (uiState.todayRoutes.size == 1) "Ronda de hoy" else "Rondas de hoy"
-                    )
-                }
+        uiState.activeRound?.let { round ->
+            item(key = "active") {
+                ActiveRoundBanner(
+                    roundName = round.routeName,
+                    onContinue = onContinueRound
+                )
+            }
+        }
 
-                item(key = "today-list") {
-                    TodayRoutesSection(
-                        routes = uiState.todayRoutes,
-                        onStart = viewModel::onStartRoute
-                    )
-                }
+        item(key = "today-title") {
+            SectionTitle(
+                if (uiState.todayRoutes.size == 1) "Ronda de hoy" else "Rondas de hoy"
+            )
+        }
 
-                if (uiState.recentRounds.isNotEmpty()) {
-                    item(key = "recent-title") {
-                        SectionTitle("Mis rondas")
-                    }
-                    items(uiState.recentRounds, key = { it.id }) { round ->
-                        RecentRoundRow(round = round)
-                    }
-                }
+        item(key = "today-list") {
+            TodayRoutesSection(
+                routes = uiState.todayRoutes,
+                hasActiveRound = uiState.activeRound?.let { !it.isFinished() } ?: false,
+                activeRouteId = uiState.activeRound?.takeIf { !it.isFinished() }?.routeId,
+                onStart = onStartRoute
+            )
+        }
+
+        if (uiState.recentRounds.isNotEmpty()) {
+            item(key = "recent-title") {
+                SectionTitle("Mis rondas")
+            }
+            items(uiState.recentRounds, key = { it.id }) { round ->
+                RecentRoundRow(round = round)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ErrorBanner(message: String, onDismiss: () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = UgErrorText.copy(alpha = 0.12f),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = message,
+                fontSize = 13.sp,
+                color = UgErrorText,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = onDismiss) {
+                Text("OK", color = UgErrorText, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -196,6 +278,8 @@ private fun ActiveRoundBanner(roundName: String, onContinue: () -> Unit) {
 @Composable
 private fun TodayRoutesSection(
     routes: List<PatrolRoute>,
+    hasActiveRound: Boolean,
+    activeRouteId: String?,
     onStart: (PatrolRoute) -> Unit
 ) {
     if (routes.isEmpty()) {
@@ -206,22 +290,45 @@ private fun TodayRoutesSection(
         )
         return
     }
+
+    // Actualiza la hora cada 5 segundos para desbloquear el botón automáticamente cuando abra la ventana
+    var nowTime by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf(LocalTime.now())
+    }
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(5000L)
+            nowTime = LocalTime.now()
+        }
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         routes.forEach { route ->
-            TodayRouteCard(route = route, onStart = { onStart(route) })
+            val blockedByOtherRound = hasActiveRound && route.id != activeRouteId
+            TodayRouteCard(
+                route = route,
+                nowTime = nowTime,
+                blockedByOtherRound = blockedByOtherRound,
+                onStart = { onStart(route) }
+            )
         }
     }
 }
 
 @Composable
-private fun TodayRouteCard(route: PatrolRoute, onStart: () -> Unit) {
+private fun TodayRouteCard(
+    route: PatrolRoute,
+    nowTime: LocalTime,
+    blockedByOtherRound: Boolean = false,
+    onStart: () -> Unit
+) {
     val summary = todayScheduleSummary(route)
     val availableFrom = route.availableFrom(
         LocalDate.now(),
-        PatrolConstants.ROUND_EARLY_START_MINUTES
+        PatrolConstants.ROUND_EARLY_START_MINUTES,
+        nowTime
     )
-    val enabled = availableFrom == null ||
-        !LocalTime.now().isBefore(availableFrom)
+    val enabled = !blockedByOtherRound && (availableFrom == null || !nowTime.isBefore(availableFrom))
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -272,7 +379,8 @@ private fun TodayRouteCard(route: PatrolRoute, onStart: () -> Unit) {
 
             RouteStartAction(
                 enabled = enabled,
-                availableFrom = availableFrom,
+                availableFrom = if (blockedByOtherRound) null else availableFrom,
+                blockedByOtherRound = blockedByOtherRound,
                 onStart = onStart
             )
         }
@@ -283,10 +391,19 @@ private fun TodayRouteCard(route: PatrolRoute, onStart: () -> Unit) {
 private fun RouteStartAction(
     enabled: Boolean,
     availableFrom: LocalTime?,
+    blockedByOtherRound: Boolean = false,
     onStart: () -> Unit
 ) {
     Column {
-        if (!enabled && availableFrom != null) {
+        if (!enabled && blockedByOtherRound) {
+            Text(
+                text = "Otra ronda está en progreso",
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = UgTextSecondary
+            )
+            Spacer(Modifier.height(8.dp))
+        } else if (!enabled && availableFrom != null) {
             Text(
                 text = "Disponible desde las " +
                     availableFrom.format(hourLabelFormat),
@@ -313,7 +430,11 @@ private fun RouteStartAction(
                 modifier = Modifier.size(22.dp)
             )
             Spacer(Modifier.width(8.dp))
-            Text("Iniciar ronda", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text(
+                if (blockedByOtherRound) "Ronda en progreso" else "Iniciar ronda",
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp
+            )
         }
     }
 }
@@ -333,40 +454,3 @@ private fun todayScheduleSummary(route: PatrolRoute): Pair<String, String> {
     return label to count
 }
 
-@Composable
-private fun LoadingRounds() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(color = UgEmerald)
-    }
-}
-
-@Composable
-private fun RoundsError(message: String, onRetryClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = message,
-            fontSize = 14.sp,
-            color = UgErrorText
-        )
-        Spacer(Modifier.height(20.dp))
-        Button(
-            onClick = onRetryClick,
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-        ) {
-            Text("Reintentar", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-        }
-    }
-}

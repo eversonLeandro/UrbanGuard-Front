@@ -24,10 +24,14 @@ class StartScheduledRoundUseCase @Inject constructor(
         now: LocalDateTime = LocalDateTime.now()
     ): PatrolRound {
         val zone = ZoneId.systemDefault()
-        // Los puntos primero: al cargarlos se migran las referencias viejas
-        // de las rutas locales. Después se relee la ruta ya migrada.
-        val pointsById = getPatrolPointsUseCase(complexId).getOrThrow().associateBy { it.id }
-        val routes = getPatrolRoutesUseCase(complexId).getOrThrow()
+        // En modo remoto, el backend ya conoce los puntos de la ocurrencia al iniciarla.
+        // Solo intentamos leer puntos si es local o como best-effort sin bloquear al guardia con getOrThrow().
+        val pointsById = if (!PatrolConstants.PATROL_ROUNDS_REMOTE) {
+            getPatrolPointsUseCase(complexId).getOrThrow().associateBy { it.id }
+        } else {
+            getPatrolPointsUseCase(complexId).getOrNull().orEmpty().associateBy { it.id }
+        }
+        val routes = getPatrolRoutesUseCase(complexId).getOrNull().orEmpty()
         val currentRoute = routes.firstOrNull { it.id == route.id } ?: route
         val occurrence = coveringOccurrence(
             currentRoute,
@@ -41,7 +45,8 @@ class StartScheduledRoundUseCase @Inject constructor(
             routeName = currentRoute.name,
             points = currentRoute.pointIds.mapNotNull(pointsById::get),
             scheduledAt = occurrence?.atZone(zone)?.toInstant(),
-            dueAt = due?.atZone(zone)?.toInstant()
+            dueAt = due?.atZone(zone)?.toInstant(),
+            occurrenceId = route.occurrenceId
         )
     }
 }

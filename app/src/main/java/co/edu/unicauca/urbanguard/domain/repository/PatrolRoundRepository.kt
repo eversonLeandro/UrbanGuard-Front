@@ -19,7 +19,8 @@ interface PatrolRoundRepository {
         routeName: String,
         points: List<PatrolControlPoint>,
         scheduledAt: Instant?,
-        dueAt: Instant?
+        dueAt: Instant?,
+        occurrenceId: String? = null
     ): PatrolRound
 
     /**

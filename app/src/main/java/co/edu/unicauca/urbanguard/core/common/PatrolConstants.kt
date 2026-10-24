@@ -18,9 +18,9 @@ object PatrolConstants {
      */
     const val PATROL_POINTS_REMOTE = true
 
-    /** Rutas y rondas todavía no tienen endpoint: siguen siendo locales. */
-    const val PATROL_ROUTES_REMOTE = false
-    const val PATROL_ROUNDS_REMOTE = false
+    /** Rutas y rondas conectadas directamente al backend remoto. */
+    const val PATROL_ROUTES_REMOTE = true
+    const val PATROL_ROUNDS_REMOTE = true
 
     /** El historial por turnos depende de un backend que aún no está disponible. */
     const val PATROL_HISTORY_REMOTE = false
@@ -29,7 +29,7 @@ object PatrolConstants {
      * La ronda puede iniciarse este tiempo antes de su horario (ventana de
      * apertura). Más temprano aparece "Disponible desde…".
      */
-    const val ROUND_EARLY_START_MINUTES = 30L
+    const val ROUND_EARLY_START_MINUTES = 10L
 
     // ── Mensajes de validación ───────────────────────────────────────────
     const val MSG_NAME_REQUIRED = "Ponle un nombre al punto (p. ej. Portería norte)."

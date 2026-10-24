@@ -61,10 +61,23 @@ fun PatrolRound.progressOf(totalPoints: Int): Float {
 /** Verdadero si la ronda ya se cerró. */
 fun PatrolRound.isFinished(): Boolean = finishedAt != null
 
-/** Verdadero si sigue abierta pero ya pasó su límite. */
-fun PatrolRound.isOverdue(now: Instant = Instant.now()): Boolean {
-    val due = dueAt ?: return false
-    return !isFinished() && now.isAfter(due)
+/**
+ * Verdadero si sigue abierta pero ya pasó su límite.
+ * Las rondas sin [dueAt] (rondas libres) se consideran vencidas
+ * después de [maxFreeHours] horas para evitar que bloqueen nuevas rondas.
+ */
+fun PatrolRound.isOverdue(
+    now: Instant = Instant.now(),
+    maxFreeHours: Long = 8L
+): Boolean {
+    if (isFinished()) return false
+    val due = dueAt
+    return if (due != null) {
+        now.isAfter(due)
+    } else {
+        // Ronda libre: vence automáticamente pasadas maxFreeHours desde el inicio
+        now.isAfter(startedAt.plusSeconds(maxFreeHours * 3600))
+    }
 }
 
 /** Semáforo de la ronda para el historial. */

@@ -77,24 +77,32 @@ fun PatrolScheduleDto.toDomain(): PatrolSchedule = PatrolSchedule(
 
 fun PatrolRoute.toRequestDto(): PatrolRouteRequestDto = PatrolRouteRequestDto(
     name = name.trim(),
-    pointIds = pointIds,
-    schedules = schedules.map { it.toDto() },
-    isActive = isActive
+    checkpointIds = pointIds,
+    description = null,
+    schedules = schedules.map { it.toDto() }
 )
 
-fun PatrolRouteDto.toDomain(complexId: String): PatrolRoute = PatrolRoute(
-    id = id,
-    complexId = complexId,
-    name = name,
-    pointIds = pointIds,
-    schedules = schedules.map { it.toDomain() },
-    isActive = isActive
-)
+fun PatrolRouteDto.toDomain(complexId: String): PatrolRoute {
+    val realId = routeId ?: id.orEmpty()
+    val extractedPointIds = checkpoints?.map { it.checkpointId } ?: pointIds.orEmpty()
+    val extractedSchedules = schedules.orEmpty().map { it.toDomain() }
+    val activeState = active ?: isActive ?: true
+    return PatrolRoute(
+        id = realId,
+        complexId = complexId,
+        name = name.orEmpty(),
+        pointIds = extractedPointIds,
+        schedules = extractedSchedules,
+        isActive = activeState
+    )
+}
 
 fun PatrolRoute.toDto(): PatrolRouteDto = PatrolRouteDto(
     id = id,
+    routeId = id,
     name = name,
     pointIds = pointIds,
     schedules = schedules.map { it.toDto() },
-    isActive = isActive
+    isActive = isActive,
+    active = isActive
 )

@@ -80,6 +80,9 @@ class PatrolRouteMapperTest {
             setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
             domain.schedules.first().days
         )
-        assertEquals(dto, domain.toDto())
+        val roundTripDto = domain.toDto()
+        assertEquals("r1", roundTripDto.id)
+        assertEquals("Nocturna", roundTripDto.name)
+        assertEquals(listOf("p1", "p2"), roundTripDto.pointIds)
     }
 }

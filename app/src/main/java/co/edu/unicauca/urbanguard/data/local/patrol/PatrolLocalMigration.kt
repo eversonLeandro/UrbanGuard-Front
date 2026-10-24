@@ -54,7 +54,7 @@ class PatrolLocalMigration @Inject constructor(
     ): List<PatrolRouteDto> {
         val routes = routeStore.load(complexId)
         val migrated = routes.map { route ->
-            route.copy(pointIds = route.pointIds.mapNotNull { remap(it, oldToNew, currentIds) })
+            route.copy(pointIds = route.pointIds.orEmpty().mapNotNull { remap(it, oldToNew, currentIds) })
         }
         if (migrated != routes) routeStore.save(complexId, migrated)
         return migrated
@@ -68,7 +68,7 @@ class PatrolLocalMigration @Inject constructor(
     ) {
         val currentIds = points.mapTo(mutableSetOf()) { it.checkpointId }
         val pointById = points.associateBy { it.checkpointId }
-        val routeById = routes.associateBy { it.id }
+        val routeById = routes.associateBy { it.id.orEmpty() }
         val rounds = roundStore.load(complexId)
         val migrated = rounds.map { round ->
             round.copy(
