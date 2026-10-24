@@ -65,21 +65,32 @@ class GuardSeguridadViewModel @Inject constructor(
 
     fun onStartRoute(route: PatrolRoute) {
         val complexId = activeComplexId() ?: return
-        // Si ya hay una ronda abierta de esta ruta, se continúa en vez de
-        // abrir otra: evita duplicados por doble toque.
-        _uiState.value.activeRound
-            ?.takeIf { !it.isFinished() && it.routeId == route.id }
-            ?.let {
+        val existing = _uiState.value.activeRound?.takeIf { !it.isFinished() }
+
+        // Si ya hay una ronda activa, redirigir a ella (sin importar la ruta).
+        // Regla: solo puede haber UNA ronda en curso simultáneamente.
+        if (existing != null) {
+            // Si es la misma ocurrencia (o misma ruta con dueAt), continuar.
+            if (existing.routeId == route.id && existing.dueAt != null) {
                 viewModelScope.launch {
                     eventChannel.send(GuardSeguridadEvent.GoToActiveRound)
                 }
-                return
+            } else {
+                // Otra ronda ya está en curso → mostrar aviso.
+                val activeName = existing.routeName
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Ya hay una ronda en progreso: \"$activeName\". " +
+                        "Termínala antes de iniciar otra."
+                )
             }
+            return
+        }
         val zone = ZoneId.systemDefault()
         val now = LocalDateTime.now(zone)
         val availableFrom = route.availableFrom(
             now.toLocalDate(),
-            PatrolConstants.ROUND_EARLY_START_MINUTES
+            PatrolConstants.ROUND_EARLY_START_MINUTES,
+            now.toLocalTime()
         )
         if (availableFrom != null && now.toLocalTime().isBefore(availableFrom)) {
             _uiState.value = _uiState.value.copy(
@@ -110,6 +121,10 @@ class GuardSeguridadViewModel @Inject constructor(
      */
     private suspend fun openRound(complexId: String, route: PatrolRoute) {
         startScheduledRoundUseCase(complexId, route)
+    }
+
+    fun onDismissError() {
+        _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
     fun onContinueRound() {

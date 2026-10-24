@@ -56,18 +56,27 @@ data class PatrolScheduleDto(
  *
  * Mientras no exista el endpoint, el frontend la guarda en local.
  */
-data class PatrolRouteDto(
-    val id: String,
-    val name: String,
-    val pointIds: List<String>,
-    val schedules: List<PatrolScheduleDto>,
-    val isActive: Boolean
+data class RouteCheckpointItemDto(
+    val checkpointId: String,
+    val position: Int,
+    val name: String
 )
 
-/** Cuerpo para crear o actualizar una ruta (contrato futuro). */
+data class PatrolRouteDto(
+    val routeId: String? = null,
+    val id: String? = null,
+    val name: String? = null,
+    val pointIds: List<String>? = null,
+    val checkpoints: List<RouteCheckpointItemDto>? = null,
+    val schedules: List<PatrolScheduleDto>? = null,
+    val active: Boolean? = null,
+    val isActive: Boolean? = null
+)
+
+/** Cuerpo para crear o actualizar una ruta en el backend. */
 data class PatrolRouteRequestDto(
     val name: String,
-    val pointIds: List<String>,
-    val schedules: List<PatrolScheduleDto>,
-    val isActive: Boolean
+    val checkpointIds: List<String>,
+    val description: String? = null,
+    val schedules: List<PatrolScheduleDto>? = null
 )

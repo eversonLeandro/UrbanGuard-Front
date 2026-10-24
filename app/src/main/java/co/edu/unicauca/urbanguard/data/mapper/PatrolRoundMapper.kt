@@ -7,7 +7,9 @@ import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolScanDto
 import co.edu.unicauca.urbanguard.domain.model.IncompleteReason
 import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
 import co.edu.unicauca.urbanguard.domain.model.PatrolRound
+import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
 import co.edu.unicauca.urbanguard.domain.model.PatrolScan
+import co.edu.unicauca.urbanguard.domain.model.PatrolSchedule
 import co.edu.unicauca.urbanguard.domain.model.normalizeNfcUid
 import java.time.Instant
 
@@ -90,3 +92,61 @@ fun PatrolRoundDto.toDomain(complexId: String): PatrolRound = PatrolRound(
         runCatching { IncompleteReason.valueOf(it) }.getOrNull()
     }
 )
+
+fun co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolExecutionDto.toDomain(
+    complexId: String
+): PatrolRound = PatrolRound(
+    id = executionId,
+    complexId = complexId,
+    routeId = routeId,
+    routeName = routeName,
+    startedAt = runCatching { Instant.parse(startedAt) }.getOrDefault(Instant.now()),
+    finishedAt = completedAt?.let { runCatching { Instant.parse(it) }.getOrNull() },
+    scans = checkpoints.filter { it.scannedAt != null }.map { pt ->
+        PatrolScan(
+            pointId = pt.checkpointId,
+            tagId = "",
+            scannedAt = runCatching { Instant.parse(pt.scannedAt!!) }.getOrDefault(Instant.now()),
+            known = true
+        )
+    },
+    points = checkpoints.map { pt ->
+        PatrolControlPoint(
+            id = pt.checkpointId,
+            complexId = complexId,
+            name = pt.name,
+            location = "",
+            description = "",
+            nfcTagId = "",
+            isActive = true
+        )
+    },
+    scheduledAt = runCatching { Instant.parse(scheduledAt) }.getOrNull(),
+    dueAt = runCatching { Instant.parse(deadlineAt) }.getOrNull(),
+    incompleteReason = when (completionReason) {
+        "POINTS_MISSING" -> IncompleteReason.POINTS_MISSING
+        "TIME_OUT" -> IncompleteReason.TIME_OUT
+        else -> null
+    }
+)
+
+fun co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolOccurrenceDto.toRoute(
+    complexId: String
+): PatrolRoute {
+    val scheduledInstant = runCatching { Instant.parse(scheduledAt) }.getOrNull()
+    val localDateTime = scheduledInstant?.atZone(java.time.ZoneId.of("America/Bogota"))?.toLocalDateTime()
+        ?: java.time.LocalDateTime.now()
+    val schedule = PatrolSchedule(
+        time = localDateTime.toLocalTime(),
+        days = setOf(localDateTime.dayOfWeek)
+    )
+    return PatrolRoute(
+        id = routeId,
+        complexId = complexId,
+        name = routeName,
+        pointIds = List(pointsExpected) { "point-$it" },
+        schedules = listOf(schedule),
+        isActive = true,
+        occurrenceId = occurrenceId
+    )
+}

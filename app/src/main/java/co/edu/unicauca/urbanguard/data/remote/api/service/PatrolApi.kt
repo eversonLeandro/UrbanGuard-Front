@@ -76,6 +76,13 @@ interface PatrolApi {
         @Body request: PatrolRouteRequestDto
     ): PatrolRouteDto
 
+    @PATCH(PatrolApiPaths.ROUTE)
+    suspend fun patchRoute(
+        @Path("complexId") complexId: String,
+        @Path("routeId") routeId: String,
+        @Body request: JsonObject
+    ): PatrolRouteDto
+
     @DELETE(PatrolApiPaths.ROUTE)
     suspend fun deleteRoute(
         @Path("complexId") complexId: String,

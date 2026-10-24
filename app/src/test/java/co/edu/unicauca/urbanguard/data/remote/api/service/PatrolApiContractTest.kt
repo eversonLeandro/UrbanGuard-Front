@@ -74,7 +74,7 @@ class PatrolApiContractTest {
 
         assertTrue(routes.isEmpty())
         assertEquals(
-            "/api/security/complexes/complex-1/patrol-routes",
+            "/api/complexes/complex-1/patrol-routes",
             requestedPath.get()
         )
     }

@@ -69,14 +69,30 @@ fun coveringOccurrence(
 }
 
 /**
- * Desde qué hora de hoy se puede iniciar la ruta (primer horario menos la
- * ventana), o null si hoy no tiene horarios.
+ * Desde qué hora se puede iniciar la ronda:
+ * Busca la cita de hoy cuya ventana cubre la hora actual, o en su defecto
+ * la próxima cita del día menos [earlyMinutes].
+ * Retorna null si la ruta no tiene horarios hoy o si la ventana ya está abierta.
  */
 fun PatrolRoute.availableFrom(
     today: LocalDate,
-    earlyMinutes: Long
-): LocalTime? =
-    occurrenceDateTimes(this, today)
-        .minOrNull()
-        ?.toLocalTime()
-        ?.minusMinutes(earlyMinutes)
+    earlyMinutes: Long,
+    currentTime: LocalTime = LocalTime.now()
+): LocalTime? {
+    val times = occurrenceDateTimes(this, today).map { it.toLocalTime() }.sorted()
+    if (times.isEmpty()) return null
+
+    // Si ya estamos dentro de la ventana de alguna cita, no hay restricción previa (está disponible)
+    for (time in times) {
+        val windowStart = time.minusMinutes(earlyMinutes)
+        // Ventana abierta para esta cita
+        if (!currentTime.isBefore(windowStart) && currentTime.isBefore(time.plusHours(3))) {
+            return null // Disponible ahora mismo
+        }
+    }
+
+    // Si aún no abre ninguna, la siguiente cita más cercana en el futuro
+    val nextTime = times.firstOrNull { it.minusMinutes(earlyMinutes).isAfter(currentTime) }
+        ?: times.first()
+    return nextTime.minusMinutes(earlyMinutes)
+}

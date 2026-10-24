@@ -16,7 +16,8 @@ class StartRoundUseCase @Inject constructor(
         routeName: String,
         points: List<PatrolControlPoint>,
         scheduledAt: Instant?,
-        dueAt: Instant?
+        dueAt: Instant?,
+        occurrenceId: String? = null
     ): PatrolRound {
         return repository.startRound(
             complexId,
@@ -24,7 +25,8 @@ class StartRoundUseCase @Inject constructor(
             routeName,
             points,
             scheduledAt,
-            dueAt
+            dueAt,
+            occurrenceId
         )
     }
 }

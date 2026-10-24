@@ -28,6 +28,13 @@ object PatrolProvideModule {
 
     @Provides
     @Singleton
+    fun providePatrolExecutionApi(
+        retrofit: Retrofit
+    ): co.edu.unicauca.urbanguard.data.remote.api.service.PatrolExecutionApi =
+        retrofit.create(co.edu.unicauca.urbanguard.data.remote.api.service.PatrolExecutionApi::class.java)
+
+    @Provides
+    @Singleton
     fun providePatrolShiftApi(retrofit: Retrofit): PatrolShiftApi =
         retrofit.create(PatrolShiftApi::class.java)
 

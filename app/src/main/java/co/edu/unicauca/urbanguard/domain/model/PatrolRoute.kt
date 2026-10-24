@@ -16,7 +16,9 @@ data class PatrolRoute(
     val name: String,
     val pointIds: List<String>,
     val schedules: List<PatrolSchedule>,
-    val isActive: Boolean
+    val isActive: Boolean,
+    /** ID de la ocurrencia concreta en el backend (solo en modo remoto). */
+    val occurrenceId: String? = null
 )
 
 /** Un horario de la ruta: hora y días en que se camina. */
