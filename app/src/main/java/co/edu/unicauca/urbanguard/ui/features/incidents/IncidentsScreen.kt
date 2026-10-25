@@ -117,7 +117,6 @@ fun IncidentsScreen(
         ) {
             IncidentsBody(
                 uiState = uiState,
-                onAddClick = onAddClick,
                 onIncidentClick = onIncidentClick,
                 onRefresh = { viewModel.onRefresh(isAdmin) },
                 isAdmin = isAdmin
@@ -129,7 +128,6 @@ fun IncidentsScreen(
 @Composable
 private fun IncidentsBody(
     uiState: IncidentsUiState,
-    onAddClick: () -> Unit,
     onIncidentClick: (SecurityIncident) -> Unit,
     onRefresh: () -> Unit,
     isAdmin: Boolean

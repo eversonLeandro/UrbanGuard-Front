@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -97,7 +98,12 @@ fun IncidentFormScreen(
             onNavigateBack = onNavigateBack
         )
 
-        IncidentFormBody(state = uiState, takePhoto = takePhoto, viewModel = viewModel)
+        IncidentFormBody(
+            state = uiState,
+            takePhoto = takePhoto,
+            viewModel = viewModel,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -105,12 +111,14 @@ fun IncidentFormScreen(
 private fun IncidentFormBody(
     state: IncidentFormUiState,
     takePhoto: () -> Unit,
-    viewModel: IncidentFormViewModel
+    viewModel: IncidentFormViewModel,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
+            .fillMaxWidth()
             .verticalScroll(rememberScrollState())
+            .imePadding()
             .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 28.dp)
     ) {
             PhotoHero(
