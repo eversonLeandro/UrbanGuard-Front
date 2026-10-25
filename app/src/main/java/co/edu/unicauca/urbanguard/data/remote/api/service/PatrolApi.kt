@@ -7,7 +7,6 @@ import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRouteDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRouteRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.ReplaceCheckpointTagRequestDto
 import com.google.gson.JsonObject
-import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -83,5 +82,5 @@ interface PatrolApi {
     suspend fun deleteRoute(
         @Path("complexId") complexId: String,
         @Path("routeId") routeId: String
-    ): Response<Unit>
+    )
 }

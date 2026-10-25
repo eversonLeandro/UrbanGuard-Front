@@ -12,29 +12,11 @@ import co.edu.unicauca.urbanguard.data.remote.api.service.PatrolApi
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
 import co.edu.unicauca.urbanguard.domain.repository.PatrolRouteRepository
 import java.io.IOException
-import co.edu.unicauca.urbanguard.data.remote.api.dto.BatchOccurrenceEntryDto
-import co.edu.unicauca.urbanguard.data.remote.api.dto.CreatePatrolBatchRequestDto
-import co.edu.unicauca.urbanguard.data.remote.api.service.PatrolExecutionApi
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.temporal.TemporalAdjusters
-import java.util.UUID
 import javax.inject.Inject
 import retrofit2.HttpException
 
-class PatrolRouteScheduleSyncException(
-    val savedRoute: PatrolRoute,
-    cause: Throwable
-) : Exception(
-    "La ruta se guardó, pero no se pudieron programar sus rondas. " +
-        "Reintenta guardar para sincronizar la programación.",
-    cause
-)
-
 class PatrolRouteRepositoryImpl @Inject constructor(
-    private val api: PatrolApi,
-    private val executionApi: PatrolExecutionApi
+    private val api: PatrolApi
 ) : PatrolRouteRepository {
 
     override suspend fun getRoutes(complexId: String): Result<List<PatrolRoute>> {
@@ -58,26 +40,15 @@ class PatrolRouteRepositoryImpl @Inject constructor(
         }
         return try {
             val saved = if (route.id.isBlank()) {
-                val created = api.createRoute(route.complexId, route.toRequestDto())
-                    .toDomain(route.complexId)
-                if (created.isActive) {
-                    syncOccurrencesForSavedRoute(created, route.schedules)
-                }
-                created
+                api.createRoute(route.complexId, route.toRequestDto()).toDomain(route.complexId)
             } else {
-                val updated = api.updateRoute(
+                api.updateRoute(
                     route.complexId,
                     route.id,
                     route.toRequestDto()
                 ).toDomain(route.complexId)
-                if (updated.isActive) {
-                    syncOccurrencesForSavedRoute(updated, route.schedules)
-                }
-                updated
             }
             Result.success(saved)
-        } catch (e: PatrolRouteScheduleSyncException) {
-            Result.failure(e)
         } catch (e: HttpException) {
             Result.failure(Exception(NetworkErrorMapper.map(e), e))
         } catch (e: IOException) {
@@ -86,76 +57,12 @@ class PatrolRouteRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun syncOccurrencesForSavedRoute(
-        savedRoute: PatrolRoute,
-        schedules: List<co.edu.unicauca.urbanguard.domain.model.PatrolSchedule>
-    ) {
-        try {
-            syncOccurrencesForSchedules(savedRoute.complexId, savedRoute.id, schedules)
-        } catch (e: HttpException) {
-            throw PatrolRouteScheduleSyncException(savedRoute, e)
-        } catch (e: IOException) {
-            throw PatrolRouteScheduleSyncException(savedRoute, e)
-        }
-    }
-
-    /**
-     * Sincroniza cuatro semanas de ocurrencias en la zona horaria del backend.
-     */
-    private suspend fun syncOccurrencesForSchedules(
-        complexId: String,
-        routeId: String,
-        schedules: List<co.edu.unicauca.urbanguard.domain.model.PatrolSchedule>
-    ) {
-        val zone = ZoneId.of("America/Bogota")
-        val today = LocalDate.now(zone)
-        val now = java.time.OffsetDateTime.now(zone)
-        val currentMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-        val weeksToSchedule = (0L..3L).map(currentMonday::plusWeeks)
-
-        for (weekMonday in weeksToSchedule) {
-            val entries = mutableListOf<BatchOccurrenceEntryDto>()
-            for (schedule in schedules) {
-                for (day in schedule.days) {
-                    val daysToAdd = (day.value - DayOfWeek.MONDAY.value).toLong()
-                    val occurrenceDate = weekMonday.plusDays(daysToAdd)
-                    val offsetTime = java.time.OffsetDateTime.of(
-                        occurrenceDate,
-                        schedule.time,
-                        zone.rules.getOffset(java.time.Instant.now())
-                    )
-                    if (!offsetTime.isBefore(now)) {
-                        entries.add(
-                            BatchOccurrenceEntryDto(
-                                routeId = routeId,
-                                scheduledAt = offsetTime.toString()
-                            )
-                        )
-                    }
-                }
-            }
-            executionApi.createBatch(
-                complexId = complexId,
-                request = CreatePatrolBatchRequestDto(
-                    weekStartDate = weekMonday.toString(),
-                    occurrences = entries,
-                    routeIds = listOf(routeId)
-                )
-            )
-        }
-    }
-
     override suspend fun deleteRoute(complexId: String, routeId: String): Result<Unit> {
         if (complexId.isBlank()) {
             return Result.failure(Exception(PatrolConstants.MSG_NO_ACTIVE_COMPLEX))
         }
         return try {
-            val response = api.deleteRoute(complexId, routeId)
-            if (!response.isSuccessful) {
-                return Result.failure(
-                    Exception("No se pudo archivar la ruta (HTTP ${response.code()}).")
-                )
-            }
+            api.deleteRoute(complexId, routeId)
             Result.success(Unit)
         } catch (e: HttpException) {
             Result.failure(Exception(NetworkErrorMapper.map(e), e))
