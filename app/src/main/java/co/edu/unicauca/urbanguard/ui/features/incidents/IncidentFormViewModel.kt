@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.io.File
+import java.util.UUID
 import javax.inject.Inject
 
 /** Eventos de una sola entrega del formulario de novedad. */
@@ -38,8 +39,11 @@ class IncidentFormViewModel @Inject constructor(
 
     private val eventChannel = Channel<IncidentFormEvent>(Channel.BUFFERED)
     val events: Flow<IncidentFormEvent> = eventChannel.receiveAsFlow()
+    private var idempotencyKey: String = UUID.randomUUID().toString()
+    private var activeExecutionId: String? = null
 
-    fun load(preselectedPointId: String?) {
+    fun load(preselectedPointId: String?, executionId: String?) {
+        activeExecutionId = executionId?.takeIf(String::isNotBlank)
         val complexId = sessionManager.getActiveConjunto()?.conjuntoId ?: return
         viewModelScope.launch {
             getPatrolPointsUseCase(complexId).fold(
@@ -57,6 +61,7 @@ class IncidentFormViewModel @Inject constructor(
     }
 
     fun onCategoryChange(category: IncidentCategory) {
+        idempotencyKey = UUID.randomUUID().toString()
         _uiState.value = _uiState.value.copy(
             category = category,
             categoryError = null,
@@ -65,6 +70,7 @@ class IncidentFormViewModel @Inject constructor(
     }
 
     fun onDescriptionChange(description: String) {
+        idempotencyKey = UUID.randomUUID().toString()
         _uiState.value = _uiState.value.copy(
             description = description,
             descriptionError = null,
@@ -73,6 +79,8 @@ class IncidentFormViewModel @Inject constructor(
     }
 
     fun onPhotoCaptured(file: File) {
+        idempotencyKey = UUID.randomUUID().toString()
+        _uiState.value.photoPath?.takeIf { it != file.absolutePath }?.let { File(it).delete() }
         _uiState.value = _uiState.value.copy(photoPath = file.absolutePath)
     }
 
@@ -81,6 +89,7 @@ class IncidentFormViewModel @Inject constructor(
     }
 
     fun onPointChange(pointId: String?) {
+        idempotencyKey = UUID.randomUUID().toString()
         _uiState.value = _uiState.value.copy(pointId = pointId)
     }
 
@@ -91,7 +100,7 @@ class IncidentFormViewModel @Inject constructor(
             _uiState.value = state.copy(errorMessage = IncidentConstants.MSG_NO_ACTIVE_COMPLEX)
             return
         }
-        when (validateIncident(state.category, state.description)) {
+        when (validateIncident(state.category, state.description, state.photoPath)) {
             IncidentValidation.CATEGORY_REQUIRED ->
                 _uiState.value = state.copy(
                     categoryError = IncidentConstants.MSG_CATEGORY_REQUIRED
@@ -104,12 +113,16 @@ class IncidentFormViewModel @Inject constructor(
                 _uiState.value = state.copy(
                     descriptionError = IncidentConstants.MSG_DESCRIPTION_TOO_SHORT
                 )
+            IncidentValidation.PHOTO_REQUIRED ->
+                _uiState.value = state.copy(
+                    errorMessage = IncidentConstants.MSG_PHOTO_REQUIRED
+                )
             IncidentValidation.VALID -> save(state, complexId)
         }
     }
 
     private fun save(state: IncidentFormUiState, complexId: String) {
-        val point = state.availablePoints.firstOrNull { it.id == state.pointId }
+        val requestKey = idempotencyKey
         _uiState.value = state.copy(isSaving = true, errorMessage = null)
         viewModelScope.launch {
             reportIncidentUseCase(
@@ -117,10 +130,14 @@ class IncidentFormViewModel @Inject constructor(
                 category = state.category ?: IncidentCategory.OTHER,
                 description = state.description.trim(),
                 photoPath = state.photoPath,
-                pointId = point?.id,
-                pointName = point?.name
+                pointId = state.pointId,
+                executionId = activeExecutionId,
+                idempotencyKey = requestKey
             ).fold(
-                onSuccess = { eventChannel.send(IncidentFormEvent.Saved) },
+                onSuccess = {
+                    state.photoPath?.let { File(it).delete() }
+                    eventChannel.send(IncidentFormEvent.Saved)
+                },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
                         isSaving = false,
@@ -129,5 +146,11 @@ class IncidentFormViewModel @Inject constructor(
                 }
             )
         }
+
+    }
+
+    override fun onCleared() {
+        _uiState.value.photoPath?.let { File(it).delete() }
+        super.onCleared()
     }
 }

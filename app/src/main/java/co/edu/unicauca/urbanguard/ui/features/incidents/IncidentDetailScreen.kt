@@ -19,23 +19,27 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import co.edu.unicauca.urbanguard.domain.model.IncidentSyncState
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ImageRequest
 import co.edu.unicauca.urbanguard.domain.model.SecurityIncident
 import co.edu.unicauca.urbanguard.domain.model.label
-import co.edu.unicauca.urbanguard.ui.components.LocalPhotoImage
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.features.visitors.VisitorActionButton
-import co.edu.unicauca.urbanguard.ui.theme.UgAmber
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
@@ -52,10 +56,15 @@ private val detailDateFormat: DateTimeFormatter =
  */
 @Composable
 fun IncidentDetailScreen(
+    reportId: String,
     onBackClick: () -> Unit,
+    isAdmin: Boolean = false,
     viewModel: IncidentDetailViewModel = hiltViewModel()
 ) {
     val incident by viewModel.incident.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
+    LaunchedEffect(reportId) { viewModel.load(reportId) }
 
     Column(
         modifier = Modifier
@@ -68,16 +77,26 @@ fun IncidentDetailScreen(
         )
 
         val current = incident
-        if (current == null) {
+        if (isLoading) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                androidx.compose.material3.CircularProgressIndicator()
+            }
+        } else if (errorMessage != null) {
+            IncidentLoadError(errorMessage.orEmpty(), onBackClick)
+        } else if (current == null) {
             IncidentMissingContent(onBackClick = onBackClick)
         } else {
-            IncidentDetailContent(incident = current, onBackClick = onBackClick)
+            IncidentDetailContent(incident = current, onBackClick = onBackClick, isAdmin = isAdmin)
         }
     }
 }
 
 @Composable
-private fun IncidentDetailContent(incident: SecurityIncident, onBackClick: () -> Unit) {
+private fun IncidentDetailContent(
+    incident: SecurityIncident,
+    onBackClick: () -> Unit,
+    isAdmin: Boolean
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -91,17 +110,25 @@ private fun IncidentDetailContent(incident: SecurityIncident, onBackClick: () ->
                 .clip(RoundedCornerShape(20.dp)),
             contentAlignment = Alignment.Center
         ) {
-            LocalPhotoImage(
-                path = incident.photoPath,
-                size = 260.dp,
+            val context = LocalContext.current
+            val request = remember(incident.imageUrl) {
+                ImageRequest.Builder(context)
+                    .data(incident.imageUrl)
+                    .memoryCachePolicy(CachePolicy.DISABLED)
+                    .diskCachePolicy(CachePolicy.DISABLED)
+                    .build()
+            }
+            AsyncImage(
+                model = request,
                 contentDescription = "Foto de la novedad",
-                modifier = Modifier.fillMaxWidth()
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
             )
         }
 
         Spacer(Modifier.height(16.dp))
 
-        IncidentDetailBody(incident = incident)
+        IncidentDetailBody(incident = incident, isAdmin = isAdmin)
 
         Spacer(Modifier.height(24.dp))
 
@@ -110,7 +137,8 @@ private fun IncidentDetailContent(incident: SecurityIncident, onBackClick: () ->
 }
 
 @Composable
-private fun IncidentDetailBody(incident: SecurityIncident) {
+private fun IncidentDetailBody(incident: SecurityIncident, isAdmin: Boolean) {
+    val pointLabel = incident.pointName ?: incident.pointId?.let { "Punto ${it.take(8)}" }
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -124,20 +152,6 @@ private fun IncidentDetailBody(incident: SecurityIncident) {
                     .padding(horizontal = 10.dp, vertical = 5.dp)
             )
             Spacer(Modifier.width(8.dp))
-            Text(
-                text = if (incident.syncState == IncidentSyncState.SYNCED) {
-                    "ENVIADA"
-                } else {
-                    "PENDIENTE"
-                },
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (incident.syncState == IncidentSyncState.SYNCED) {
-                    UgEmerald
-                } else {
-                    UgAmber
-                }
-            )
         }
 
         Spacer(Modifier.height(10.dp))
@@ -148,7 +162,7 @@ private fun IncidentDetailBody(incident: SecurityIncident) {
             color = UgTextPrimary
         )
 
-        if (!incident.pointName.isNullOrBlank()) {
+        if (!pointLabel.isNullOrBlank()) {
             Spacer(Modifier.height(10.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
@@ -159,7 +173,7 @@ private fun IncidentDetailBody(incident: SecurityIncident) {
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = incident.pointName,
+                    text = pointLabel,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = UgNavy
@@ -174,6 +188,28 @@ private fun IncidentDetailBody(incident: SecurityIncident) {
             fontSize = 12.5.sp,
             color = UgTextSecondary
         )
+        if (isAdmin) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "Guardia: ${incident.guardId}",
+                fontSize = 12.5.sp,
+                color = UgTextSecondary
+            )
+        }
+    }
+
+}
+
+@Composable
+private fun IncidentLoadError(message: String, onBackClick: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(32.dp),
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = message, color = UgTextPrimary)
+        Spacer(Modifier.height(20.dp))
+        VisitorActionButton(text = "Volver", onClick = onBackClick)
     }
 }
 

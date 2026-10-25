@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,10 +43,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.core.common.IncidentConstants
-import co.edu.unicauca.urbanguard.domain.model.IncidentSyncState
 import co.edu.unicauca.urbanguard.domain.model.SecurityIncident
 import co.edu.unicauca.urbanguard.domain.model.label
-import co.edu.unicauca.urbanguard.ui.components.LocalPhotoImage
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.features.visitors.VisitorActionButton
 import co.edu.unicauca.urbanguard.ui.theme.UgAmber
@@ -63,14 +62,14 @@ private val incidentDateFormat: DateTimeFormatter =
     DateTimeFormatter.ofPattern("d MMM, HH:mm").withZone(ZoneId.systemDefault())
 
 /**
- * Bandeja de novedades del guardia: foto, categoría, hora relativa y estado
- * de envío. Solo muestra el FAB cuando ya hay novedades.
+ * Bandeja remota de novedades, compartida por guardia y administrador.
  */
 @Composable
 fun IncidentsScreen(
     onNavigateBack: () -> Unit,
     onAddClick: () -> Unit,
     onIncidentClick: (SecurityIncident) -> Unit,
+    isAdmin: Boolean = false,
     viewModel: IncidentsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -78,7 +77,7 @@ fun IncidentsScreen(
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) viewModel.onRefresh()
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.onRefresh(isAdmin)
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -87,12 +86,12 @@ fun IncidentsScreen(
     Scaffold(
         topBar = {
             UrbanGuardTopBar(
-                title = "Novedades",
+                title = if (isAdmin) "Novedades de vigilancia" else "Novedades",
                 onNavigateBack = onNavigateBack
             )
         },
         floatingActionButton = {
-            if (uiState.incidents.isNotEmpty()) {
+            if (!isAdmin) {
                 ExtendedFloatingActionButton(
                     onClick = onAddClick,
                     icon = {
@@ -118,12 +117,9 @@ fun IncidentsScreen(
         ) {
             IncidentsBody(
                 uiState = uiState,
-                onAddClick = onAddClick,
-                onIncidentClick = { incident ->
-                    viewModel.selectIncident(incident)
-                    onIncidentClick(incident)
-                },
-                onRefresh = viewModel::onRefresh
+                onIncidentClick = onIncidentClick,
+                onRefresh = { viewModel.onRefresh(isAdmin) },
+                isAdmin = isAdmin
             )
         }
     }
@@ -132,9 +128,9 @@ fun IncidentsScreen(
 @Composable
 private fun IncidentsBody(
     uiState: IncidentsUiState,
-    onAddClick: () -> Unit,
     onIncidentClick: (SecurityIncident) -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    isAdmin: Boolean
 ) {
     val errorMessage = uiState.errorMessage
     when {
@@ -143,7 +139,7 @@ private fun IncidentsBody(
             message = errorMessage,
             onRetryClick = onRefresh
         )
-        uiState.isEmpty -> IncidentsEmpty(onAddClick = onAddClick)
+        uiState.isEmpty -> IncidentsEmpty(isAdmin = isAdmin)
         else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
@@ -154,15 +150,11 @@ private fun IncidentsBody(
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (uiState.pendingCount > 0) {
-                        item(key = "pending") {
-                            PendingBanner(count = uiState.pendingCount)
-                        }
-                    }
                     items(uiState.incidents, key = { it.id }) { incident ->
                         Box(Modifier.animateItem()) {
                             IncidentCard(
                                 incident = incident,
+                                isAdmin = isAdmin,
                                 onClick = { onIncidentClick(incident) }
                             )
                         }
@@ -172,26 +164,7 @@ private fun IncidentsBody(
 }
 
 @Composable
-private fun PendingBanner(count: Int) {
-    Text(
-        text = if (count == 1) {
-            "1 novedad por enviar"
-        } else {
-            "$count novedades por enviar"
-        },
-        fontSize = 12.5.sp,
-        fontWeight = FontWeight.Bold,
-        color = UgAmber,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(UgAmber.copy(alpha = 0.12f))
-            .padding(horizontal = 14.dp, vertical = 10.dp)
-    )
-}
-
-@Composable
-private fun IncidentCard(incident: SecurityIncident, onClick: () -> Unit) {
+private fun IncidentCard(incident: SecurityIncident, isAdmin: Boolean, onClick: () -> Unit) {
     val color = categoryColor(incident.category)
     Card(
         onClick = onClick,
@@ -204,12 +177,15 @@ private fun IncidentCard(incident: SecurityIncident, onClick: () -> Unit) {
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            LocalPhotoImage(
-                path = incident.photoPath,
-                size = 64.dp,
-                contentDescription = null,
-                modifier = Modifier.clip(RoundedCornerShape(12.dp))
-            )
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(UgAmber.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Image, contentDescription = "Foto de la novedad", tint = UgAmber)
+            }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -227,7 +203,6 @@ private fun IncidentCard(incident: SecurityIncident, onClick: () -> Unit) {
                         color = color,
                         modifier = Modifier.weight(1f)
                     )
-                    SyncBadge(synced = incident.syncState == IncidentSyncState.SYNCED)
                 }
                 Spacer(Modifier.height(3.dp))
                 Text(
@@ -239,29 +214,16 @@ private fun IncidentCard(incident: SecurityIncident, onClick: () -> Unit) {
                 )
                 Spacer(Modifier.height(3.dp))
                 Text(
-                    text = incidentWhenLabel(incident),
+                    text = buildString {
+                        append(incidentWhenLabel(incident))
+                        if (isAdmin) append(" · Guardia ${incident.guardId.take(8)}")
+                    },
                     fontSize = 11.5.sp,
                     color = UgTextSecondary
                 )
             }
         }
     }
-}
-
-@Composable
-private fun SyncBadge(synced: Boolean) {
-    Text(
-        text = if (synced) "ENVIADA" else "PENDIENTE",
-        fontSize = 10.sp,
-        fontWeight = FontWeight.Bold,
-        color = if (synced) UgEmerald else UgAmber,
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(
-                (if (synced) UgEmerald else UgAmber).copy(alpha = 0.12f)
-            )
-            .padding(horizontal = 8.dp, vertical = 3.dp)
-    )
 }
 
 private fun incidentWhenLabel(incident: SecurityIncident): String {
@@ -272,11 +234,8 @@ private fun incidentWhenLabel(incident: SecurityIncident): String {
         minutes < 60 * 24 -> "Hace ${minutes / 60} h"
         else -> incidentDateFormat.format(incident.createdAt)
     }
-    return if (incident.pointName.isNullOrBlank()) {
-        relative
-    } else {
-        "$relative · ${incident.pointName}"
-    }
+    val point = incident.pointName ?: incident.pointId?.take(8)?.let { "Punto $it" }
+    return if (point.isNullOrBlank()) relative else "$relative · $point"
 }
 
 @Composable
@@ -290,7 +249,7 @@ private fun IncidentsLoading() {
 }
 
 @Composable
-private fun IncidentsEmpty(onAddClick: () -> Unit) {
+private fun IncidentsEmpty(isAdmin: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -299,7 +258,7 @@ private fun IncidentsEmpty(onAddClick: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = IncidentConstants.LIST_EMPTY_TITLE,
+            text = if (isAdmin) "No hay novedades en este periodo" else IncidentConstants.LIST_EMPTY_TITLE,
             fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
             color = UgTextPrimary,
@@ -307,13 +266,11 @@ private fun IncidentsEmpty(onAddClick: () -> Unit) {
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = IncidentConstants.LIST_EMPTY_SUBTITLE,
+            text = if (isAdmin) "Las novedades reportadas aparecerán aquí." else IncidentConstants.LIST_EMPTY_SUBTITLE,
             fontSize = 13.5.sp,
             color = UgTextSecondary,
             textAlign = TextAlign.Center
         )
-        Spacer(Modifier.height(24.dp))
-        VisitorActionButton(text = "Reportar novedad", onClick = onAddClick)
     }
 }
 

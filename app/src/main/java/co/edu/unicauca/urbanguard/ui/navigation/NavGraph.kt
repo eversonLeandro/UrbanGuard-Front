@@ -350,7 +350,32 @@ fun AppNavGraph(
                 },
                 onNavigateToPatrolRoutes = {
                     navController.navigate(Routes.PATROL_ROUTES)
+                },
+                onNavigateToIncidents = {
+                    navController.navigate(Routes.ADMIN_INCIDENTS)
                 }
+            )
+        }
+
+        composable(Routes.ADMIN_INCIDENTS) {
+            IncidentsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onAddClick = {},
+                isAdmin = true,
+                onIncidentClick = { incident ->
+                    navController.navigate("admin_incident_detail/${incident.id}")
+                }
+            )
+        }
+
+        composable(
+            route = Routes.ADMIN_INCIDENT_DETAIL,
+            arguments = listOf(navArgument("reportId") { type = NavType.StringType })
+        ) { entry ->
+            IncidentDetailScreen(
+                reportId = entry.arguments?.getString("reportId").orEmpty(),
+                isAdmin = true,
+                onBackClick = { navController.popBackStack() }
             )
         }
 
@@ -660,13 +685,10 @@ fun AppNavGraph(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onReportIncident = { pointId ->
+                onReportIncident = { executionId, pointId ->
                     navController.navigate(
-                        if (pointId == null) {
-                            "guard_incident_form"
-                        } else {
-                            "guard_incident_form?pointId=$pointId"
-                        }
+                        "guard_incident_form?pointId=${pointId.orEmpty()}" +
+                            "&executionId=${executionId.orEmpty()}"
                     )
                 }
             )
@@ -692,7 +714,7 @@ fun AppNavGraph(
                     navController.navigate("guard_incident_form")
                 },
                 onIncidentClick = {
-                    navController.navigate(Routes.GUARD_INCIDENT_DETAIL)
+                    navController.navigate("guard_incident_detail/${it.id}")
                 }
             )
         }
@@ -704,11 +726,17 @@ fun AppNavGraph(
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
+                },
+                navArgument("executionId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
                 }
             )
         ) { backStackEntry ->
             IncidentFormScreen(
                 pointId = backStackEntry.arguments?.getString("pointId"),
+                executionId = backStackEntry.arguments?.getString("executionId"),
                 onSaved = {
                     navController.navigate(Routes.GUARD_INCIDENTS) {
                         popUpTo(Routes.GUARD_INCIDENTS) { inclusive = true }
@@ -720,8 +748,12 @@ fun AppNavGraph(
             )
         }
 
-        composable(Routes.GUARD_INCIDENT_DETAIL) {
+        composable(
+            route = Routes.GUARD_INCIDENT_DETAIL,
+            arguments = listOf(navArgument("reportId") { type = NavType.StringType })
+        ) { entry ->
             IncidentDetailScreen(
+                reportId = entry.arguments?.getString("reportId").orEmpty(),
                 onBackClick = {
                     navController.popBackStack()
                 }

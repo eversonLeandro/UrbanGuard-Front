@@ -2,7 +2,6 @@ package co.edu.unicauca.urbanguard.data.mapper
 
 import co.edu.unicauca.urbanguard.data.remote.api.dto.IncidentResponseDto
 import co.edu.unicauca.urbanguard.domain.model.IncidentCategory
-import co.edu.unicauca.urbanguard.domain.model.IncidentSyncState
 import co.edu.unicauca.urbanguard.domain.model.IncidentValidation
 import co.edu.unicauca.urbanguard.domain.model.validateIncident
 import org.junit.Assert.assertEquals
@@ -17,7 +16,7 @@ class IncidentMapperTest {
     fun validate_blankDescription_isRequired() {
         assertEquals(
             IncidentValidation.DESCRIPTION_REQUIRED,
-            validateIncident(IncidentCategory.SECURITY, "  ")
+            validateIncident(IncidentCategory.SECURITY, "  ", null)
         )
     }
 
@@ -25,7 +24,7 @@ class IncidentMapperTest {
     fun validate_shortDescription_isTooShort() {
         assertEquals(
             IncidentValidation.DESCRIPTION_TOO_SHORT,
-            validateIncident(IncidentCategory.SECURITY, "Roto")
+            validateIncident(IncidentCategory.SECURITY, "Roto", null)
         )
     }
 
@@ -33,7 +32,7 @@ class IncidentMapperTest {
     fun validate_nullCategory_isRequired() {
         assertEquals(
             IncidentValidation.CATEGORY_REQUIRED,
-            validateIncident(null, "Puerta del sótano abierta toda la noche")
+            validateIncident(null, "Puerta del sótano abierta toda la noche", "photo.jpg")
         )
     }
 
@@ -41,7 +40,15 @@ class IncidentMapperTest {
     fun validate_ok_isValid() {
         assertEquals(
             IncidentValidation.VALID,
-            validateIncident(IncidentCategory.LIGHTING, "Luminaria fundida en torre 2")
+            validateIncident(IncidentCategory.LIGHTING, "Luminaria fundida en torre 2", "photo.jpg")
+        )
+    }
+
+    @Test
+    fun validate_photoRequired() {
+        assertEquals(
+            IncidentValidation.PHOTO_REQUIRED,
+            validateIncident(IncidentCategory.LIGHTING, "Luminaria fundida en torre 2", null)
         )
     }
 
@@ -53,24 +60,24 @@ class IncidentMapperTest {
     }
 
     @Test
-    fun responseDto_roundTripKeepsPhotoAndState() {
+    fun responseDto_mapsBackendReport() {
         val dto = IncidentResponseDto(
-            id = "n1",
+            reportId = "n1",
+            complexId = "c1",
+            guardId = "g1",
             category = "SECURITY",
             description = "Puerta abierta",
-            photoUrl = "https://x/foto.jpg",
-            pointId = "p1",
-            pointName = "Sótano",
-            createdAt = "2026-02-10T22:05:00Z",
-            synced = false
+            reportedAt = "2026-02-10T22:05:00Z",
+            checkpointId = "p1"
         )
 
-        val domain = dto.toDomain("c1")
+        val domain = dto.toDomain("https://x/foto.jpg")
 
         assertEquals("n1", domain.id)
+        assertEquals("c1", domain.complexId)
         assertEquals(IncidentCategory.SECURITY, domain.category)
-        assertEquals("https://x/foto.jpg", domain.photoPath)
-        assertEquals(IncidentSyncState.PENDING, domain.syncState)
-        assertEquals(dto, domain.toResponseDto())
+        assertEquals("https://x/foto.jpg", domain.imageUrl)
+        assertEquals("p1", domain.pointId)
+        assertEquals("g1", domain.guardId)
     }
 }

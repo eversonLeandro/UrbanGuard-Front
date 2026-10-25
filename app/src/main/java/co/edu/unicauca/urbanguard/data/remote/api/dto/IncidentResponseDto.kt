@@ -1,19 +1,25 @@
 package co.edu.unicauca.urbanguard.data.remote.api.dto
 
-/**
- * Novedad devuelta por el backend (contrato propuesto para UG-99).
- *
- * GET `api/complexes/{complexId}/incidents` → 200 OK con la lista.
- * `photoUrl` la sirve el backend cuando la foto ya subió; en local se usa
- * la ruta del archivo.
- */
 data class IncidentResponseDto(
-    val id: String,
+    val reportId: String,
+    val complexId: String,
+    val guardId: String,
     val category: String,
     val description: String,
-    val photoUrl: String? = null,
-    val pointId: String? = null,
-    val pointName: String? = null,
-    val createdAt: String,
-    val synced: Boolean = true
+    val reportedAt: String,
+    val executionId: String? = null,
+    val checkpointId: String? = null,
+    val hasImage: Boolean = true
+)
+
+data class IncidentImageAccessDto(
+    val url: String,
+    val expiresAt: String
+)
+
+data class CreateIncidentRequestDto(
+    val description: String,
+    val category: String,
+    val executionId: String? = null,
+    val checkpointId: String? = null
 )

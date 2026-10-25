@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Nfc
+import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
@@ -48,7 +49,8 @@ fun AdminSecurityMenuScreen(
     onNavigateToRegisterGuard: () -> Unit = {},
     onNavigateToPatrolHistory: () -> Unit = {},
     onNavigateToPatrolPoints: () -> Unit = {},
-    onNavigateToPatrolRoutes: () -> Unit = {}
+    onNavigateToPatrolRoutes: () -> Unit = {},
+    onNavigateToIncidents: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -61,7 +63,8 @@ fun AdminSecurityMenuScreen(
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .weight(1f)
+                .fillMaxWidth()
                 .padding(20.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -88,6 +91,13 @@ fun AdminSecurityMenuScreen(
                     onClick = onNavigateToPatrolHistory
                 )
             }
+
+            SecurityOptionCard(
+                title = "Novedades",
+                subtitle = "Consultar novedades reportadas por los guardias",
+                icon = Icons.Default.ReportProblem,
+                onClick = onNavigateToIncidents
+            )
 
             SecurityOptionCard(
                 title = "Puntos de control NFC",

@@ -8,9 +8,6 @@ object IncidentConstants {
     /** Mínimo de caracteres de la descripción. */
     const val MIN_DESCRIPTION_LENGTH = 10
 
-    /** Activa el envío real al backend de novedades. */
-    const val INCIDENTS_BACKEND_ENABLED = false
-
     // ── Mensajes ───────────────────────────────────────────────────────
     const val MSG_CATEGORY_REQUIRED = "Elige la categoría de la novedad."
     const val MSG_DESCRIPTION_REQUIRED = "Describe lo que está pasando."
@@ -20,6 +17,7 @@ object IncidentConstants {
     const val MSG_SAVE_ERROR = "No se pudo guardar la novedad. Intenta de nuevo."
     const val MSG_LIST_ERROR = "No se pudieron cargar las novedades."
     const val MSG_CAMERA_ERROR = "No se pudo abrir la cámara."
+    const val MSG_PHOTO_REQUIRED = "Toma una foto para poder reportar la novedad."
     const val LIST_EMPTY_TITLE = "Sin novedades reportadas"
     const val LIST_EMPTY_SUBTITLE =
         "Cuando veas algo raro en tu turno, repórtalo aquí con una foto."
