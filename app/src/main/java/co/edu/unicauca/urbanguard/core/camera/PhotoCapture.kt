@@ -28,9 +28,8 @@ private fun photoUri(context: Context, file: File): Uri =
 /**
  * Devuelve una acción para tomar foto con la app de cámara del sistema.
  *
- * La foto queda en caché propia y se entrega el archivo listo para guardar
- * su ruta en la novedad. Si no hay cámara disponible, avisa por [onError]
- * en vez de romper.
+ * La foto queda temporalmente en caché propia y se entrega al formulario
+ * para subirla al servidor. Si no hay cámara disponible, avisa por [onError].
  */
 @Composable
 // El catch amplio cubre lo que puede fallar al abrir la cámara del sistema
@@ -48,6 +47,8 @@ fun rememberPhotoCapture(
     ) { saved ->
         if (saved) {
             pending?.takeIf { it.exists() }?.let(onCaptured)
+        } else {
+            pending?.delete()
         }
         pending = null
     }

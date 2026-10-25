@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetIncidentsUseCase @Inject constructor(
     private val repository: IncidentRepository
 ) {
-    suspend operator fun invoke(complexId: String): Result<List<SecurityIncident>> {
-        return repository.getIncidents(complexId)
+    suspend operator fun invoke(complexId: String, isAdmin: Boolean): Result<List<SecurityIncident>> {
+        return repository.getIncidents(complexId, isAdmin)
     }
 }

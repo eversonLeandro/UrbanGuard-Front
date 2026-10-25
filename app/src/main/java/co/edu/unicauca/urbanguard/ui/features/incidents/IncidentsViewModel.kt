@@ -4,10 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.common.IncidentConstants
 import co.edu.unicauca.urbanguard.core.session.SessionManager
-import co.edu.unicauca.urbanguard.domain.model.SecurityIncident
-import co.edu.unicauca.urbanguard.domain.repository.IncidentRepository
 import co.edu.unicauca.urbanguard.domain.usecase.incidents.GetIncidentsUseCase
-import co.edu.unicauca.urbanguard.domain.usecase.incidents.RetryPendingIncidentsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,8 +15,6 @@ import javax.inject.Inject
 @HiltViewModel
 class IncidentsViewModel @Inject constructor(
     private val getIncidentsUseCase: GetIncidentsUseCase,
-    private val retryPendingIncidentsUseCase: RetryPendingIncidentsUseCase,
-    private val repository: IncidentRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -30,12 +25,11 @@ class IncidentsViewModel @Inject constructor(
      * La pantalla lo llama en cada ON_RESUME (entrada y vuelta del
      * formulario), así que no se carga en el `init`: se duplicaría.
      */
-    fun onRefresh() {
+    fun onRefresh(isAdmin: Boolean = false) {
         val complexId = activeComplexId() ?: return
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            retryPendingIncidentsUseCase(complexId)
-            getIncidentsUseCase(complexId).fold(
+            getIncidentsUseCase(complexId, isAdmin).fold(
                 onSuccess = { incidents ->
                     _uiState.value = IncidentsUiState(incidents = incidents)
                 },
@@ -46,10 +40,6 @@ class IncidentsViewModel @Inject constructor(
                 }
             )
         }
-    }
-
-    fun selectIncident(incident: SecurityIncident) {
-        repository.setSelectedIncident(incident)
     }
 
     private fun activeComplexId(): String? {

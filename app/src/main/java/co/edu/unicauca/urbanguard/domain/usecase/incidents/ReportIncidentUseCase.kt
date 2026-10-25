@@ -5,7 +5,7 @@ import co.edu.unicauca.urbanguard.domain.model.SecurityIncident
 import co.edu.unicauca.urbanguard.domain.repository.IncidentRepository
 import javax.inject.Inject
 
-/** Guarda una novedad y trata de enviarla. */
+/** Crea una novedad en el backend. */
 class ReportIncidentUseCase @Inject constructor(
     private val repository: IncidentRepository
 ) {
@@ -15,7 +15,8 @@ class ReportIncidentUseCase @Inject constructor(
         description: String,
         photoPath: String?,
         pointId: String?,
-        pointName: String?
+        executionId: String?,
+        idempotencyKey: String
     ): Result<SecurityIncident> {
         return repository.reportIncident(
             complexId = complexId,
@@ -23,7 +24,8 @@ class ReportIncidentUseCase @Inject constructor(
             description = description,
             photoPath = photoPath,
             pointId = pointId,
-            pointName = pointName
+            executionId = executionId,
+            idempotencyKey = idempotencyKey
         )
     }
 }

@@ -83,7 +83,7 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 fun RoundActiveScreen(
     onFinished: () -> Unit,
     onNavigateBack: () -> Unit,
-    onReportIncident: (String?) -> Unit = {},
+    onReportIncident: (String?, String?) -> Unit = { _, _ -> },
     viewModel: RoundActiveViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -134,7 +134,9 @@ fun RoundActiveScreen(
             else -> ActiveContent(
                 uiState = uiState,
                 onFinishRequest = viewModel::onRequestFinish,
-                onReportIncident = onReportIncident
+                onReportIncident = { pointId ->
+                    onReportIncident(uiState.round?.id, pointId)
+                }
             )
         }
 

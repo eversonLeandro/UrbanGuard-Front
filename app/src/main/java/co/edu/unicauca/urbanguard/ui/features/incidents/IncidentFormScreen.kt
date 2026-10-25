@@ -67,6 +67,7 @@ import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 @Composable
 fun IncidentFormScreen(
     pointId: String?,
+    executionId: String?,
     onSaved: () -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: IncidentFormViewModel = hiltViewModel()
@@ -77,8 +78,8 @@ fun IncidentFormScreen(
         onError = { viewModel.onCameraError(true) }
     )
 
-    LaunchedEffect(pointId) {
-        viewModel.load(pointId)
+    LaunchedEffect(pointId, executionId) {
+        viewModel.load(pointId, executionId)
     }
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->

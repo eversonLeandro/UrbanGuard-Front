@@ -11,6 +11,8 @@ object Routes {
     const val HOME = "home"
     const val CENSUS = "census"
     const val SECURITY = "security"
+    const val ADMIN_INCIDENTS = "admin_incidents"
+    const val ADMIN_INCIDENT_DETAIL = "admin_incident_detail/{reportId}"
     const val NEWS = "news"
     const val PROFILE = "profile"
     const val VISITORS = "visitors"
@@ -47,6 +49,7 @@ object Routes {
     const val GUARD_ROUND_ACTIVE = "guard_round_active"
     const val GUARD_ROUND_SUMMARY = "guard_round_summary"
     const val GUARD_INCIDENTS = "guard_incidents"
-    const val GUARD_INCIDENT_FORM = "guard_incident_form?pointId={pointId}"
-    const val GUARD_INCIDENT_DETAIL = "guard_incident_detail"
+    const val GUARD_INCIDENT_FORM =
+        "guard_incident_form?pointId={pointId}&executionId={executionId}"
+    const val GUARD_INCIDENT_DETAIL = "guard_incident_detail/{reportId}"
 }

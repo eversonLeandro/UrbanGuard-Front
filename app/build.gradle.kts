@@ -133,6 +133,7 @@ android {
 
 dependencies {
     detektCli("io.gitlab.arturbosch.detekt:detekt-cli:$detektVersion")
+    implementation("io.coil-kt:coil-compose:2.7.0")
     implementation(libs.auth0.android)
     implementation(libs.auth0.jwtdecode)
     implementation(libs.hilt.android)
