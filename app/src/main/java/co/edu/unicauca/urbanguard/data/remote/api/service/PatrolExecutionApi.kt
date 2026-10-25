@@ -41,6 +41,11 @@ interface PatrolExecutionApi {
         @Path("complexId") complexId: String
     ): Response<PatrolExecutionDto>
 
+    @GET(PatrolApiPaths.EXECUTIONS_MINE)
+    suspend fun getMyExecutions(
+        @Path("complexId") complexId: String
+    ): List<PatrolExecutionDto>
+
     @GET(PatrolApiPaths.EXECUTION_DETAIL)
     suspend fun getExecutionDetail(
         @Path("complexId") complexId: String,

@@ -79,7 +79,8 @@ fun PatrolRoute.toRequestDto(): PatrolRouteRequestDto = PatrolRouteRequestDto(
     name = name.trim(),
     checkpointIds = pointIds,
     description = null,
-    schedules = schedules.map { it.toDto() }
+    schedules = schedules.map { it.toDto() },
+    active = isActive
 )
 
 fun PatrolRouteDto.toDomain(complexId: String): PatrolRoute {

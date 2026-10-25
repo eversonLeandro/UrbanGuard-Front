@@ -2,10 +2,8 @@ package co.edu.unicauca.urbanguard.ui.features.guard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import co.edu.unicauca.urbanguard.core.common.PatrolConstants
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
-import co.edu.unicauca.urbanguard.domain.model.availableFrom
 import co.edu.unicauca.urbanguard.domain.model.isFinished
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolEntryUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.StartScheduledRoundUseCase
@@ -17,8 +15,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.ZoneId
 import javax.inject.Inject
 
 /** Eventos de una sola entrega de la entrada de patrullaje. */
@@ -51,7 +47,8 @@ class GuardSeguridadViewModel @Inject constructor(
                     _uiState.value = GuardSeguridadUiState(
                         todayRoutes = entry.todayRoutes,
                         activeRound = entry.activeRound,
-                        recentRounds = entry.recentRounds
+                        recentRounds = entry.recentRounds,
+                        errorMessage = entry.recentRoundsError
                     )
                 },
                 onFailure = { error ->
@@ -83,22 +80,6 @@ class GuardSeguridadViewModel @Inject constructor(
                         "Termínala antes de iniciar otra."
                 )
             }
-            return
-        }
-        val zone = ZoneId.systemDefault()
-        val now = LocalDateTime.now(zone)
-        val availableFrom = route.availableFrom(
-            now.toLocalDate(),
-            PatrolConstants.ROUND_EARLY_START_MINUTES,
-            now.toLocalTime()
-        )
-        if (availableFrom != null && now.toLocalTime().isBefore(availableFrom)) {
-            _uiState.value = _uiState.value.copy(
-                errorMessage = "Disponible desde las " +
-                    availableFrom.format(
-                        java.time.format.DateTimeFormatter.ofPattern("HH:mm")
-                    )
-            )
             return
         }
         if (starting) return

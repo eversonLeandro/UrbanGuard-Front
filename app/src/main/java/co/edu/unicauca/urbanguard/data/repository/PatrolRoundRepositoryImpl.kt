@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.data.repository
 
 import android.util.Log
 import co.edu.unicauca.urbanguard.core.common.PatrolConstants
+import co.edu.unicauca.urbanguard.core.network.NetworkErrorMapper
 import co.edu.unicauca.urbanguard.data.mapper.toDomain
 import co.edu.unicauca.urbanguard.data.remote.api.dto.CheckpointScanRequestDto
 import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
@@ -13,6 +14,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.UUID
+import java.io.IOException
 import javax.inject.Inject
 import retrofit2.HttpException
 
@@ -46,8 +48,6 @@ class PatrolRoundRepositoryImpl @Inject constructor(
                 to   = to
             )
             occurrences.firstOrNull { it.routeId == routeId && it.available }?.occurrenceId
-                ?: occurrences.firstOrNull { it.routeId == routeId }?.occurrenceId
-                ?: occurrences.firstOrNull { it.available }?.occurrenceId
                 ?: error("No hay ocurrencias disponibles para iniciar en este momento.")
         }
 
@@ -64,20 +64,13 @@ class PatrolRoundRepositoryImpl @Inject constructor(
         return domainRound
     }
 
-    @Suppress("TooGenericExceptionCaught")
     override suspend fun activeRound(complexId: String): PatrolRound? {
-        try {
-            val response = executionApi.getActiveExecution(complexId)
-            if (response.isSuccessful) {
-                val body = response.body()
-                if (body != null) {
-                    return body.toDomain(complexId)
-                }
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Error consultando ejecución activa remota", e)
+        val response = executionApi.getActiveExecution(complexId)
+        if (response.code() == 204) return null
+        if (!response.isSuccessful) {
+            throw HttpException(response)
         }
-        return null
+        return response.body()?.toDomain(complexId)
     }
 
     @Suppress("TooGenericExceptionCaught")
@@ -169,7 +162,16 @@ class PatrolRoundRepositoryImpl @Inject constructor(
         if (complexId.isBlank()) {
             return Result.failure(Exception(PatrolConstants.MSG_NO_ACTIVE_COMPLEX))
         }
-        return Result.success(emptyList())
+        return try {
+            val rounds = executionApi.getMyExecutions(complexId)
+                .map { it.toDomain(complexId) }
+            Result.success(rounds)
+        } catch (e: HttpException) {
+            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+        } catch (e: IOException) {
+            Log.w(TAG, "Sin conexión al cargar rondas recientes", e)
+            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+        }
     }
 
     override fun lastFinishedRound(): PatrolRound? = lastFinished

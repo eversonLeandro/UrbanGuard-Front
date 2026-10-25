@@ -45,7 +45,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import co.edu.unicauca.urbanguard.core.common.PatrolConstants
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
 import co.edu.unicauca.urbanguard.domain.model.availableFrom
 import co.edu.unicauca.urbanguard.domain.model.isFinished
@@ -198,10 +197,23 @@ private fun GuardSeguridadContent(
             )
         }
 
-        if (uiState.recentRounds.isNotEmpty()) {
-            item(key = "recent-title") {
-                SectionTitle("Mis rondas")
+        item(key = "recent-title") {
+            SectionTitle("Mis rondas")
+        }
+
+        if (uiState.recentRounds.isEmpty()) {
+            item(key = "recent-empty") {
+                Text(
+                    text = if (errorMessage == null) {
+                        "Aún no tienes rondas recientes."
+                    } else {
+                        "No se pudieron cargar tus rondas recientes."
+                    },
+                    fontSize = 13.sp,
+                    color = UgTextSecondary
+                )
             }
+        } else {
             items(uiState.recentRounds, key = { it.id }) { round ->
                 RecentRoundRow(round = round)
             }
@@ -292,13 +304,13 @@ private fun TodayRoutesSection(
     }
 
     // Actualiza la hora cada 5 segundos para desbloquear el botón automáticamente cuando abra la ventana
-    var nowTime by androidx.compose.runtime.remember {
-        androidx.compose.runtime.mutableStateOf(LocalTime.now())
+    var nowInstant by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf(java.time.Instant.now())
     }
     LaunchedEffect(Unit) {
         while (true) {
             kotlinx.coroutines.delay(5000L)
-            nowTime = LocalTime.now()
+            nowInstant = java.time.Instant.now()
         }
     }
 
@@ -307,7 +319,7 @@ private fun TodayRoutesSection(
             val blockedByOtherRound = hasActiveRound && route.id != activeRouteId
             TodayRouteCard(
                 route = route,
-                nowTime = nowTime,
+                nowInstant = nowInstant,
                 blockedByOtherRound = blockedByOtherRound,
                 onStart = { onStart(route) }
             )
@@ -318,17 +330,29 @@ private fun TodayRoutesSection(
 @Composable
 private fun TodayRouteCard(
     route: PatrolRoute,
-    nowTime: LocalTime,
+    nowInstant: java.time.Instant,
     blockedByOtherRound: Boolean = false,
     onStart: () -> Unit
 ) {
     val summary = todayScheduleSummary(route)
-    val availableFrom = route.availableFrom(
-        LocalDate.now(),
-        PatrolConstants.ROUND_EARLY_START_MINUTES,
-        nowTime
-    )
-    val enabled = !blockedByOtherRound && (availableFrom == null || !nowTime.isBefore(availableFrom))
+    val scheduledDay = route.occurrenceScheduledAt?.atZone(
+        java.time.ZoneId.of("America/Bogota")
+    )?.toLocalDate()
+    val today = LocalDate.now(java.time.ZoneId.of("America/Bogota"))
+    val dayLabel = if (scheduledDay == null || scheduledDay == today) "Hoy" else "Ayer"
+    val insideServerWindow = route.earliestStartAt?.let { !nowInstant.isBefore(it) } == true &&
+        route.occurrenceDeadlineAt?.let { nowInstant.isBefore(it) } == true
+    val enabledBySchedule = insideServerWindow &&
+        (route.occurrenceAvailable == true || route.occurrenceStatus == "SCHEDULED")
+    val enabled = !blockedByOtherRound &&
+        (route.occurrenceAvailable?.let { enabledBySchedule } ?: true)
+    val availableFrom = if (route.occurrenceAvailable == false &&
+        route.occurrenceStatus == "SCHEDULED"
+    ) {
+        route.earliestStartAt?.atZone(
+            java.time.ZoneId.of("America/Bogota")
+        )?.toLocalTime()
+    } else null
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -362,7 +386,7 @@ private fun TodayRouteCard(
                         color = UgNavy
                     )
                     Text(
-                        text = "Hoy ${summary.first} · ${route.pointIds.size} puntos",
+                        text = "$dayLabel ${summary.first} · ${route.pointIds.size} puntos",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = UgTextPrimary
@@ -453,4 +477,3 @@ private fun todayScheduleSummary(route: PatrolRoute): Pair<String, String> {
     val count = if (times.size == 1) "1 horario hoy" else "${times.size} horarios hoy"
     return label to count
 }
-

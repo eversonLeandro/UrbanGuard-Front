@@ -3,6 +3,9 @@ package co.edu.unicauca.urbanguard.data.mapper
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRoundDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRoundPointDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolScanDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolExecutionDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolPointViewDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolOccurrenceDto
 import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
 import co.edu.unicauca.urbanguard.domain.model.PatrolRound
 import co.edu.unicauca.urbanguard.domain.model.PatrolScan
@@ -174,6 +177,59 @@ class PatrolRoundMapperTest {
         assertEquals("p1", domain.scans.first().pointId)
         assertTrue(domain.scans.first().known)
         assertEquals(dto, domain.toDto())
+    }
+
+    @Test
+    fun timedOutExecution_isMappedAsIncompleteInHistory() {
+        val execution = PatrolExecutionDto(
+            executionId = "execution-1",
+            occurrenceId = "occurrence-1",
+            routeId = "route-1",
+            routeName = "Ronda nocturna",
+            scheduledAt = "2026-10-19T22:00:00Z",
+            earliestStartAt = "2026-10-19T21:50:00Z",
+            deadlineAt = "2026-10-20T01:00:00Z",
+            startedAt = "2026-10-19T22:01:00Z",
+            status = "INCOMPLETE",
+            serverTime = "2026-10-20T01:00:00Z",
+            pointsCompleted = 1,
+            pointsExpected = 1,
+            checkpoints = listOf(
+                PatrolPointViewDto(
+                    checkpointId = "point-1",
+                    position = 1,
+                    name = "Entrada",
+                    scannedAt = "2026-10-19T22:05:00Z"
+                )
+            )
+        )
+
+        val round = execution.toDomain("complex-1")
+
+        assertEquals(RoundStatus.INCOMPLETE, round.status())
+    }
+
+    @Test
+    fun occurrenceRoute_keepsServerAvailabilityAndOccurrenceIdentity() {
+        val occurrence = PatrolOccurrenceDto(
+            occurrenceId = "occurrence-1",
+            routeId = "route-1",
+            routeName = "Ronda norte",
+            scheduledAt = "2026-10-20T04:00:00Z",
+            earliestStartAt = "2026-10-20T03:50:00Z",
+            deadlineAt = "2026-10-20T07:00:00Z",
+            pointsExpected = 2,
+            status = "SCHEDULED",
+            available = true
+        )
+
+        val route = occurrence.toRoute("complex-1")
+
+        assertEquals("occurrence-1", route.occurrenceId)
+        assertEquals(true, route.occurrenceAvailable)
+        assertEquals(Instant.parse("2026-10-20T03:50:00Z"), route.earliestStartAt)
+        assertEquals(Instant.parse("2026-10-20T07:00:00Z"), route.occurrenceDeadlineAt)
+        assertEquals(2, route.pointIds.size)
     }
 
     private fun schedule(days: Set<DayOfWeek>) =

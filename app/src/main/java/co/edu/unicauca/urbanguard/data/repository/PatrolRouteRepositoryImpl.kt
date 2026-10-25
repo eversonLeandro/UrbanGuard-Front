@@ -23,6 +23,15 @@ import java.util.UUID
 import javax.inject.Inject
 import retrofit2.HttpException
 
+class PatrolRouteScheduleSyncException(
+    val savedRoute: PatrolRoute,
+    cause: Throwable
+) : Exception(
+    "La ruta se guardó, pero no se pudieron programar sus rondas. " +
+        "Reintenta guardar para sincronizar la programación.",
+    cause
+)
+
 class PatrolRouteRepositoryImpl @Inject constructor(
     private val api: PatrolApi,
     private val executionApi: PatrolExecutionApi
@@ -51,19 +60,24 @@ class PatrolRouteRepositoryImpl @Inject constructor(
             val saved = if (route.id.isBlank()) {
                 val created = api.createRoute(route.complexId, route.toRequestDto())
                     .toDomain(route.complexId)
-                syncOccurrencesForSchedules(route.complexId, created.id, route.schedules)
+                if (created.isActive) {
+                    syncOccurrencesForSavedRoute(created, route.schedules)
+                }
                 created
             } else {
-                runCatching {
-                    val patchObj = com.google.gson.JsonObject().apply {
-                        addProperty("active", route.isActive)
-                    }
-                    api.patchRoute(route.complexId, route.id, patchObj)
+                val updated = api.updateRoute(
+                    route.complexId,
+                    route.id,
+                    route.toRequestDto()
+                ).toDomain(route.complexId)
+                if (updated.isActive) {
+                    syncOccurrencesForSavedRoute(updated, route.schedules)
                 }
-                syncOccurrencesForSchedules(route.complexId, route.id, route.schedules)
-                route
+                updated
             }
             Result.success(saved)
+        } catch (e: PatrolRouteScheduleSyncException) {
+            Result.failure(e)
         } catch (e: HttpException) {
             Result.failure(Exception(NetworkErrorMapper.map(e), e))
         } catch (e: IOException) {
@@ -72,33 +86,45 @@ class PatrolRouteRepositoryImpl @Inject constructor(
         }
     }
 
+    private suspend fun syncOccurrencesForSavedRoute(
+        savedRoute: PatrolRoute,
+        schedules: List<co.edu.unicauca.urbanguard.domain.model.PatrolSchedule>
+    ) {
+        try {
+            syncOccurrencesForSchedules(savedRoute.complexId, savedRoute.id, schedules)
+        } catch (e: HttpException) {
+            throw PatrolRouteScheduleSyncException(savedRoute, e)
+        } catch (e: IOException) {
+            throw PatrolRouteScheduleSyncException(savedRoute, e)
+        }
+    }
+
     /**
-     * Sincroniza las ocurrencias programadas para la semana actual y la próxima
-     * en el backend (zona Bogotá UTC-5).
+     * Sincroniza cuatro semanas de ocurrencias en la zona horaria del backend.
      */
     private suspend fun syncOccurrencesForSchedules(
         complexId: String,
         routeId: String,
         schedules: List<co.edu.unicauca.urbanguard.domain.model.PatrolSchedule>
     ) {
-        if (schedules.isEmpty()) return
-        runCatching {
-            val zone = ZoneId.of("America/Bogota")
-            val today = LocalDate.now(zone)
-            val currentMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-            val weeksToSchedule = listOf(currentMonday, currentMonday.plusWeeks(1))
+        val zone = ZoneId.of("America/Bogota")
+        val today = LocalDate.now(zone)
+        val now = java.time.OffsetDateTime.now(zone)
+        val currentMonday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val weeksToSchedule = (0L..3L).map(currentMonday::plusWeeks)
 
-            for (weekMonday in weeksToSchedule) {
-                val entries = mutableListOf<BatchOccurrenceEntryDto>()
-                for (schedule in schedules) {
-                    for (day in schedule.days) {
-                        val daysToAdd = (day.value - DayOfWeek.MONDAY.value).toLong()
-                        val occurrenceDate = weekMonday.plusDays(daysToAdd)
-                        val offsetTime = java.time.OffsetDateTime.of(
-                            occurrenceDate,
-                            schedule.time,
-                            zone.rules.getOffset(java.time.Instant.now())
-                        )
+        for (weekMonday in weeksToSchedule) {
+            val entries = mutableListOf<BatchOccurrenceEntryDto>()
+            for (schedule in schedules) {
+                for (day in schedule.days) {
+                    val daysToAdd = (day.value - DayOfWeek.MONDAY.value).toLong()
+                    val occurrenceDate = weekMonday.plusDays(daysToAdd)
+                    val offsetTime = java.time.OffsetDateTime.of(
+                        occurrenceDate,
+                        schedule.time,
+                        zone.rules.getOffset(java.time.Instant.now())
+                    )
+                    if (!offsetTime.isBefore(now)) {
                         entries.add(
                             BatchOccurrenceEntryDto(
                                 routeId = routeId,
@@ -107,18 +133,15 @@ class PatrolRouteRepositoryImpl @Inject constructor(
                         )
                     }
                 }
-                if (entries.isNotEmpty()) {
-                    executionApi.createBatch(
-                        complexId = complexId,
-                        request = CreatePatrolBatchRequestDto(
-                            weekStartDate = weekMonday.toString(),
-                            occurrences = entries
-                        )
-                    )
-                }
             }
-        }.onFailure { ex ->
-            Log.w(TAG, "No se pudo sincronizar el lote de ocurrencias en el backend", ex)
+            executionApi.createBatch(
+                complexId = complexId,
+                request = CreatePatrolBatchRequestDto(
+                    weekStartDate = weekMonday.toString(),
+                    occurrences = entries,
+                    routeIds = listOf(routeId)
+                )
+            )
         }
     }
 
@@ -127,7 +150,12 @@ class PatrolRouteRepositoryImpl @Inject constructor(
             return Result.failure(Exception(PatrolConstants.MSG_NO_ACTIVE_COMPLEX))
         }
         return try {
-            api.deleteRoute(complexId, routeId)
+            val response = api.deleteRoute(complexId, routeId)
+            if (!response.isSuccessful) {
+                return Result.failure(
+                    Exception("No se pudo archivar la ruta (HTTP ${response.code()}).")
+                )
+            }
             Result.success(Unit)
         } catch (e: HttpException) {
             Result.failure(Exception(NetworkErrorMapper.map(e), e))

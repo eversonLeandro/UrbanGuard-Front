@@ -16,6 +16,7 @@ import co.edu.unicauca.urbanguard.domain.model.withoutSchedule
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolPointsUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolRoutesUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.SavePatrolRouteUseCase
+import co.edu.unicauca.urbanguard.data.repository.PatrolRouteScheduleSyncException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -213,6 +214,10 @@ class PatrolRouteFormViewModel @Inject constructor(
             ).fold(
                 onSuccess = { eventChannel.send(PatrolRouteFormEvent.Saved) },
                 onFailure = { error ->
+                    val scheduleError = error as? PatrolRouteScheduleSyncException
+                    if (scheduleError != null) {
+                        routeId = scheduleError.savedRoute.id
+                    }
                     _uiState.value = _uiState.value.copy(
                         isSaving = false,
                         errorMessage = error.message ?: PatrolConstants.MSG_SAVE_ERROR
