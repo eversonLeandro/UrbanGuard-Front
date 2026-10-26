@@ -16,16 +16,17 @@ class GetPatrolEntryUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(complexId: String): PatrolEntry {
         closeOverdueRoundsUseCase(complexId)
-        val today = getTodayRoutesUseCase(complexId).getOrDefault(emptyList())
-        val active = runCatching { getActiveRoundUseCase(complexId) }.getOrNull()
-        val recent = getMyRoundsUseCase(complexId)
-            .getOrDefault(emptyList())
+        val today = getTodayRoutesUseCase(complexId).getOrThrow()
+        val active = getActiveRoundUseCase(complexId)
+        val recentResult = getMyRoundsUseCase(complexId)
+        val recent = recentResult.getOrDefault(emptyList())
             .distinctBy { it.id }
             .take(5)
         return PatrolEntry(
             todayRoutes = today,
             activeRound = active,
-            recentRounds = recent
+            recentRounds = recent,
+            recentRoundsError = recentResult.exceptionOrNull()?.message
         )
     }
 }

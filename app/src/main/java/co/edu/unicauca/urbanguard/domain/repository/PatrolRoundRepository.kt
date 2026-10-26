@@ -7,8 +7,8 @@ import java.time.Instant
 /**
  * Rondas de patrullaje del guardia (UG-41).
  *
- * Hoy se guardan en local; el snapshot de puntos es parte de la ronda para
- * que el resumen no dependa de la ruta actual.
+ * Las ejecuciones remotas guardan una foto de puntos al iniciar, para que
+ * el historial no dependa de la ruta actual.
  */
 interface PatrolRoundRepository {
 

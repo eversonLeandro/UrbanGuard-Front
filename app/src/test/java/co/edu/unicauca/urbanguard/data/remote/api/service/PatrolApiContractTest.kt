@@ -52,6 +52,14 @@ class PatrolApiContractTest {
     }
 
     @Test
+    fun `el historial de ejecuciones usa el endpoint propio del guardia`() {
+        assertEquals(
+            PatrolApiPaths.EXECUTIONS_MINE,
+            pathOf(PatrolExecutionApi::class.java, "getMyExecutions")
+        )
+    }
+
+    @Test
     fun `getPoints con 200 y arreglo vacio devuelve lista vacia`() = runBlocking {
         val requestedPath = AtomicReference<String>()
         val api = retrofitReturning("[]", requestedPath).create(PatrolApi::class.java)

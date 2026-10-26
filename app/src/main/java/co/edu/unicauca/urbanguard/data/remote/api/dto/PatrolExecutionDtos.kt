@@ -73,5 +73,6 @@ data class BatchOccurrenceEntryDto(
 
 data class CreatePatrolBatchRequestDto(
     val weekStartDate: String,
-    val occurrences: List<BatchOccurrenceEntryDto>
+    val occurrences: List<BatchOccurrenceEntryDto>,
+    val routeIds: List<String>
 )

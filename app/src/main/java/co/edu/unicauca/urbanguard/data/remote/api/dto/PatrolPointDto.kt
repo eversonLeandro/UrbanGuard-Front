@@ -78,5 +78,6 @@ data class PatrolRouteRequestDto(
     val name: String,
     val checkpointIds: List<String>,
     val description: String? = null,
-    val schedules: List<PatrolScheduleDto>? = null
+    val schedules: List<PatrolScheduleDto>? = null,
+    val active: Boolean = true
 )

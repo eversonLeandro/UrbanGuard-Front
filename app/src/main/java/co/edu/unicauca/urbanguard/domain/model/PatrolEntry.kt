@@ -7,5 +7,6 @@ package co.edu.unicauca.urbanguard.domain.model
 data class PatrolEntry(
     val todayRoutes: List<PatrolRoute> = emptyList(),
     val activeRound: PatrolRound? = null,
-    val recentRounds: List<PatrolRound> = emptyList()
+    val recentRounds: List<PatrolRound> = emptyList(),
+    val recentRoundsError: String? = null
 )

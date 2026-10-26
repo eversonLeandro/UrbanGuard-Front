@@ -101,7 +101,9 @@ fun co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolExecutionDto.toDomain(
     routeId = routeId,
     routeName = routeName,
     startedAt = runCatching { Instant.parse(startedAt) }.getOrDefault(Instant.now()),
-    finishedAt = completedAt?.let { runCatching { Instant.parse(it) }.getOrNull() },
+    finishedAt = completedAt?.let { runCatching { Instant.parse(it) }.getOrNull() }
+        ?: serverTime?.takeIf { status == "INCOMPLETE" }
+            ?.let { runCatching { Instant.parse(it) }.getOrNull() },
     scans = checkpoints.filter { it.scannedAt != null }.map { pt ->
         PatrolScan(
             pointId = pt.checkpointId,
@@ -123,9 +125,9 @@ fun co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolExecutionDto.toDomain(
     },
     scheduledAt = runCatching { Instant.parse(scheduledAt) }.getOrNull(),
     dueAt = runCatching { Instant.parse(deadlineAt) }.getOrNull(),
-    incompleteReason = when (completionReason) {
-        "POINTS_MISSING" -> IncompleteReason.POINTS_MISSING
-        "TIME_OUT" -> IncompleteReason.TIME_OUT
+    incompleteReason = when {
+        completionReason == "POINTS_MISSING" -> IncompleteReason.POINTS_MISSING
+        completionReason == "TIME_OUT" || status == "INCOMPLETE" -> IncompleteReason.TIME_OUT
         else -> null
     }
 )
@@ -147,6 +149,11 @@ fun co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolOccurrenceDto.toRoute(
         pointIds = List(pointsExpected) { "point-$it" },
         schedules = listOf(schedule),
         isActive = true,
-        occurrenceId = occurrenceId
+        occurrenceId = occurrenceId,
+        occurrenceAvailable = available,
+        earliestStartAt = runCatching { Instant.parse(earliestStartAt) }.getOrNull(),
+        occurrenceDeadlineAt = runCatching { Instant.parse(deadlineAt) }.getOrNull(),
+        occurrenceStatus = status,
+        occurrenceScheduledAt = runCatching { Instant.parse(scheduledAt) }.getOrNull()
     )
 }

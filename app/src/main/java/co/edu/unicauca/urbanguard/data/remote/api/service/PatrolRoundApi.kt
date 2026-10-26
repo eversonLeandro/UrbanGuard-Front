@@ -12,11 +12,7 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 /**
- * Rondas de patrullaje del guardia (UG-41 / UG-95).
- *
- * El backend de rondas todavía no existe. Mientras
- * [PatrolConstants.PATROL_ROUNDS_REMOTE] esté apagado el repositorio no
- * invoca estos métodos y trabaja contra el almacén local.
+ * Contrato legacy de rondas. El flujo actual usa [PatrolExecutionApi].
  */
 interface PatrolRoundApi {
 

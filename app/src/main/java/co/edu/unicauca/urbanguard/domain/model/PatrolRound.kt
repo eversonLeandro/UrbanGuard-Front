@@ -94,6 +94,7 @@ enum class RoundStatus {
 fun PatrolRound.status(): RoundStatus =
     when {
         !isFinished() -> RoundStatus.IN_PROGRESS
+        incompleteReason != null -> RoundStatus.INCOMPLETE
         totalPoints > 0 && donePointIds().size < totalPoints -> RoundStatus.INCOMPLETE
         else -> RoundStatus.COMPLETED
     }

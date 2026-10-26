@@ -7,7 +7,6 @@ import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRouteDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRouteRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.ReplaceCheckpointTagRequestDto
 import com.google.gson.JsonObject
-import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -17,11 +16,7 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 /**
- * Checkpoints NFC y rutas de patrullaje.
- *
- * Los puntos usan el contrato real de `security-service`. Las rutas todavía
- * no tienen endpoint: su repositorio solo llama estos métodos si
- * [PatrolConstants.PATROL_ROUTES_REMOTE] se enciende en el futuro.
+ * Checkpoints NFC y rutas de patrullaje del contrato de `security-service`.
  */
 interface PatrolApi {
 
@@ -56,7 +51,7 @@ interface PatrolApi {
         @Body request: ReplaceCheckpointTagRequestDto
     ): CheckpointResponseDto
 
-    // ── Rutas programadas (sin backend todavía) ─────────────────────────
+    // ── Rutas ────────────────────────────────────────────────────────────
 
     @GET(PatrolApiPaths.ROUTES)
     suspend fun getRoutes(
@@ -87,5 +82,5 @@ interface PatrolApi {
     suspend fun deleteRoute(
         @Path("complexId") complexId: String,
         @Path("routeId") routeId: String
-    ): Response<Unit>
+    )
 }

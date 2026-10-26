@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.domain.model
 
 import java.time.DayOfWeek
 import java.time.LocalTime
+import java.time.Instant
 
 /**
  * Ruta de patrullaje: un conjunto de puntos con sus horarios.
@@ -18,7 +19,13 @@ data class PatrolRoute(
     val schedules: List<PatrolSchedule>,
     val isActive: Boolean,
     /** ID de la ocurrencia concreta en el backend (solo en modo remoto). */
-    val occurrenceId: String? = null
+    val occurrenceId: String? = null,
+    /** Disponibilidad calculada por el backend para la ocurrencia concreta. */
+    val occurrenceAvailable: Boolean? = null,
+    val earliestStartAt: Instant? = null,
+    val occurrenceDeadlineAt: Instant? = null,
+    val occurrenceStatus: String? = null,
+    val occurrenceScheduledAt: Instant? = null
 )
 
 /** Un horario de la ruta: hora y días en que se camina. */
@@ -109,4 +116,3 @@ fun List<PatrolSchedule>.withToggledDay(
     if (selected) days.add(day) else days.remove(day)
     return toMutableList().also { it[index] = it[index].copy(days = days) }
 }
-

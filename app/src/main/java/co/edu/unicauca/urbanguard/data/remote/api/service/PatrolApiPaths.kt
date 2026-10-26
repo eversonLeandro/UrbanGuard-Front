@@ -19,6 +19,7 @@ object PatrolApiPaths {
 
     const val EXECUTIONS = "$CHECKPOINT_COMPLEXES/patrol-executions"
     const val EXECUTION_ACTIVE = "$EXECUTIONS/active"
+    const val EXECUTIONS_MINE = "$EXECUTIONS/mine"
     const val EXECUTION_DETAIL = "$EXECUTIONS/{executionId}"
     const val EXECUTION_SCANS = "$EXECUTIONS/{executionId}/scans"
     const val EXECUTION_FINISH = "$EXECUTIONS/{executionId}/finish"
