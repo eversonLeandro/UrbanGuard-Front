@@ -66,6 +66,8 @@ import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolRoutesScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolShiftDetailScreen
 import co.edu.unicauca.urbanguard.ui.features.profile.ProfileScreen
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
+import co.edu.unicauca.urbanguard.ui.features.support.HelpScreen
+import co.edu.unicauca.urbanguard.ui.features.support.TermsAndPrivacyScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.GenerateQrScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.GeneratedPassScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.InvitationPassScreen
@@ -565,10 +567,24 @@ fun AppNavGraph(
         }
 
         composable(Routes.SUPPORT) {
-            PlaceholderScreen(
-                title = "Soporte",
-                icon = Icons.Default.SupportAgent
+            HelpScreen(
+                role = "resident",
+                onNavigateBack = { navController.popBackStack() }
             )
+        }
+
+        composable(
+            route = Routes.HELP,
+            arguments = listOf(navArgument("role") { type = NavType.StringType })
+        ) { backStackEntry ->
+            HelpScreen(
+                role = backStackEntry.arguments?.getString("role") ?: "resident",
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.TERMS_PRIVACY) {
+            TermsAndPrivacyScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(Routes.CONJUNTO_INFO) {
@@ -612,7 +628,9 @@ fun AppNavGraph(
                     sessionViewModel.logout {
                         navController.navigateToLogin()
                     }
-                }
+                },
+                onOpenTermsPrivacy = { navController.navigate(Routes.TERMS_PRIVACY) },
+                onOpenHelp = { role -> navController.navigate("help/$role") }
             )
         }
 
@@ -663,7 +681,9 @@ fun AppNavGraph(
                     sessionViewModel.logout {
                         navController.navigateToLogin()
                     }
-                }
+                },
+                onOpenTermsPrivacy = { navController.navigate(Routes.TERMS_PRIVACY) },
+                onOpenHelp = { role -> navController.navigate("help/$role") }
             )
         }
 

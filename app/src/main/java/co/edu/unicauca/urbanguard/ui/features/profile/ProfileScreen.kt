@@ -65,6 +65,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.components.LogoutDialog
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
@@ -79,9 +80,12 @@ import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 import co.edu.unicauca.urbanguard.ui.theme.UgNavyGradient
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
+@Suppress("LongMethod")
 @Composable
 fun ProfileScreen(
     onLogout: () -> Unit = {},
+    onOpenTermsPrivacy: () -> Unit = {},
+    onOpenHelp: (String) -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -148,12 +152,14 @@ fun ProfileScreen(
                 ProfileOptionRow(
                     icon = Icons.Default.Shield,
                     title = "Términos y Privacidad",
-                    subtitle = "Políticas del servicio"
+                    subtitle = "Políticas del servicio",
+                    onClick = onOpenTermsPrivacy
                 )
                 ProfileOptionRow(
                     icon = Icons.Default.Help,
                     title = "Centro de Ayuda",
-                    subtitle = "Preguntas frecuentes"
+                    subtitle = "Preguntas frecuentes",
+                    onClick = { onOpenHelp(roleForHelp(uiState.role)) }
                 )
             }
 
@@ -173,6 +179,13 @@ fun ProfileScreen(
         onReauthConfirm = { email, password -> viewModel.onReauthSubmit(email, password) },
         onReauthDismiss = viewModel::onReauthDismissed
     )
+}
+
+private fun roleForHelp(role: UserRole?): String = when (role) {
+    UserRole.ADMIN -> "admin"
+    UserRole.GUARD -> "guard"
+    UserRole.RESIDENT, UserRole.USER -> "resident"
+    else -> "resident"
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
