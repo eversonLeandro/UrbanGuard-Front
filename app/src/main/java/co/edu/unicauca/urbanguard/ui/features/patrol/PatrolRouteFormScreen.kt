@@ -237,6 +237,15 @@ private fun RouteSchedulesSection(
 
     Spacer(Modifier.height(8.dp))
 
+    Text(
+        text = "Para probar hoy, deja seleccionado el día actual y elige una hora próxima. " +
+            "La ronda se habilita 10 minutos antes.",
+        fontSize = 12.sp,
+        color = UgTextSecondary
+    )
+
+    Spacer(Modifier.height(8.dp))
+
     SchedulePresetRow(onPreset = onPreset)
 
     Spacer(Modifier.height(4.dp))

@@ -12,11 +12,12 @@ import java.time.ZoneId
 import javax.inject.Inject
 
 /**
- * Ocurrencias vigentes de hoy, incluyendo la ventana que cruza medianoche.
+ * Ocurrencias vigentes desde hoy hasta los próximos siete días, incluyendo
+ * la ventana de ayer que cruza medianoche.
  *
- * Es lo que alimenta la tarjeta "Ronda de hoy" de la entrada de seguridad.
- * En modo remoto, consulta las ocurrencias del backend para hoy en su zona
- * horaria y conserva el identificador/ventana de cada ocurrencia.
+ * Alimenta las rondas programadas de la entrada de seguridad. En modo remoto,
+ * consulta las ocurrencias del backend en su zona horaria y conserva el
+ * identificador/ventana de cada ocurrencia.
  */
 class GetTodayRoutesUseCase @Inject constructor(
     private val repository: PatrolRouteRepository,
@@ -37,7 +38,7 @@ class GetTodayRoutesUseCase @Inject constructor(
                 val occurrences = executionApi.getAvailableOccurrences(
                     complexId = complexId,
                     from = today.minusDays(1).toString(),
-                    to = today.toString()
+                    to = today.plusDays(7).toString()
                 )
                 occurrences.asSequence()
                     .filter { it.status == "SCHEDULED" || it.status == "IN_PROGRESS" }
