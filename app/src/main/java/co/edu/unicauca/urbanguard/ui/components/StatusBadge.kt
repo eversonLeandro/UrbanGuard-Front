@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
+import co.edu.unicauca.urbanguard.ui.theme.UgInfoText
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 import co.edu.unicauca.urbanguard.ui.theme.UgWarningText
 
@@ -47,5 +48,6 @@ fun statusToneColor(tone: StatusTone): Color = when (tone) {
     StatusTone.SUCCESS -> UgEmerald
     StatusTone.WARNING -> UgWarningText
     StatusTone.ERROR -> UgErrorText
+    StatusTone.INFO -> UgInfoText
     StatusTone.NEUTRAL -> UgTextSecondary
 }

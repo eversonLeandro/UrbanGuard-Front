@@ -66,6 +66,7 @@ fun HomeScreen(
     onOpenConjuntoCode: () -> Unit = {},
     onOpenPendingRequests: () -> Unit = {},
     onOpenGenerateQr: () -> Unit = {},
+    onOpenPqrsInbox: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -104,7 +105,10 @@ fun HomeScreen(
             }
 
             // ── Accesos Rápidos de Comunidad ────────────────────────────
-            CommunityServicesSection(onOpenGenerateQr = onOpenGenerateQr)
+            CommunityServicesSection(
+                onOpenGenerateQr = onOpenGenerateQr,
+                onOpenPqrsInbox = if (uiState.role == UserRole.ADMIN) onOpenPqrsInbox else null
+            )
 
             // ── Selector de conjunto ───────────────────────────────────
             ConjuntoSelectorCard(
@@ -277,7 +281,10 @@ private fun AdminActionsSection(
 
 /** Rejilla de los servicios principales del conjunto. */
 @Composable
-private fun CommunityServicesSection(onOpenGenerateQr: () -> Unit) {
+private fun CommunityServicesSection(
+    onOpenGenerateQr: () -> Unit,
+    onOpenPqrsInbox: (() -> Unit)? = null
+) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = "Servicios Principales",
@@ -324,7 +331,9 @@ private fun CommunityServicesSection(onOpenGenerateQr: () -> Unit) {
                 subtitle = "Atención al residente",
                 icon = Icons.AutoMirrored.Filled.Chat,
                 badgeColor = UgNavy,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).let { base ->
+                    if (onOpenPqrsInbox != null) base.clickable(onClick = onOpenPqrsInbox) else base
+                }
             )
         }
     }

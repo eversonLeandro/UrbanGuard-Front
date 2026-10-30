@@ -20,6 +20,8 @@ object Routes {
     const val VISITORS_PASS = "visitors/pass"
     const val VISITORS_PASS_DETAIL = "visitors/pass_detail"
     const val SUPPORT = "support"
+    const val PQRS_INBOX = "pqrs_inbox"
+    const val PQRS_DETAIL = "pqrs_detail/{pqrsId}"
     const val CONJUNTO_INFO = "conjunto_info"
     const val RESERVATIONS = "reservations"
     const val PACKAGES = "packages"

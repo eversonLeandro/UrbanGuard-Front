@@ -14,6 +14,9 @@ enum class StatusTone {
     /** Error o incumplimiento (rojo). */
     ERROR,
 
+    /** Información de proceso. */
+    INFO,
+
     /** Neutro o sin estado (gris). */
     NEUTRAL
 }

@@ -50,6 +50,8 @@ import co.edu.unicauca.urbanguard.ui.features.guard.GuardVisitantesScreen
 import co.edu.unicauca.urbanguard.ui.features.home.HomeScreen
 import co.edu.unicauca.urbanguard.ui.features.news.NewsFeedScreen
 import co.edu.unicauca.urbanguard.ui.features.notifications.NotificationInboxScreen
+import co.edu.unicauca.urbanguard.ui.features.pqrs.PqrsDetailScreen
+import co.edu.unicauca.urbanguard.ui.features.pqrs.PqrsInboxScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ActivateConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoCodeScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoSelectionScreen
@@ -285,8 +287,23 @@ fun AppNavGraph(
                         launchSingleTop = true
                         restoreState = true
                     }
-                }
+                },
+                onOpenPqrsInbox = { navController.navigate(Routes.PQRS_INBOX) }
             )
+        }
+
+        composable(Routes.PQRS_INBOX) {
+            PqrsInboxScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onOpenDetail = { pqrsId -> navController.navigate("pqrs_detail/$pqrsId") }
+            )
+        }
+
+        composable(
+            route = Routes.PQRS_DETAIL,
+            arguments = listOf(navArgument("pqrsId") { type = NavType.StringType })
+        ) {
+            PqrsDetailScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(Routes.PENDING_REQUESTS) {
