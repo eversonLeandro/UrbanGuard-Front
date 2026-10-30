@@ -78,7 +78,7 @@ fun getPropertyOrEnv(key: String, defaultValue: String = ""): String {
 android {
     namespace = "co.edu.unicauca.urbanguard"
     compileSdk {
-        version = release(37)
+        version = release(37) { minorApiLevel = 0 }
     }
 
     defaultConfig {

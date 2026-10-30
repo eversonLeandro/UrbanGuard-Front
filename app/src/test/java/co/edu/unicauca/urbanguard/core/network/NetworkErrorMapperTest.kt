@@ -10,6 +10,7 @@ import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
+import java.net.SocketTimeoutException
 
 /**
  * El mapper es el punto donde se decide qué ve el usuario cuando algo falla, así que
@@ -68,6 +69,14 @@ class NetworkErrorMapperTest {
         val error = NetworkErrorMapper.toAppError(IOException("timeout"))
 
         assertTrue(error is AppError.NoConnection)
+    }
+
+    @Test
+    fun `a SocketTimeoutException is reported as timeout`() {
+        val error = NetworkErrorMapper.toAppError(SocketTimeoutException("timeout"))
+
+        assertTrue(error is AppError.Timeout)
+        assertEquals(AppError.Timeout.MESSAGE, error.message)
     }
 
     @Test

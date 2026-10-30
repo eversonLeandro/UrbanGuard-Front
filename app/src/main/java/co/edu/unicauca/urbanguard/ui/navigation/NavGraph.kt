@@ -49,6 +49,7 @@ import co.edu.unicauca.urbanguard.ui.features.incidents.IncidentsScreen
 import co.edu.unicauca.urbanguard.ui.features.guard.GuardVisitantesScreen
 import co.edu.unicauca.urbanguard.ui.features.home.HomeScreen
 import co.edu.unicauca.urbanguard.ui.features.news.NewsFeedScreen
+import co.edu.unicauca.urbanguard.ui.features.news.PublishNewsScreen
 import co.edu.unicauca.urbanguard.ui.features.notifications.NotificationInboxScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ActivateConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoCodeScreen
@@ -285,6 +286,9 @@ fun AppNavGraph(
                         launchSingleTop = true
                         restoreState = true
                     }
+                },
+                onOpenNews = {
+                    navController.navigate(Routes.NEWS)
                 }
             )
         }
@@ -510,7 +514,25 @@ fun AppNavGraph(
         }
 
         composable(Routes.NEWS) {
-            NewsFeedScreen()
+            NewsFeedScreen(
+                onPublishClick = {
+                    navController.navigate(Routes.PUBLISH_NEWS)
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.PUBLISH_NEWS) {
+            PublishNewsScreen(
+                onPublished = {
+                    navController.popBackStack()
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
 
         composable(Routes.VISITORS) {

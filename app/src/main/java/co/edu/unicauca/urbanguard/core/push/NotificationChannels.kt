@@ -26,6 +26,7 @@ object NotificationChannels {
         deepLink.startsWith("urbanguard://requests") -> REQUESTS
         deepLink.startsWith("urbanguard://patrol") -> PATROL
         deepLink.startsWith("urbanguard://community") -> ANNOUNCEMENTS
+        deepLink.startsWith("urbanguard://news") -> ANNOUNCEMENTS
         else -> ANNOUNCEMENTS
     }
 

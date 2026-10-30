@@ -52,4 +52,6 @@ object Routes {
     const val GUARD_INCIDENT_FORM =
         "guard_incident_form?pointId={pointId}&executionId={executionId}"
     const val GUARD_INCIDENT_DETAIL = "guard_incident_detail/{reportId}"
+
+    const val PUBLISH_NEWS = "publish_news"
 }

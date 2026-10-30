@@ -7,6 +7,7 @@ import co.edu.unicauca.urbanguard.domain.model.AppException
 import com.google.gson.Gson
 import retrofit2.HttpException
 import java.io.IOException
+import java.net.SocketTimeoutException
 
 /**
  * Punto único donde se traduce cualquier error de red a un [AppError] legible.
@@ -48,7 +49,14 @@ object NetworkErrorMapper {
 
         return when (throwable) {
             is HttpException -> fromHttpException(throwable)
-            is IOException -> AppError.NoConnection(AppError.NoConnection.MESSAGE)
+            is SocketTimeoutException -> {
+                Log.e(TAG, "IOException: ${throwable.javaClass.name} - ${throwable.message}", throwable)
+                AppError.Timeout(AppError.Timeout.MESSAGE)
+            }
+            is IOException -> {
+                Log.e(TAG, "IOException: ${throwable.javaClass.name} - ${throwable.message}", throwable)
+                AppError.NoConnection(AppError.NoConnection.MESSAGE)
+            }
             else -> {
                 Log.e(
                     TAG,
