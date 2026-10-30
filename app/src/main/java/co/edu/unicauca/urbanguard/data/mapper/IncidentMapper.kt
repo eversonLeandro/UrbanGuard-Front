@@ -15,6 +15,7 @@ fun IncidentResponseDto.toDomain(imageUrl: String? = null): SecurityIncident =
         hasImage = hasImage,
         pointId = checkpointId,
         guardId = guardId,
+        guardName = guardName,
         executionId = executionId,
         createdAt = runCatching { Instant.parse(reportedAt) }.getOrDefault(Instant.EPOCH)
     )

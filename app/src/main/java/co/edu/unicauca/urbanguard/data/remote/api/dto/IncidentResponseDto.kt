@@ -4,6 +4,7 @@ data class IncidentResponseDto(
     val reportId: String,
     val complexId: String,
     val guardId: String,
+    val guardName: String? = null,
     val category: String,
     val description: String,
     val reportedAt: String,

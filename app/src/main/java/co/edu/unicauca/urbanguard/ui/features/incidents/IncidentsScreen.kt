@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Image
@@ -23,12 +25,16 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,7 +60,9 @@ import co.edu.unicauca.urbanguard.ui.theme.UgErrorText
 import co.edu.unicauca.urbanguard.ui.theme.UgTextPrimary
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 import java.time.Duration
+import coil.compose.AsyncImage
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -125,6 +133,11 @@ fun IncidentsScreen(
     }
 }
 
+private enum class IncidentDateFilter(val label: String) {
+    ALL("Todas"), TODAY("Hoy"), WEEK("Últimos 7 días"), MONTH("Últimos 30 días")
+}
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun IncidentsBody(
     uiState: IncidentsUiState,
@@ -133,34 +146,63 @@ private fun IncidentsBody(
     isAdmin: Boolean
 ) {
     val errorMessage = uiState.errorMessage
+    var dateFilter by remember { mutableStateOf(IncidentDateFilter.ALL) }
+    val filteredIncidents = remember(uiState.incidents, dateFilter) {
+        uiState.incidents.filter { it.matches(dateFilter) }
+    }
+
     when {
         uiState.isLoading -> IncidentsLoading()
-        errorMessage != null -> IncidentsError(
-            message = errorMessage,
-            onRetryClick = onRefresh
-        )
+        errorMessage != null -> IncidentsError(message = errorMessage, onRetryClick = onRefresh)
         uiState.isEmpty -> IncidentsEmpty(isAdmin = isAdmin)
         else -> LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        start = 20.dp,
-                        end = 20.dp,
-                        top = 18.dp,
-                        bottom = 96.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.incidents, key = { it.id }) { incident ->
-                        Box(Modifier.animateItem()) {
-                            IncidentCard(
-                                incident = incident,
-                                isAdmin = isAdmin,
-                                onClick = { onIncidentClick(incident) }
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 96.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                Column(Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Filtrar por fecha",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = UgTextSecondary
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IncidentDateFilter.entries.forEach { filter ->
+                            FilterChip(
+                                selected = dateFilter == filter,
+                                onClick = { dateFilter = filter },
+                                label = { Text(filter.label) }
                             )
                         }
                     }
                 }
             }
+            if (filteredIncidents.isEmpty()) {
+                item { IncidentsEmpty(isAdmin = isAdmin, filtered = true) }
+            } else {
+                items(filteredIncidents, key = { it.id }) { incident ->
+                    Box(Modifier.animateItem()) {
+                        IncidentCard(incident = incident, isAdmin = isAdmin, onClick = { onIncidentClick(incident) })
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun SecurityIncident.matches(filter: IncidentDateFilter): Boolean {
+    val zone = ZoneId.systemDefault()
+    val incidentDate = createdAt.atZone(zone).toLocalDate()
+    val today = LocalDate.now(zone)
+    return when (filter) {
+        IncidentDateFilter.ALL -> true
+        IncidentDateFilter.TODAY -> incidentDate == today
+        IncidentDateFilter.WEEK -> !incidentDate.isBefore(today.minusDays(6))
+        IncidentDateFilter.MONTH -> !incidentDate.isBefore(today.minusDays(29))
+    }
 }
 
 @Composable
@@ -168,59 +210,76 @@ private fun IncidentCard(incident: SecurityIncident, isAdmin: Boolean, onClick: 
     val color = categoryColor(incident.category)
     Card(
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Column(Modifier.fillMaxWidth()) {
             Box(
                 modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .fillMaxWidth()
+                    .height(118.dp)
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = 18.dp,
+                            topEnd = 18.dp
+                        )
+                    )
                     .background(UgAmber.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Image, contentDescription = "Foto de la novedad", tint = UgAmber)
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                if (incident.imageUrl.isNullOrBlank()) {
                     Icon(
-                        imageVector = categoryIcon(incident.category),
+                        Icons.Default.Image,
                         contentDescription = null,
-                        tint = color,
-                        modifier = Modifier.size(15.dp)
+                        tint = UgAmber,
+                        modifier = Modifier.size(38.dp)
                     )
-                    Spacer(Modifier.width(5.dp))
-                    Text(
-                        text = incident.category.label(),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = color,
-                        modifier = Modifier.weight(1f)
+                } else {
+                    AsyncImage(
+                        model = incident.imageUrl,
+                        contentDescription = "Foto de la novedad",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
                 }
-                Spacer(Modifier.height(3.dp))
+                Text(
+                    text = incident.category.label(),
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(color)
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                )
+            }
+            Column(Modifier.padding(14.dp)) {
                 Text(
                     text = incident.description,
-                    fontSize = 13.5.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
                     color = UgTextPrimary,
                     maxLines = 2
                 )
-                Spacer(Modifier.height(3.dp))
+                Spacer(Modifier.height(10.dp))
                 Text(
-                    text = buildString {
-                        append(incidentWhenLabel(incident))
-                        if (isAdmin) append(" · Guardia ${incident.guardId.take(8)}")
-                    },
+                    text = incidentWhenLabel(incident),
                     fontSize = 11.5.sp,
                     color = UgTextSecondary
                 )
+                if (isAdmin) {
+                    Spacer(Modifier.height(7.dp))
+                    Text(
+                        text = "Guardia: ${incident.guardName ?: "Nombre no disponible"}",
+                        fontSize = 12.sp,
+                        color = UgTextPrimary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
@@ -249,7 +308,7 @@ private fun IncidentsLoading() {
 }
 
 @Composable
-private fun IncidentsEmpty(isAdmin: Boolean) {
+private fun IncidentsEmpty(isAdmin: Boolean, filtered: Boolean = false) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -258,7 +317,7 @@ private fun IncidentsEmpty(isAdmin: Boolean) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = if (isAdmin) "No hay novedades en este periodo" else IncidentConstants.LIST_EMPTY_TITLE,
+            text = if (filtered || isAdmin) "No hay novedades en este periodo" else IncidentConstants.LIST_EMPTY_TITLE,
             fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
             color = UgTextPrimary,
