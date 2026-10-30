@@ -67,6 +67,7 @@ fun HomeScreen(
     onOpenPendingRequests: () -> Unit = {},
     onOpenGenerateQr: () -> Unit = {},
     onOpenPqrsInbox: () -> Unit = {},
+    onOpenMyPqrs: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -107,7 +108,11 @@ fun HomeScreen(
             // ── Accesos Rápidos de Comunidad ────────────────────────────
             CommunityServicesSection(
                 onOpenGenerateQr = onOpenGenerateQr,
-                onOpenPqrsInbox = if (uiState.role == UserRole.ADMIN) onOpenPqrsInbox else null
+                onOpenPqrsInbox = when (uiState.role) {
+                    UserRole.ADMIN -> onOpenPqrsInbox
+                    UserRole.RESIDENT -> onOpenMyPqrs
+                    else -> null
+                }
             )
 
             // ── Selector de conjunto ───────────────────────────────────

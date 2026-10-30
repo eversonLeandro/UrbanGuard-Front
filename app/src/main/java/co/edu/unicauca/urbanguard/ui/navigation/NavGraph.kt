@@ -52,6 +52,9 @@ import co.edu.unicauca.urbanguard.ui.features.news.NewsFeedScreen
 import co.edu.unicauca.urbanguard.ui.features.notifications.NotificationInboxScreen
 import co.edu.unicauca.urbanguard.ui.features.pqrs.PqrsDetailScreen
 import co.edu.unicauca.urbanguard.ui.features.pqrs.PqrsInboxScreen
+import co.edu.unicauca.urbanguard.ui.features.pqrs.CreatePqrsScreen
+import co.edu.unicauca.urbanguard.ui.features.pqrs.MyPqrsDetailScreen
+import co.edu.unicauca.urbanguard.ui.features.pqrs.MyPqrsScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ActivateConjuntoScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoCodeScreen
 import co.edu.unicauca.urbanguard.ui.features.onboarding.ConjuntoSelectionScreen
@@ -288,7 +291,8 @@ fun AppNavGraph(
                         restoreState = true
                     }
                 },
-                onOpenPqrsInbox = { navController.navigate(Routes.PQRS_INBOX) }
+                onOpenPqrsInbox = { navController.navigate(Routes.PQRS_INBOX) },
+                onOpenMyPqrs = { navController.navigate(Routes.MY_PQRS) }
             )
         }
 
@@ -297,6 +301,32 @@ fun AppNavGraph(
                 onNavigateBack = { navController.popBackStack() },
                 onOpenDetail = { pqrsId -> navController.navigate("pqrs_detail/$pqrsId") }
             )
+        }
+
+        composable(Routes.MY_PQRS) {
+            MyPqrsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onRadicar = { navController.navigate(Routes.CREATE_PQRS) },
+                onOpenDetail = { id -> navController.navigate("my_pqrs_detail/$id") }
+            )
+        }
+
+        composable(Routes.CREATE_PQRS) {
+            CreatePqrsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onCreated = { id ->
+                    navController.navigate("my_pqrs_detail/$id") {
+                        popUpTo(Routes.CREATE_PQRS) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Routes.MY_PQRS_DETAIL,
+            arguments = listOf(navArgument("pqrsId") { type = NavType.StringType })
+        ) {
+            MyPqrsDetailScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(
