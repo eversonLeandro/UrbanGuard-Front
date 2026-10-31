@@ -15,6 +15,7 @@ object NotificationChannels {
     const val REQUESTS = "requests"
     const val ANNOUNCEMENTS = "announcements"
     const val PATROL = "patrol"
+    const val PQRS = "pqrs"
 
     /**
      * Deriva el canal desde el deepLink del backend
@@ -27,6 +28,7 @@ object NotificationChannels {
         deepLink.startsWith("urbanguard://patrol") -> PATROL
         deepLink.startsWith("urbanguard://community") -> ANNOUNCEMENTS
         deepLink.startsWith("urbanguard://news") -> ANNOUNCEMENTS
+        deepLink.startsWith("urbanguard://pqrs") -> PQRS
         else -> ANNOUNCEMENTS
     }
 
@@ -37,6 +39,10 @@ object NotificationChannels {
      * importancia en un canal ya creado. Para ver `IMPORTANCE_HIGH` en un
      * dispositivo donde el canal ya existía hay que reinstalar la app (o
      * borrar sus datos); en instalaciones nuevas aplica directo.
+     *
+     * Lo mismo vale para [PQRS]: el canal debe existir **antes** de que el
+     * backend empiece a enviar avisos con `channel: "pqrs"`, o el push se
+     * descarta en silencio en Android 8+.
      */
     fun createAll(context: Context) {
         val manager = NotificationManagerCompat.from(context)
@@ -51,6 +57,9 @@ object NotificationChannels {
         )
         manager.createNotificationChannel(
             channel(PATROL, "Rondas", NotificationManager.IMPORTANCE_HIGH)
+        )
+        manager.createNotificationChannel(
+            channel(PQRS, "PQRS", NotificationManager.IMPORTANCE_HIGH)
         )
     }
 

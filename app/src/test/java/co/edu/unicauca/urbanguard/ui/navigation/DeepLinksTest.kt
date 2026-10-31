@@ -7,9 +7,11 @@ import org.junit.Test
 /**
  * El mapeo de deep links del backend a rutas internas. HU-A: el aviso de
  * recorrido no completado abre la bandeja porque aún no existe un endpoint GET
- * por id de ronda. El resto de destinos no cambia.
+ * por id de ronda. El cierre de PQRS abre el detalle de esa PQRS.
  */
 class DeepLinksTest {
+
+    private val pqrsId = "3c55f0f4-8d2b-4a1e-9f7c-1b2c3d4e5f60"
 
     @Test
     fun `patrol abre la bandeja de notificaciones`() {
@@ -24,6 +26,29 @@ class DeepLinksTest {
     @Test
     fun `requests conserva su destino`() {
         assertEquals(Routes.CONJUNTO_SELECTION, routeForDeepLink("urbanguard://requests/7"))
+    }
+
+    @Test
+    fun `pqrs abre el detalle de esa pqrs`() {
+        assertEquals(
+            "my_pqrs_detail/$pqrsId",
+            routeForDeepLink("urbanguard://pqrs/$pqrsId")
+        )
+    }
+
+    @Test
+    fun `pqrs ignora parametros de consulta`() {
+        assertEquals(
+            "my_pqrs_detail/$pqrsId",
+            routeForDeepLink("urbanguard://pqrs/$pqrsId?status=RESOLVED")
+        )
+    }
+
+    @Test
+    fun `un pqrs sin id utilizable abre la lista de pqrs`() {
+        assertEquals(Routes.MY_PQRS, routeForDeepLink("urbanguard://pqrs/"))
+        assertEquals(Routes.MY_PQRS, routeForDeepLink("urbanguard://pqrs"))
+        assertEquals(Routes.MY_PQRS, routeForDeepLink("urbanguard://pqrs/no-es-uuid"))
     }
 
     @Test
