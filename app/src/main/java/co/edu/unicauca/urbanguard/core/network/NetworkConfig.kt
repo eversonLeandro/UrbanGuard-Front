@@ -11,5 +11,6 @@ object NetworkConfig {
     const val API_VERSION_PATH = "api/v1/"
 
     const val CONNECT_TIMEOUT_SECONDS = 15L
-    const val READ_TIMEOUT_SECONDS = 20L
+    const val READ_TIMEOUT_SECONDS = 45L
+    const val WRITE_TIMEOUT_SECONDS = 30L
 }

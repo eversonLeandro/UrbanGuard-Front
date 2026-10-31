@@ -133,6 +133,13 @@ sealed class AppError {
         }
     }
 
+    /** Tiempo de espera agotado al enviar/recibir. */
+    data class Timeout(override val message: String) : AppError() {
+        companion object {
+            const val MESSAGE = "Está tardando más de lo normal. Revisa la lista de comunicados antes de reintentar."
+        }
+    }
+
     /** Fallo del servidor o de un servicio intermedio. */
     data class ServerError(override val message: String) : AppError() {
         companion object {

@@ -35,4 +35,9 @@ class DeepLinksTest {
     fun `un deepLink ausente no navega`() {
         assertNull(routeForDeepLink(null))
     }
+
+    @Test
+    fun `news deep link se mapea al feed de comunicados`() {
+        assertEquals(Routes.NEWS, routeForDeepLink("urbanguard://news"))
+    }
 }
