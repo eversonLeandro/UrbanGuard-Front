@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.common.PqrsConstants
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.usecase.pqrs.GetAllPqrsUseCase
+import co.edu.unicauca.urbanguard.domain.model.PqrsType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,8 +53,11 @@ class PqrsInboxViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(activeFilter = filter)
     }
 
+    fun onTypeSelected(type: PqrsType?) {
+        _uiState.value = _uiState.value.copy(activeType = type)
+    }
+
     fun onQueryChange(query: String) {
         _uiState.value = _uiState.value.copy(query = query)
     }
 }
-

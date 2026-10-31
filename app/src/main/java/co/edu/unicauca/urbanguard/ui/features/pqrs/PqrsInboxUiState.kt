@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.ui.features.pqrs
 
 import co.edu.unicauca.urbanguard.domain.model.PqrsStatus
 import co.edu.unicauca.urbanguard.domain.model.PqrsSummary
+import co.edu.unicauca.urbanguard.domain.model.PqrsType
 
 enum class PqrsFilter(val label: String) {
     ALL("Todas"),
@@ -23,14 +24,16 @@ data class PqrsInboxUiState(
     val isLoading: Boolean = true,
     val items: List<PqrsSummary> = emptyList(),
     val activeFilter: PqrsFilter = PqrsFilter.ALL,
+    val activeType: PqrsType? = null,
     val query: String = "",
     val errorMessage: String? = null
 ) {
     val visibleItems: List<PqrsSummary>
-        get() = items.filter { activeFilter.matches(it.status) }.filter { item ->
+        get() = items.filter { activeFilter.matches(it.status) }
+            .filter { activeType == null || it.type == activeType }
+            .filter { item ->
             query.isBlank() ||
                 item.subject.contains(query, ignoreCase = true) ||
                 item.authorName.contains(query, ignoreCase = true)
         }
 }
-
