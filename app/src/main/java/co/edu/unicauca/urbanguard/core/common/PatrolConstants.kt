@@ -22,8 +22,8 @@ object PatrolConstants {
     const val PATROL_ROUTES_REMOTE = true
     const val PATROL_ROUNDS_REMOTE = true
 
-    /** El historial por turnos se consulta mediante el API de seguridad. */
-    const val PATROL_HISTORY_REMOTE = true
+    /** El historial por turnos depende de un backend que aún no está disponible. */
+    const val PATROL_HISTORY_REMOTE = false
 
     /**
      * La ronda puede iniciarse este tiempo antes de su horario (ventana de
