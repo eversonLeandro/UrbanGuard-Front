@@ -225,12 +225,7 @@ class PatrolRouteFormViewModel @Inject constructor(
     private suspend fun loadRoute(complexId: String, routeId: String?) {
         if (routeId.isNullOrBlank()) {
             _uiState.value = _uiState.value.copy(
-                schedules = listOf(
-                    PatrolSchedule(
-                        time = LocalTime.of(8, 0),
-                        days = defaultWorkDays()
-                    )
-                )
+                schedules = listOf(defaultPatrolSchedule())
             )
             return
         }

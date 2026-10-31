@@ -59,6 +59,7 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 private val hourLabelFormat: DateTimeFormatter =
     DateTimeFormatter.ofPattern("HH:mm")
@@ -184,7 +185,7 @@ private fun GuardSeguridadContent(
 
         item(key = "today-title") {
             SectionTitle(
-                if (uiState.todayRoutes.size == 1) "Ronda de hoy" else "Rondas de hoy"
+                "Rondas programadas"
             )
         }
 
@@ -296,7 +297,7 @@ private fun TodayRoutesSection(
 ) {
     if (routes.isEmpty()) {
         Text(
-            text = "Hoy no hay rondas programadas.",
+            text = "No hay rondas próximas programadas.",
             fontSize = 13.5.sp,
             color = UgTextSecondary
         )
@@ -334,12 +335,7 @@ private fun TodayRouteCard(
     blockedByOtherRound: Boolean = false,
     onStart: () -> Unit
 ) {
-    val summary = todayScheduleSummary(route)
-    val scheduledDay = route.occurrenceScheduledAt?.atZone(
-        java.time.ZoneId.of("America/Bogota")
-    )?.toLocalDate()
-    val today = LocalDate.now(java.time.ZoneId.of("America/Bogota"))
-    val dayLabel = if (scheduledDay == null || scheduledDay == today) "Hoy" else "Ayer"
+    val scheduleLabel = routeScheduleLabel(route)
     val insideServerWindow = route.earliestStartAt?.let { !nowInstant.isBefore(it) } == true &&
         route.occurrenceDeadlineAt?.let { nowInstant.isBefore(it) } == true
     val enabledBySchedule = insideServerWindow &&
@@ -386,13 +382,13 @@ private fun TodayRouteCard(
                         color = UgNavy
                     )
                     Text(
-                        text = "$dayLabel ${summary.first} · ${route.pointIds.size} puntos",
+                        text = "${scheduleLabel.day} ${scheduleLabel.time} · ${route.pointIds.size} puntos",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = UgTextPrimary
                     )
                     Text(
-                        text = summary.second,
+                        text = scheduleLabel.description,
                         fontSize = 12.sp,
                         color = UgTextSecondary
                     )
@@ -409,6 +405,32 @@ private fun TodayRouteCard(
             )
         }
     }
+}
+
+private data class RouteScheduleLabel(val day: String, val time: String, val description: String)
+
+private fun routeScheduleLabel(route: PatrolRoute): RouteScheduleLabel {
+    val backendZone = java.time.ZoneId.of("America/Bogota")
+    val scheduledAt = route.occurrenceScheduledAt?.atZone(backendZone)
+    if (scheduledAt == null) {
+        val summary = todayScheduleSummary(route)
+        return RouteScheduleLabel("Hoy", summary.first, summary.second)
+    }
+
+    val today = LocalDate.now(backendZone)
+    val scheduledDay = scheduledAt.toLocalDate()
+    val dayLabel = when (scheduledDay) {
+        today -> "Hoy"
+        today.minusDays(1) -> "Ayer"
+        else -> scheduledDay.format(
+            DateTimeFormatter.ofPattern("EEE d MMM", Locale.forLanguageTag("es-CO"))
+        ).replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.forLanguageTag("es-CO")) else it.toString() }
+    }
+    return RouteScheduleLabel(
+        day = dayLabel,
+        time = scheduledAt.toLocalTime().format(hourLabelFormat),
+        description = "Ocurrencia programada"
+    )
 }
 
 @Composable

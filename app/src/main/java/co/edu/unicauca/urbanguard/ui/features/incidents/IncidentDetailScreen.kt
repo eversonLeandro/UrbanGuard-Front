@@ -15,7 +15,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -139,65 +145,54 @@ private fun IncidentDetailContent(
 @Composable
 private fun IncidentDetailBody(incident: SecurityIncident, isAdmin: Boolean) {
     val pointLabel = incident.pointName ?: incident.pointId?.let { "Punto ${it.take(8)}" }
-    Column {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = incident.category.label(),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(UgNavy)
-                    .padding(horizontal = 10.dp, vertical = 5.dp)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            DetailInfoRow(icon = Icons.Default.Category, label = "Categoría", value = incident.category.label())
+            Spacer(Modifier.height(14.dp))
+            DetailInfoRow(icon = Icons.Default.Description, label = "Descripción", value = incident.description)
+            Spacer(Modifier.height(14.dp))
+            DetailInfoRow(
+                icon = Icons.Default.Schedule,
+                label = "Fecha y hora",
+                value = detailDateFormat.format(incident.createdAt)
             )
-            Spacer(Modifier.width(8.dp))
-        }
-
-        Spacer(Modifier.height(10.dp))
-
-        Text(
-            text = incident.description,
-            fontSize = 15.sp,
-            color = UgTextPrimary
-        )
-
-        if (!pointLabel.isNullOrBlank()) {
-            Spacer(Modifier.height(10.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = null,
-                    tint = UgEmerald,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = pointLabel,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = UgNavy
+            if (!pointLabel.isNullOrBlank()) {
+                Spacer(Modifier.height(14.dp))
+                DetailInfoRow(icon = Icons.Default.LocationOn, label = "Punto de vigilancia", value = pointLabel)
+            }
+            if (isAdmin) {
+                Spacer(Modifier.height(14.dp))
+                DetailInfoRow(
+                    icon = Icons.Default.Person,
+                    label = "Guardia reportante",
+                    value = incident.guardName ?: "Guardia ${incident.guardId.take(8)}…"
                 )
             }
         }
+    }
+}
 
-        Spacer(Modifier.height(6.dp))
-
-        Text(
-            text = detailDateFormat.format(incident.createdAt),
-            fontSize = 12.5.sp,
-            color = UgTextSecondary
-        )
-        if (isAdmin) {
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = "Guardia: ${incident.guardId}",
-                fontSize = 12.5.sp,
-                color = UgTextSecondary
-            )
+@Composable
+private fun DetailInfoRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String) {
+    Row(verticalAlignment = Alignment.Top) {
+        Box(
+            modifier = Modifier.size(38.dp).clip(RoundedCornerShape(10.dp)).background(UgEmerald.copy(alpha = 0.10f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = UgEmerald, modifier = Modifier.size(20.dp))
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(label, fontSize = 11.sp, color = UgTextSecondary, fontWeight = FontWeight.Medium)
+            Spacer(Modifier.height(3.dp))
+            Text(value, fontSize = 14.sp, color = UgTextPrimary, fontWeight = FontWeight.SemiBold)
         }
     }
-
 }
 
 @Composable

@@ -2,6 +2,9 @@ package co.edu.unicauca.urbanguard.ui.features.patrol
 
 import co.edu.unicauca.urbanguard.domain.model.PatrolSchedule
 import java.time.DayOfWeek
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 
 /**
  * Estado del formulario de ruta (crear y editar).
@@ -38,3 +41,14 @@ fun defaultWorkDays(): Set<DayOfWeek> =
         DayOfWeek.THURSDAY,
         DayOfWeek.FRIDAY
     )
+
+/** Primer horario al crear una ruta: hoy y diez minutos desde la hora local de Bogotá. */
+fun defaultPatrolSchedule(
+    now: ZonedDateTime = ZonedDateTime.now(ZoneId.of("America/Bogota"))
+): PatrolSchedule {
+    val scheduledAt = now.truncatedTo(ChronoUnit.MINUTES).plusMinutes(10)
+    return PatrolSchedule(
+        time = scheduledAt.toLocalTime(),
+        days = defaultWorkDays() + scheduledAt.dayOfWeek
+    )
+}

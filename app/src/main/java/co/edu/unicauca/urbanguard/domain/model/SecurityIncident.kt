@@ -18,6 +18,7 @@ data class SecurityIncident(
     val pointId: String? = null,
     val pointName: String? = null,
     val guardId: String,
+    val guardName: String? = null,
     val executionId: String? = null,
     val createdAt: Instant,
 )
