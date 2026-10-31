@@ -37,8 +37,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        pendingDeepLink.value = intent?.getStringExtra(UrbanGuardMessagingService.EXTRA_DEEP_LINK)
-            ?: intent?.dataString
+        pendingDeepLink.value = deepLinkFrom(intent)
         enableEdgeToEdge()
         setContent {
             UrbanGuardFrontendTheme {
@@ -69,6 +68,8 @@ class MainActivity : ComponentActivity() {
                 // - urbanguard://patrol/{roundId} → bandeja de notificaciones
                 //   (aviso de recorrido no completado, HU-A): aún no hay
                 //   endpoint GET por id de ronda, así que no hay detalle.
+                // - urbanguard://pqrs/{pqrsId} → detalle de la PQRS propia, con
+                //   la respuesta del administrador y el historial de estados.
                 val deepLink by pendingDeepLink
                 LaunchedEffect(deepLink) {
                     val target = routeForDeepLink(deepLink)
@@ -91,7 +92,22 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        pendingDeepLink.value = intent.getStringExtra(UrbanGuardMessagingService.EXTRA_DEEP_LINK)
-            ?: intent.dataString
+        pendingDeepLink.value = deepLinkFrom(intent)
+    }
+
+    /**
+     * Con la app en primer plano el servicio de FCM publica la notificación y
+     * añade [UrbanGuardMessagingService.EXTRA_DEEP_LINK]. En segundo plano o
+     * cerrada, el sistema muestra la notificación y el toque abre esta actividad
+     * con el `data` del push como extras: la clave que envía el backend es
+     * `deepLink`. El esquema `urbanguard://` queda como tercera vía.
+     */
+    private fun deepLinkFrom(intent: Intent?): String? =
+        intent?.getStringExtra(UrbanGuardMessagingService.EXTRA_DEEP_LINK)
+            ?: intent?.getStringExtra(FCM_DEEP_LINK_EXTRA)
+            ?: intent?.dataString
+
+    private companion object {
+        const val FCM_DEEP_LINK_EXTRA = "deepLink"
     }
 }
