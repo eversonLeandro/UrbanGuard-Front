@@ -1,2 +1,12 @@
 package co.edu.unicauca.urbanguard.data.remote.api.dto
 
+data class ResidentialUnitDto(
+    val id: String? = null,
+    val identifier: String? = null,
+    val residents: List<ResidentialResidentDto>? = null
+)
+
+data class ResidentialResidentDto(
+    val userId: String? = null,
+    val fullName: String? = null
+)
