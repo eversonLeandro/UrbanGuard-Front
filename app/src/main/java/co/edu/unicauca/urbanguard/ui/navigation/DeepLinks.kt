@@ -5,6 +5,8 @@ private const val REQUESTS_PREFIX = "urbanguard://requests"
 private const val PATROL_PREFIX = "urbanguard://patrol"
 private const val PQRS_PREFIX = "urbanguard://pqrs"
 private const val PQRS_DETAIL_PREFIX = "$PQRS_PREFIX/"
+private const val PQRS_ADMIN_PREFIX = "$PQRS_PREFIX/admin"
+private const val PQRS_ADMIN_DETAIL_PREFIX = "$PQRS_ADMIN_PREFIX/"
 private val PQRS_ID = Regex(
     "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 )
@@ -26,8 +28,23 @@ fun routeForDeepLink(deepLink: String?): String? = when {
     deepLink.startsWith(PATROL_PREFIX) -> Routes.NOTIFICATIONS
     // Aviso de cierre de PQRS: `urbanguard://pqrs/{pqrsId}` abre el detalle del
     // residente con el historial y la respuesta del administrador.
+    isAdminPqrsDeepLink(deepLink) -> pqrsAdminDetailRoute(deepLink)
     deepLink.startsWith(PQRS_PREFIX) -> pqrsDetailRoute(deepLink)
     else -> null
+}
+
+private fun isAdminPqrsDeepLink(deepLink: String): Boolean =
+    deepLink == PQRS_ADMIN_PREFIX ||
+        deepLink.startsWith(PQRS_ADMIN_DETAIL_PREFIX) ||
+        deepLink.startsWith("$PQRS_ADMIN_PREFIX?")
+
+private fun pqrsAdminDetailRoute(deepLink: String): String {
+    val id = deepLink.removePrefix(PQRS_ADMIN_DETAIL_PREFIX).substringBefore('?').trim('/')
+    return if (PQRS_ID.matches(id)) {
+        Routes.PQRS_DETAIL.replace("{pqrsId}", id)
+    } else {
+        Routes.PQRS_INBOX
+    }
 }
 
 /**
