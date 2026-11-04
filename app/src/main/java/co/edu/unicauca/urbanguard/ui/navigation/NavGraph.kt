@@ -49,6 +49,7 @@ import co.edu.unicauca.urbanguard.ui.features.incidents.IncidentsScreen
 import co.edu.unicauca.urbanguard.ui.features.guard.GuardVisitantesScreen
 import co.edu.unicauca.urbanguard.ui.features.home.HomeScreen
 import co.edu.unicauca.urbanguard.ui.features.news.NewsFeedScreen
+import co.edu.unicauca.urbanguard.ui.features.news.PublishNewsScreen
 import co.edu.unicauca.urbanguard.ui.features.notifications.NotificationInboxScreen
 import co.edu.unicauca.urbanguard.ui.features.pqrs.PqrsDetailScreen
 import co.edu.unicauca.urbanguard.ui.features.pqrs.PqrsInboxScreen
@@ -292,7 +293,8 @@ fun AppNavGraph(
                     }
                 },
                 onOpenPqrsInbox = { navController.navigate(Routes.PQRS_INBOX) },
-                onOpenMyPqrs = { navController.navigate(Routes.MY_PQRS) }
+                onOpenMyPqrs = { navController.navigate(Routes.MY_PQRS) },
+                onOpenNews = { navController.navigate(Routes.NEWS) }
             )
         }
 
@@ -557,7 +559,25 @@ fun AppNavGraph(
         }
 
         composable(Routes.NEWS) {
-            NewsFeedScreen()
+            NewsFeedScreen(
+                onPublishClick = {
+                    navController.navigate(Routes.PUBLISH_NEWS)
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.PUBLISH_NEWS) {
+            PublishNewsScreen(
+                onPublished = {
+                    navController.popBackStack()
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
 
         composable(Routes.VISITORS) {

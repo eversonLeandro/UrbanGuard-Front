@@ -163,6 +163,7 @@ fun ErrorBanner(
 /** Título corto y explícito: es lo que permite identificar el error de un vistazo. */
 private fun titleFor(error: AppError): String = when (error) {
     is AppError.NoConnection -> "Sin conexión"
+    is AppError.Timeout -> "Tiempo de espera agotado"
     is AppError.SessionExpired -> "Sesión expirada"
     is AppError.ReauthRequired -> "Confirma tu identidad"
     is AppError.InvalidCredentials -> "No pudimos verificar tus datos"
@@ -189,6 +190,7 @@ private data class Presentation(
 
 private fun presentationFor(error: AppError): Presentation = when (error) {
     is AppError.NoConnection -> Presentation(Icons.Default.CloudOff, UgWarningText, UgWarningBg)
+    is AppError.Timeout -> Presentation(Icons.Default.Timer, UgWarningText, UgWarningBg)
     is AppError.SessionExpired -> Presentation(Icons.Default.Lock, UgWarningText, UgWarningBg)
     is AppError.InvalidCredentials -> Presentation(Icons.Default.Lock, UgWarningText, UgWarningBg)
     is AppError.WeakPassword -> Presentation(Icons.Default.Shield, UgWarningText, UgWarningBg)

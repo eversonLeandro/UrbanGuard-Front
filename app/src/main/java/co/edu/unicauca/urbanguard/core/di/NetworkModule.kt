@@ -32,6 +32,7 @@ object NetworkModule {
         OkHttpClient.Builder()
             .connectTimeout(NetworkConfig.CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .readTimeout(NetworkConfig.READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(NetworkConfig.WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .addInterceptor(requestIdInterceptor)   //  primero: marca la petición
             .addInterceptor(authInterceptor)        // luego: agrega el token
             .build()

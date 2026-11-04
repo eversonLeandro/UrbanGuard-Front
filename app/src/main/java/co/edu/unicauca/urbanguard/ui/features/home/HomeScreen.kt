@@ -1,5 +1,7 @@
 package co.edu.unicauca.urbanguard.ui.features.home
 
+import co.edu.unicauca.urbanguard.ui.navigation.Routes
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -68,6 +70,7 @@ fun HomeScreen(
     onOpenGenerateQr: () -> Unit = {},
     onOpenPqrsInbox: () -> Unit = {},
     onOpenMyPqrs: () -> Unit = {},
+    onOpenNews: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -112,7 +115,8 @@ fun HomeScreen(
                     UserRole.ADMIN -> onOpenPqrsInbox
                     UserRole.RESIDENT -> onOpenMyPqrs
                     else -> null
-                }
+                },
+                onOpenNews = onOpenNews
             )
 
             // ── Selector de conjunto ───────────────────────────────────
@@ -288,7 +292,8 @@ private fun AdminActionsSection(
 @Composable
 private fun CommunityServicesSection(
     onOpenGenerateQr: () -> Unit,
-    onOpenPqrsInbox: (() -> Unit)? = null
+    onOpenPqrsInbox: (() -> Unit)? = null,
+    onOpenNews: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
@@ -329,7 +334,9 @@ private fun CommunityServicesSection(
                 subtitle = "Noticias del conjunto",
                 icon = Icons.Default.Campaign,
                 badgeColor = UgAmber,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onOpenNews() }
             )
             HomeActionCard(
                 title = "PQRS & Reportes",
