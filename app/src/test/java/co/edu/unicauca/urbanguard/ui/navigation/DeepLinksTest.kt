@@ -45,6 +45,29 @@ class DeepLinksTest {
     }
 
     @Test
+    fun `pqrs nueva abre el detalle administrativo`() {
+        assertEquals(
+            "pqrs_detail/$pqrsId",
+            routeForDeepLink("urbanguard://pqrs/admin/$pqrsId")
+        )
+    }
+
+    @Test
+    fun `pqrs administrativa ignora parametros de consulta`() {
+        assertEquals(
+            "pqrs_detail/$pqrsId",
+            routeForDeepLink("urbanguard://pqrs/admin/$pqrsId?status=SUBMITTED")
+        )
+    }
+
+    @Test
+    fun `pqrs administrativa sin id utilizable abre la bandeja`() {
+        assertEquals(Routes.PQRS_INBOX, routeForDeepLink("urbanguard://pqrs/admin"))
+        assertEquals(Routes.PQRS_INBOX, routeForDeepLink("urbanguard://pqrs/admin/"))
+        assertEquals(Routes.PQRS_INBOX, routeForDeepLink("urbanguard://pqrs/admin/no-es-uuid"))
+    }
+
+    @Test
     fun `un pqrs sin id utilizable abre la lista de pqrs`() {
         assertEquals(Routes.MY_PQRS, routeForDeepLink("urbanguard://pqrs/"))
         assertEquals(Routes.MY_PQRS, routeForDeepLink("urbanguard://pqrs"))
