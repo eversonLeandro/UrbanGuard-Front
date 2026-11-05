@@ -83,6 +83,28 @@ class PublishNewsUseCaseTest {
                 )
             )
         }
+        override suspend fun updateNews(
+            complexId: String,
+            announcementId: String,
+            title: String,
+            body: String,
+            attachment: RequestBody?,
+            attachmentName: String?,
+            removeAttachment: Boolean
+        ): Result<News> {
+            return Result.success(
+                News(
+                    announcementId = announcementId,
+                    title = title,
+                    body = body,
+                    publishedAt = OffsetDateTime.now(),
+                    attachment = null
+                )
+            )
+        }
+        override suspend fun deleteNews(complexId: String, announcementId: String): Result<Unit> {
+            return Result.success(Unit)
+        }
         override suspend fun downloadAttachment(complexId: String, announcementId: String): Result<File> {
             return Result.failure(RuntimeException("no"))
         }

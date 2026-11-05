@@ -19,15 +19,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -65,6 +70,7 @@ private val ITEM_GAP = 12.dp
 @Composable
 fun NewsFeedScreen(
     onPublishClick: () -> Unit = {},
+    onEditClick: (News) -> Unit = {},
     onNavigateBack: (() -> Unit)? = null,
     viewModel: NewsFeedViewModel = hiltViewModel()
 ) {
@@ -78,6 +84,13 @@ fun NewsFeedScreen(
     LaunchedEffect(uiState.downloadError) {
         if (uiState.downloadError != null) {
             snackbarHostState.showSnackbar(uiState.downloadError.orEmpty())
+        }
+    }
+
+    LaunchedEffect(uiState.deleteError) {
+        if (uiState.deleteError != null) {
+            snackbarHostState.showSnackbar(uiState.deleteError.orEmpty())
+            viewModel.clearDeleteError()
         }
     }
 
@@ -119,14 +132,56 @@ fun NewsFeedScreen(
                 )
                 uiState.newsList.isEmpty() -> EmptyNewsState()
                 else -> NewsListContent(
-                    newsList = uiState.newsList,
-                    errorMessage = uiState.errorMessage,
-                    downloadingId = uiState.downloadingId,
-                    onAttachmentClick = viewModel::openAttachment
+                    uiState = uiState,
+                    onAttachmentClick = viewModel::openAttachment,
+                    onEditClick = onEditClick,
+                    onDeleteClick = viewModel::requestDelete
                 )
             }
         }
     }
+
+    uiState.deleteTarget?.let { target ->
+        DeleteNewsDialog(
+            isDeleting = uiState.deletingId == target.announcementId,
+            onConfirm = viewModel::confirmDelete,
+            onDismiss = viewModel::cancelDelete
+        )
+    }
+}
+
+@Composable
+private fun DeleteNewsDialog(
+    isDeleting: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { if (!isDeleting) onDismiss() },
+        title = { Text(NewsConstants.DELETE_CONFIRM_TITLE) },
+        text = {
+            Text(
+                text = NewsConstants.DELETE_CONFIRM_BODY,
+                color = UgTextSecondary
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm, enabled = !isDeleting) {
+                if (isDeleting) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(NewsConstants.DELETE_CONFIRM_ACTION, color = co.edu.unicauca.urbanguard.ui.theme.UgErrorText)
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isDeleting) {
+                Text(NewsConstants.CANCEL_ACTION)
+            }
+        },
+        titleContentColor = UgTextPrimary,
+        containerColor = Color.White
+    )
 }
 
 @Composable
@@ -158,15 +213,15 @@ private fun EmptyNewsState() {
 
 @Composable
 private fun NewsListContent(
-    newsList: List<News>,
-    errorMessage: String?,
-    downloadingId: String?,
-    onAttachmentClick: (News) -> Unit
+    uiState: NewsFeedUiState,
+    onAttachmentClick: (News) -> Unit,
+    onEditClick: (News) -> Unit,
+    onDeleteClick: (News) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        if (errorMessage != null) {
+        if (uiState.errorMessage != null) {
             Text(
-                text = errorMessage,
+                text = uiState.errorMessage.orEmpty(),
                 color = co.edu.unicauca.urbanguard.ui.theme.UgErrorText,
                 fontSize = 13.sp,
                 modifier = Modifier.padding(horizontal = LIST_PADDING, vertical = 8.dp)
@@ -177,11 +232,15 @@ private fun NewsListContent(
             contentPadding = PaddingValues(horizontal = LIST_PADDING, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(ITEM_GAP)
         ) {
-            items(newsList) { news ->
+            items(uiState.newsList) { news ->
                 NewsCard(
                     news = news,
-                    isDownloading = downloadingId == news.announcementId,
-                    onAttachmentClick = { onAttachmentClick(news) }
+                    isDownloading = uiState.downloadingId == news.announcementId,
+                    isAdmin = uiState.isAdmin,
+                    isDeleting = uiState.deletingId == news.announcementId,
+                    onAttachmentClick = { onAttachmentClick(news) },
+                    onEditClick = { onEditClick(news) },
+                    onDeleteClick = { onDeleteClick(news) }
                 )
             }
         }
@@ -192,7 +251,11 @@ private fun NewsListContent(
 private fun NewsCard(
     news: News,
     isDownloading: Boolean,
-    onAttachmentClick: () -> Unit
+    isAdmin: Boolean,
+    isDeleting: Boolean,
+    onAttachmentClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     val localDateTime = news.publishedAt.atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime()
     val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
@@ -202,12 +265,41 @@ private fun NewsCard(
             .background(Color.White, RoundedCornerShape(CARD_CORNER))
             .padding(CARD_PADDING)
     ) {
-        Text(
-            text = news.title,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = UgTextPrimary
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = news.title,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = UgTextPrimary,
+                modifier = Modifier.weight(1f)
+            )
+            if (isAdmin) {
+                IconButton(onClick = onEditClick, enabled = !isDeleting) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = NewsConstants.EDIT_BUTTON_TEXT,
+                        tint = UgNavy
+                    )
+                }
+                IconButton(onClick = onDeleteClick, enabled = !isDeleting) {
+                    if (isDeleting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = NewsConstants.DELETE_BUTTON_TEXT,
+                            tint = co.edu.unicauca.urbanguard.ui.theme.UgErrorText
+                        )
+                    }
+                }
+            }
+        }
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = localDateTime.format(formatter),

@@ -11,6 +11,7 @@ import co.edu.unicauca.urbanguard.core.common.NewsConstants
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.News
 import co.edu.unicauca.urbanguard.domain.model.UserRole
+import co.edu.unicauca.urbanguard.domain.usecase.news.EditOrDeleteNewsUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.news.GetNewsUseCase
 import co.edu.unicauca.urbanguard.domain.repository.NewsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,9 +25,11 @@ import javax.inject.Inject
 
 private const val TAG = "NewsFeedViewModel"
 
+@Suppress("LongParameterList")
 @HiltViewModel
 class NewsFeedViewModel @Inject constructor(
     private val getNewsUseCase: GetNewsUseCase,
+    private val editOrDeleteNewsUseCase: EditOrDeleteNewsUseCase,
     private val newsRepository: NewsRepository,
     private val sessionManager: SessionManager,
     @ApplicationContext private val context: Context
@@ -83,6 +86,57 @@ class NewsFeedViewModel @Inject constructor(
 
     fun refresh() {
         loadNews()
+    }
+
+    fun requestDelete(news: News) {
+        _uiState.value = _uiState.value.copy(deleteTarget = news, deleteError = null)
+    }
+
+    fun cancelDelete() {
+        _uiState.value = _uiState.value.copy(deleteTarget = null)
+    }
+
+    fun confirmDelete() {
+        val target = _uiState.value.deleteTarget ?: return
+        val complexId = sessionManager.getActiveConjunto()?.conjuntoId
+        if (complexId.isNullOrBlank()) {
+            _uiState.value = _uiState.value.copy(
+                deleteTarget = null,
+                deleteError = NewsConstants.MSG_NO_ACTIVE_COMPLEX
+            )
+            return
+        }
+        if (_uiState.value.deletingId != null) return
+        _uiState.value = _uiState.value.copy(
+            deletingId = target.announcementId,
+            deleteError = null
+        )
+        viewModelScope.launch {
+            editOrDeleteNewsUseCase.delete(complexId, target.announcementId).fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        newsList = _uiState.value.newsList.filterNot {
+                            it.announcementId == target.announcementId
+                        },
+                        deleteTarget = null,
+                        deletingId = null
+                    )
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        deleteTarget = null,
+                        deletingId = null,
+                        deleteError = error.message ?: NewsConstants.MSG_DELETE_ERROR
+                    )
+                }
+            )
+        }
+    }
+
+    fun clearDeleteError() {
+        if (_uiState.value.deleteError != null) {
+            _uiState.value = _uiState.value.copy(deleteError = null)
+        }
     }
 
     fun openAttachment(news: News) {
