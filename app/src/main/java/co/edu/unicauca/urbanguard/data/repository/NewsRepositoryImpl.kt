@@ -70,6 +70,67 @@ class NewsRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateNews(
+        complexId: String,
+        announcementId: String,
+        title: String,
+        body: String,
+        attachment: RequestBody?,
+        attachmentName: String?,
+        removeAttachment: Boolean
+    ): Result<News> {
+        if (complexId.isBlank()) {
+            return Result.failure(Exception(NewsConstants.MSG_NO_ACTIVE_COMPLEX))
+        }
+        if (announcementId.isBlank()) {
+            return Result.failure(Exception(NewsConstants.MSG_ANNOUNCEMENT_REQUIRED))
+        }
+        return try {
+            val metadata = createMetadataRequestBody(title = title, body = body)
+            val part = if (attachment != null && !attachmentName.isNullOrBlank()) {
+                val cleaned = sanitizeFileName(attachmentName)
+                MultipartBody.Part.createFormData("attachment", cleaned, attachment)
+            } else {
+                null
+            }
+            val response = api.updateAnnouncement(complexId, announcementId, metadata, part, removeAttachment)
+            clearCachedAttachment(announcementId)
+            Result.success(response.toDomain())
+        } catch (e: HttpException) {
+            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+        } catch (e: IOException) {
+            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+        } catch (e: DateTimeParseException) {
+            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+        }
+    }
+
+    override suspend fun deleteNews(complexId: String, announcementId: String): Result<Unit> {
+        if (complexId.isBlank()) {
+            return Result.failure(Exception(NewsConstants.MSG_NO_ACTIVE_COMPLEX))
+        }
+        if (announcementId.isBlank()) {
+            return Result.failure(Exception(NewsConstants.MSG_ANNOUNCEMENT_REQUIRED))
+        }
+        return try {
+            api.deleteAnnouncement(complexId, announcementId)
+            clearCachedAttachment(announcementId)
+            Result.success(Unit)
+        } catch (e: HttpException) {
+            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+        } catch (e: IOException) {
+            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+        }
+    }
+
+    private fun clearCachedAttachment(announcementId: String) {
+        val dir = File(context.cacheDir, NewsConstants.ATTACHMENT_CACHE_DIR)
+        if (!dir.exists()) return
+        dir.listFiles()
+            ?.filter { it.name.startsWith("$announcementId.") }
+            ?.forEach { it.delete() }
+    }
+
     override suspend fun downloadAttachment(complexId: String, announcementId: String): Result<File> {
         if (complexId.isBlank() || announcementId.isBlank()) {
             return Result.failure(Exception(NewsConstants.ATTACH_DOWNLOAD_ERROR))

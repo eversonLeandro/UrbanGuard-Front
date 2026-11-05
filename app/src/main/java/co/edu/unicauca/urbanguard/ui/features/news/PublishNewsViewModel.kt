@@ -7,20 +7,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.common.NewsConstants
 import co.edu.unicauca.urbanguard.core.session.SessionManager
-import co.edu.unicauca.urbanguard.data.remote.api.AnnouncementImageUpload
 import co.edu.unicauca.urbanguard.domain.usecase.news.PublishNewsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.IOException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,7 +27,7 @@ class PublishNewsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PublishNewsUiState())
     val uiState: StateFlow<PublishNewsUiState> = _uiState.asStateFlow()
 
-    private val allowedTypes = setOf("application/pdf", "image/jpeg", "image/png")
+    private val allowedTypes = NewsAttachmentPreparer.allowedTypes
 
     fun onTitleChange(title: String) {
         if (title.length <= NewsConstants.TITLE_MAX_LENGTH) {
@@ -63,17 +57,18 @@ class PublishNewsViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(attachmentError = NewsConstants.ATTACH_INVALID_TYPE)
             return
         }
-        val size = queryColumn(uri, OpenableColumns.SIZE)?.toLongOrNull()
+        val size = NewsAttachmentPreparer.queryColumn(context, uri, OpenableColumns.SIZE)?.toLongOrNull()
         if (size != null && size > NewsConstants.ATTACHMENT_MAX_BYTES) {
             _uiState.value = _uiState.value.copy(attachmentError = NewsConstants.ATTACH_TOO_LARGE)
             return
         }
-        val name = queryColumn(uri, OpenableColumns.DISPLAY_NAME) ?: uri.lastPathSegment
+        val name = NewsAttachmentPreparer.queryColumn(context, uri, OpenableColumns.DISPLAY_NAME)
+            ?: uri.lastPathSegment
         if (name.isNullOrBlank()) {
             _uiState.value = _uiState.value.copy(attachmentError = NewsConstants.ATTACH_INVALID_NAME)
             return
         }
-        val cleaned = sanitize(name)
+        val cleaned = NewsAttachmentPreparer.sanitize(name)
         if (cleaned.isBlank()) {
             _uiState.value = _uiState.value.copy(attachmentError = NewsConstants.ATTACH_INVALID_NAME)
             return
@@ -129,43 +124,16 @@ class PublishNewsViewModel @Inject constructor(
         }
     }
 
-    @Suppress("SwallowedException", "CyclomaticComplexMethod")
     private suspend fun prepareAttachment(state: PublishNewsUiState): AttachmentPayload? {
-        val size = state.attachmentSize
-            ?: state.attachmentUri?.let { queryColumn(it, OpenableColumns.SIZE)?.toLongOrNull() }
-        if (size != null && size > NewsConstants.ATTACHMENT_MAX_BYTES) {
-            return failAttachment(NewsConstants.ATTACH_TOO_LARGE)
-        }
-        val uri = state.attachmentUri ?: return AttachmentPayload(null, null)
-        val mime = state.attachmentMime ?: "application/octet-stream"
-        return try {
-            if (mime == "application/pdf") {
-                val bytes = withContext(Dispatchers.IO) {
-                    context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                } ?: return failAttachment(NewsConstants.ATTACH_OPEN_ERROR)
-                if (bytes.size.toLong() > NewsConstants.ATTACHMENT_MAX_BYTES) {
-                    return failAttachment(NewsConstants.ATTACH_TOO_LARGE)
-                }
-                AttachmentPayload(bytes.toRequestBody(mime.toMediaTypeOrNull()), state.attachmentName)
-            } else {
-                val prepared = withContext(Dispatchers.IO) {
-                    context.contentResolver.openInputStream(uri)?.use { stream ->
-                        AnnouncementImageUpload.cacheAndAsRequestBody(
-                            context.cacheDir,
-                            stream,
-                            state.attachmentName ?: "imagen"
-                        )
-                    }
-                } ?: return failAttachment(NewsConstants.ATTACH_OPEN_ERROR)
-                if (prepared.body.contentLength() > NewsConstants.ATTACHMENT_MAX_BYTES) {
-                    return failAttachment(NewsConstants.ATTACH_TOO_LARGE)
-                }
-                AttachmentPayload(prepared.body, prepared.fileName)
-            }
-        } catch (e: IOException) {
-            failAttachment(NewsConstants.ATTACH_OPEN_ERROR)
-        } catch (e: SecurityException) {
-            failAttachment(NewsConstants.ATTACH_OPEN_ERROR)
+        return when (val result = NewsAttachmentPreparer.prepare(
+            context = context,
+            uri = state.attachmentUri,
+            mime = state.attachmentMime,
+            name = state.attachmentName,
+            sizeHint = state.attachmentSize
+        )) {
+            is NewsAttachmentPreparer.Result.Ready -> AttachmentPayload(result.body, result.fileName)
+            is NewsAttachmentPreparer.Result.Failed -> failAttachment(result.message)
         }
     }
 
@@ -181,27 +149,5 @@ class PublishNewsViewModel @Inject constructor(
 
     fun resetPublished() {
         _uiState.value = PublishNewsUiState()
-    }
-
-    private fun queryColumn(uri: Uri, column: String): String? {
-        val cursor = context.contentResolver.query(uri, arrayOf(column), null, null, null)
-        cursor?.use {
-            if (it.moveToFirst()) {
-                val idx = it.getColumnIndex(column)
-                if (idx >= 0 && !it.isNull(idx)) {
-                    return it.getString(idx)
-                }
-            }
-        }
-        return null
-    }
-
-    private fun sanitize(name: String): String {
-        val cleaned = name.replace(Regex("[^A-Za-z0-9._-]"), "_")
-        return if (cleaned.length > NewsConstants.ATTACHMENT_NAME_MAX_LENGTH) {
-            cleaned.take(NewsConstants.ATTACHMENT_NAME_MAX_LENGTH)
-        } else {
-            cleaned
-        }
     }
 }
