@@ -29,7 +29,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -60,6 +59,7 @@ fun GuardHomeScreen(
     onNotificationsClick: (() -> Unit)? = null,
     onScanQr: () -> Unit = {},
     onReportIncident: () -> Unit = {},
+    onPackages: () -> Unit = {},
     viewModel: GuardHomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -123,7 +123,11 @@ fun GuardHomeScreen(
             // ── Accesos Rápidos de Guardia ──────────────────────────
             Text("Acciones Rápidas", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = UgNavy)
 
-            GuardQuickActions(onScanQr = onScanQr, onReportIncident = onReportIncident)
+            GuardQuickActions(
+                onScanQr = onScanQr,
+                onReportIncident = onReportIncident,
+                onPackages = onPackages
+            )
 
             // ── Bitácora Reciente ───────────────────────────────────
             Text(
@@ -228,57 +232,94 @@ private fun GuardWelcomeCard(userName: String) {
  * Acciones rapidas del guardia: escaneo QR y reporte de novedades.
  */
 @Composable
-private fun GuardQuickActions(onScanQr: () -> Unit, onReportIncident: () -> Unit) {
-    Button(
-        onClick = onScanQr,
-        shape = RoundedCornerShape(18.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(54.dp)
-            .shadow(
-                elevation = 6.dp,
-                shape = RoundedCornerShape(18.dp),
-                ambientColor = UgEmerald.copy(alpha = 0.4f)
-            )
-    ) {
-        Icon(
-            Icons.Default.QrCodeScanner,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(Modifier.width(10.dp))
-        Text(
-            "Escanear Pase QR de Ingreso",
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-    }
+private fun GuardQuickActions(
+    onScanQr: () -> Unit,
+    onReportIncident: () -> Unit,
+    onPackages: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Card(
+            onClick = onScanQr,
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = UgEmerald),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(68.dp)
+                .shadow(6.dp, RoundedCornerShape(18.dp), ambientColor = UgEmerald.copy(alpha = 0.35f))
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Box(
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.16f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.QrCodeScanner, null, tint = Color.White, modifier = Modifier.size(24.dp))
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Escanear pase QR", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Text("Validar ingreso de visitantes", color = Color.White.copy(alpha = 0.78f), fontSize = 12.sp)
+                }
+            }
+        }
 
-    OutlinedButton(
-        onClick = onReportIncident,
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            GuardSecondaryAction(
+                modifier = Modifier.weight(1f),
+                title = "Novedad",
+                subtitle = "Reportar incidente",
+                icon = Icons.Default.ReportProblem,
+                iconColor = UgAmber,
+                onClick = onReportIncident
+            )
+            GuardSecondaryAction(
+                modifier = Modifier.weight(1f),
+                title = "Paquetes",
+                subtitle = "Ingreso y entrega",
+                icon = Icons.Default.Inventory2,
+                iconColor = UgInfoIcon,
+                onClick = onPackages
+            )
+        }
+    }
+}
+
+@Composable
+private fun GuardSecondaryAction(
+    modifier: Modifier = Modifier,
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    iconColor: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
         shape = RoundedCornerShape(18.dp),
-        border = androidx.compose.foundation.BorderStroke(1.5.dp, UgAmber),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = UgAmber),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = modifier.height(104.dp)
     ) {
-        Icon(
-            Icons.Default.ReportProblem,
-            contentDescription = null,
-            tint = UgAmber,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(Modifier.width(10.dp))
-        Text(
-            "Reportar novedad",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = UgNavy
-        )
+        Column(
+            modifier = Modifier.fillMaxSize().padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(
+                modifier = Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(iconColor.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, null, tint = iconColor, modifier = Modifier.size(20.dp))
+            }
+            Column {
+                Text(title, color = UgNavy, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(subtitle, color = UgTextSecondary, fontSize = 11.sp, maxLines = 1)
+            }
+        }
     }
 }
 

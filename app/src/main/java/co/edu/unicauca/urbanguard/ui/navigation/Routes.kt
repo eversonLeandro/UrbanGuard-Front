@@ -28,6 +28,8 @@ object Routes {
     const val CONJUNTO_INFO = "conjunto_info"
     const val RESERVATIONS = "reservations"
     const val PACKAGES = "packages"
+    const val REGISTER_PACKAGE = "packages/register"
+    const val PACKAGE_DETAIL = "packages/detail/{packageId}"
     const val NOTIFICATIONS = "notifications"
 
     // Pendiente: agregar el resto de rutas aquí a medida que se implementen.
