@@ -310,7 +310,9 @@ private fun GuardSecondaryAction(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Box(
-                modifier = Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(iconColor.copy(alpha = 0.12f)),
+                modifier = Modifier.size(34.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(iconColor.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(icon, null, tint = iconColor, modifier = Modifier.size(20.dp))

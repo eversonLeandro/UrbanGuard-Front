@@ -68,7 +68,10 @@ fun PackageDetailScreen(
             state.isLoading -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = UgNavy)
             }
-            state.errorMessage != null -> Box(Modifier.weight(1f).fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+            state.errorMessage != null -> Box(
+                Modifier.weight(1f).fillMaxWidth().padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(state.errorMessage ?: "", color = UgTextSecondary)
             }
             state.parcel != null -> PackageDetailContent(state.parcel!!)
@@ -84,14 +87,19 @@ private fun PackageDetailContent(parcel: Package) {
     ) {
         if (!parcel.evidenceUrl.isNullOrBlank()) {
             AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current).data(parcel.evidenceUrl).crossfade(true).build(),
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(parcel.evidenceUrl)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = "Foto del paquete",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxWidth().height(220.dp).clip(RoundedCornerShape(18.dp))
             )
         } else {
             Box(
-                modifier = Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(18.dp)).background(UgNavy.copy(alpha = 0.06f)),
+                modifier = Modifier.fillMaxWidth().height(150.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(UgNavy.copy(alpha = 0.06f)),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {

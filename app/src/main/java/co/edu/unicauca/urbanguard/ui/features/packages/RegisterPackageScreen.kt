@@ -76,10 +76,31 @@ fun RegisterPackageScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    PackageField("Nombre del destinatario *", state.recipientName, viewModel::updateRecipient, maxLength = 150)
-                    PackageField("Unidad / apartamento", state.residentialUnitLabel, viewModel::updateUnit, maxLength = 50)
-                    PackageField("Remitente o mensajería", state.sender, viewModel::updateSender, maxLength = 150)
-                    PackageField("Descripción del paquete *", state.description, viewModel::updateDescription, minLines = 3, maxLength = 500)
+                    PackageField(
+                        "Nombre del destinatario *",
+                        state.recipientName,
+                        viewModel::updateRecipient,
+                        maxLength = 150
+                    )
+                    PackageField(
+                        "Unidad / apartamento",
+                        state.residentialUnitLabel,
+                        viewModel::updateUnit,
+                        maxLength = 50
+                    )
+                    PackageField(
+                        "Remitente o mensajería",
+                        state.sender,
+                        viewModel::updateSender,
+                        maxLength = 150
+                    )
+                    PackageField(
+                        "Descripción del paquete *",
+                        state.description,
+                        viewModel::updateDescription,
+                        minLines = 3,
+                        maxLength = 500
+                    )
                     PackageField("Observaciones", state.observations, viewModel::updateObservations, minLines = 2)
                     PackagePhoto(photoPath = state.photoPath, onTakePhoto = takePhoto)
                 }

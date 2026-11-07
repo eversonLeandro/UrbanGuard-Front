@@ -74,6 +74,7 @@ import co.edu.unicauca.urbanguard.ui.features.profile.ProfileScreen
 import co.edu.unicauca.urbanguard.ui.features.packages.PackageListScreen
 import co.edu.unicauca.urbanguard.ui.features.packages.RegisterPackageScreen
 import co.edu.unicauca.urbanguard.ui.features.packages.PackageDetailScreen
+import co.edu.unicauca.urbanguard.ui.features.packages.PackageMetricsScreen
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.GenerateQrScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.GeneratedPassScreen
@@ -297,8 +298,13 @@ fun AppNavGraph(
                 },
                 onOpenPqrsInbox = { navController.navigate(Routes.PQRS_INBOX) },
                 onOpenMyPqrs = { navController.navigate(Routes.MY_PQRS) },
-                onOpenNews = { navController.navigate(Routes.NEWS) }
+                onOpenNews = { navController.navigate(Routes.NEWS) },
+                onOpenPackageMetrics = { navController.navigate(Routes.PACKAGE_METRICS) }
             )
+        }
+
+        composable(Routes.PACKAGE_METRICS) {
+            PackageMetricsScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(Routes.PQRS_INBOX) {

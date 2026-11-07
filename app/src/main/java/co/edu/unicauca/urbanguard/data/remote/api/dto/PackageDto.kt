@@ -31,3 +31,22 @@ data class RegisterPackageRequestDto(
 )
 
 data class DeliverPackageRequestDto(val deliveredTo: String)
+
+data class PackageMetricsDto(
+    val receivedCount: Long,
+    val deliveredCount: Long,
+    val pendingCount: Long,
+    val returnedCount: Long,
+    val canceledCount: Long,
+    val averageDeliveryHours: Double?,
+    val byStatus: List<PackageStatusMetricDto>,
+    val trend: List<PackageTrendMetricDto>
+)
+
+data class PackageStatusMetricDto(val status: String, val count: Long)
+
+data class PackageTrendMetricDto(
+    val date: String,
+    val receivedCount: Long,
+    val deliveredCount: Long
+)

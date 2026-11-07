@@ -35,7 +35,11 @@ class PackageDetailViewModel @Inject constructor(
         viewModelScope.launch {
             repository.detail(complexId, packageId).fold(
                 onSuccess = { _state.value = PackageDetailUiState(parcel = it) },
-                onFailure = { _state.value = PackageDetailUiState(errorMessage = it.message ?: "No fue posible cargar el paquete") }
+                onFailure = {
+                    _state.value = PackageDetailUiState(
+                        errorMessage = it.message ?: "No fue posible cargar el paquete"
+                    )
+                }
             )
         }
     }

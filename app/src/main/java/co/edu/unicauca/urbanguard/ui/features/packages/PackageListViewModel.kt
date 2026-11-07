@@ -32,7 +32,11 @@ class PackageListViewModel @Inject constructor(
         viewModelScope.launch {
             repository.list(complexId, status).fold(
                 onSuccess = { _uiState.value = PackageListUiState(packages = it) },
-                onFailure = { _uiState.value = PackageListUiState(errorMessage = it.message ?: "No se pudieron cargar los paquetes") }
+                onFailure = {
+                    _uiState.value = PackageListUiState(
+                        errorMessage = it.message ?: "No se pudieron cargar los paquetes"
+                    )
+                }
             )
         }
     }

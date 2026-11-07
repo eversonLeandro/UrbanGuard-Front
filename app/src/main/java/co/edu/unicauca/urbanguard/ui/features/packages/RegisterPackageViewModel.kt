@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.usecase.packages.RegisterPackageUseCase
+import co.edu.unicauca.urbanguard.domain.model.PackageRegistration
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,8 +51,7 @@ class RegisterPackageViewModel @Inject constructor(
         }
         _uiState.value = state.copy(isSaving = true, errorMessage = null)
         viewModelScope.launch {
-            registerPackage(
-                complexId = complexId,
+            val registration = PackageRegistration(
                 residentialUnitId = null,
                 residentialUnitLabel = state.residentialUnitLabel.ifBlank { null },
                 residentId = null,
@@ -60,7 +60,8 @@ class RegisterPackageViewModel @Inject constructor(
                 description = description,
                 observations = state.observations.ifBlank { null },
                 photoPath = state.photoPath
-            ).fold(
+            )
+            registerPackage(complexId = complexId, registration = registration).fold(
                 onSuccess = { _uiState.value = _uiState.value.copy(isSaving = false, saved = true) },
                 onFailure = { _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = it.message) }
             )
