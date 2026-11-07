@@ -13,5 +13,6 @@ data class ApiErrorResponseDto(
     val error: String? = null,
     val message: String? = null,
     val path: String? = null,
-    val correlationId: String? = null
+    val correlationId: String? = null,
+    val code: String? = null
 )

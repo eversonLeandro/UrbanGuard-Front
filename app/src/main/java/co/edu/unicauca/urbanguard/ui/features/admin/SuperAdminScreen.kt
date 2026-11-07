@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.ui.features.admin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,8 +23,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Apartment
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Construction
 import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -55,7 +58,8 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 @Composable
 fun SuperAdminScreen(
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onOpenUserManagement: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -77,6 +81,9 @@ fun SuperAdminScreen(
         ) {
             // ── Card de Encabezado SuperAdmin ─────────────────────────
             SuperAdminHeroCard()
+
+            // ── Gestión de cuentas (HU-006) ─────────────────────────────
+            UserManagementCard(onClick = onOpenUserManagement)
 
             // ── Métricas de Plataforma ───────────────────────────────
             PlatformMetrics()
@@ -165,6 +172,67 @@ private fun SuperAdminHeroCard() {
                 "Gestión centralizada de infraestructura residencial UrbanGuard (Capa 2.3).",
                 fontSize = 12.5.sp,
                 color = Color.White.copy(alpha = 0.8f)
+            )
+        }
+    }
+}
+
+/**
+ * Entrada a la gestión de cuentas de la plataforma (HU-006): listado, bloqueo
+ * (soft delete con historial conservado) y reactivación desde el gateway.
+ */
+@Composable
+private fun UserManagementCard(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(UgEmerald.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.People,
+                    contentDescription = null,
+                    tint = UgEmerald,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    "Gestión de usuarios",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UgNavy
+                )
+                Text(
+                    "Revoca o restaura el acceso de las cuentas de la plataforma",
+                    fontSize = 11.5.sp,
+                    color = UgTextSecondary
+                )
+            }
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = UgTextSecondary,
+                modifier = Modifier.size(20.dp)
             )
         }
     }

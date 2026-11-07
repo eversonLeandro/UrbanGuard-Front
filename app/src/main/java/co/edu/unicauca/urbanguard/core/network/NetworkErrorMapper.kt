@@ -22,6 +22,7 @@ import java.net.SocketTimeoutException
  */
 object NetworkErrorMapper {
     private const val TAG = "NetworkErrorMapper"
+    private const val ACCOUNT_DISABLED_CODE = "ACCOUNT_DISABLED"
 
     /**
      * Fases de error de Spring en inglés. El backend las mete en `message`
@@ -89,6 +90,10 @@ object NetworkErrorMapper {
     private fun fromHttpException(exception: HttpException): AppError {
         val body = readErrorBody(exception)
         val bodyMessage = body?.message?.trim().orEmpty()
+
+        if (body?.code == ACCOUNT_DISABLED_CODE) {
+            return AppError.AccountDisabled(AppError.AccountDisabled.MESSAGE)
+        }
 
         if (bodyMessage.isNotEmpty() && isUsable(bodyMessage)) {
             Log.w(
