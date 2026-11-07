@@ -52,7 +52,8 @@ class ResidentialRepositoryImplTest {
         val result = ResidentialRepositoryImpl(api).getCensus("complex-1")
 
         assertTrue(result.isFailure)
-        val exception = result.exceptionOrNull() as co.edu.unicauca.urbanguard.domain.model.AppException
+        val exception = result.exceptionOrNull()
+            as co.edu.unicauca.urbanguard.domain.model.AppException
         assertTrue(exception.error is AppError.Unexpected)
     }
 }

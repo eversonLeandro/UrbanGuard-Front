@@ -209,6 +209,7 @@ private fun CensusContent(
     onFilterChange: (CensusUnitFilter) -> Unit,
     onUnitSelected: (String) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -217,10 +218,11 @@ private fun CensusContent(
     ) {
         CensusStatistics(state = state)
         Spacer(Modifier.height(12.dp))
-        CensusSearchAndFilters(
+        CensusFilterBar(
             state = state,
             onSearchQueryChange = onSearchQueryChange,
-            onFilterChange = onFilterChange
+            onFilterChange = onFilterChange,
+            onSearch = { keyboardController?.hide() }
         )
         Spacer(Modifier.height(8.dp))
 
@@ -251,6 +253,53 @@ private fun CensusContent(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CensusFilterBar(
+    state: CensusUiState,
+    onSearchQueryChange: (String) -> Unit,
+    onFilterChange: (CensusUnitFilter) -> Unit,
+    onSearch: () -> Unit
+) {
+    OutlinedTextField(
+        value = state.searchQuery,
+        onValueChange = onSearchQueryChange,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        singleLine = true,
+        placeholder = { Text("Buscar apartamento o residente") },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
+        trailingIcon = if (state.searchQuery.isNotEmpty()) {
+            {
+                IconButton(onClick = { onSearchQueryChange("") }) {
+                    Icon(Icons.Default.Close, contentDescription = "Limpiar búsqueda")
+                }
+            }
+        } else null,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = UgEmerald,
+            unfocusedIndicatorColor = UgBorder,
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White
+        )
+    )
+    Spacer(Modifier.height(8.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CensusUnitFilter.entries.forEach { filter ->
+            FilterChip(
+                selected = state.filter == filter,
+                onClick = { onFilterChange(filter) },
+                label = { Text(filter.label, fontSize = 12.sp) }
+            )
         }
     }
 }

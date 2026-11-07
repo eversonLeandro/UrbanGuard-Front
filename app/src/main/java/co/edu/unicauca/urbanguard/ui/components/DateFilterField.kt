@@ -5,6 +5,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -60,9 +63,9 @@ fun DateFilterField(
     placeholder: String = "Fecha",
     dateFormat: DateTimeFormatter = DEFAULT_DATE_FORMAT
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Box(modifier = modifier) {
         Row(
-            modifier = modifier
+            modifier = Modifier.fillMaxSize()
                 .background(Color.White, RoundedCornerShape(10.dp))
                 .border(1.dp, UgBorder, RoundedCornerShape(10.dp))
                 .clickable { onShowDatePicker() }
@@ -79,19 +82,20 @@ fun DateFilterField(
             Text(
                 text = date?.format(dateFormat) ?: placeholder,
                 fontSize = 13.sp,
-                color = if (date != null) UgTextPrimary else UgDisabledText
+                color = if (date != null) UgTextPrimary else UgDisabledText,
+                modifier = Modifier.weight(1f)
             )
-        }
-        if (date != null && onClearDate != null) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Limpiar fecha",
-                modifier = Modifier
-                    .size(32.dp)
-                    .clickable { onClearDate() }
-                    .padding(4.dp),
-                tint = UgTextSecondary
-            )
+            if (date != null && onClearDate != null) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Limpiar fecha",
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clickable { onClearDate() }
+                        .padding(4.dp),
+                    tint = UgTextSecondary
+                )
+            }
         }
     }
 }

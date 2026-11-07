@@ -71,6 +71,7 @@ fun HomeScreen(
     onOpenPqrsInbox: () -> Unit = {},
     onOpenMyPqrs: () -> Unit = {},
     onOpenNews: () -> Unit = {},
+    onOpenPackageMetrics: (() -> Unit)? = null,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -116,7 +117,8 @@ fun HomeScreen(
                     UserRole.RESIDENT -> onOpenMyPqrs
                     else -> null
                 },
-                onOpenNews = onOpenNews
+                onOpenNews = onOpenNews,
+                onOpenPackageMetrics = if (uiState.role == UserRole.ADMIN) onOpenPackageMetrics else null
             )
 
             // ── Selector de conjunto ───────────────────────────────────
@@ -293,7 +295,8 @@ private fun AdminActionsSection(
 private fun CommunityServicesSection(
     onOpenGenerateQr: () -> Unit,
     onOpenPqrsInbox: (() -> Unit)? = null,
-    onOpenNews: () -> Unit
+    onOpenNews: () -> Unit,
+    onOpenPackageMetrics: (() -> Unit)? = null
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
@@ -321,7 +324,9 @@ private fun CommunityServicesSection(
                 subtitle = "Entregas en portería",
                 icon = Icons.Default.Inventory2,
                 badgeColor = UgInfoIcon,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).let { base ->
+                    if (onOpenPackageMetrics != null) base.clickable(onClick = onOpenPackageMetrics) else base
+                }
             )
         }
 
@@ -531,4 +536,3 @@ private fun AdminQuickActionCard(
         }
     }
 }
-
