@@ -153,6 +153,55 @@ fun CensusScreen(viewModel: CensusViewModel = hiltViewModel()) {
 }
 
 @Composable
+private fun CensusSearchAndFilters(
+    state: CensusUiState,
+    onSearchQueryChange: (String) -> Unit,
+    onFilterChange: (CensusUnitFilter) -> Unit
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    OutlinedTextField(
+        value = state.searchQuery,
+        onValueChange = onSearchQueryChange,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        singleLine = true,
+        placeholder = { Text("Buscar apartamento o residente") },
+        leadingIcon = {
+            Icon(Icons.Default.Search, contentDescription = "Buscar")
+        },
+        trailingIcon = {
+            if (state.searchQuery.isNotEmpty()) {
+                IconButton(onClick = { onSearchQueryChange("") }) {
+                    Icon(Icons.Default.Close, contentDescription = "Limpiar búsqueda")
+                }
+            }
+        },
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = UgEmerald,
+            unfocusedIndicatorColor = UgBorder,
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White
+        )
+    )
+    Spacer(Modifier.height(8.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CensusUnitFilter.entries.forEach { filter ->
+            FilterChip(
+                selected = state.filter == filter,
+                onClick = { onFilterChange(filter) },
+                label = { Text(filter.label, fontSize = 12.sp) }
+            )
+        }
+    }
+}
+
+@Composable
 private fun CensusContent(
     state: CensusUiState,
     visibleUnits: List<ResidentialUnit>,

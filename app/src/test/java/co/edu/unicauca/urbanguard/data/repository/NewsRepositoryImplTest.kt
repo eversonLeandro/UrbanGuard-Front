@@ -121,6 +121,38 @@ class NewsRepositoryImplTest {
         assertEquals(NetworkErrorMapper.map(IOException("broken pipe")), result.exceptionOrNull()?.message)
     }
 
+    @Test
+    fun `updateNews returns mapped news`() = runTest {
+        val repo = NewsRepositoryImpl(FakeNewsApi(listOf(sampleDto())), android.app.Application())
+        val result = repo.updateNews("complex-1", "a1", "titulo", "cuerpo")
+        assertTrue(result.isSuccess)
+        assertEquals("titulo", result.getOrNull()?.title)
+    }
+
+    @Test
+    fun `updateNews fails without announcementId`() = runTest {
+        val repo = NewsRepositoryImpl(FakeNewsApi(listOf(sampleDto())), android.app.Application())
+        val result = repo.updateNews("complex-1", "", "titulo", "cuerpo")
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `deleteNews succeeds`() = runTest {
+        val repo = NewsRepositoryImpl(FakeNewsApi(listOf(sampleDto())), android.app.Application())
+        val result = repo.deleteNews("complex-1", "a1")
+        assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `deleteNews maps http error`() = runTest {
+        val repo = NewsRepositoryImpl(
+            FakeNewsApi(error = httpException(403, "No tienes permiso")),
+            android.app.Application()
+        )
+        val result = repo.deleteNews("complex-1", "a1")
+        assertTrue(result.isFailure)
+    }
+
     private fun sampleDto() = NewsDto(
         announcementId = "a1",
         title = "titulo",
@@ -152,6 +184,21 @@ class NewsRepositoryImplTest {
         ): NewsDto {
             error?.let { throw it }
             return published
+        }
+
+        override suspend fun updateAnnouncement(
+            complexId: String,
+            announcementId: String,
+            metadata: RequestBody,
+            attachment: MultipartBody.Part?,
+            removeAttachment: Boolean
+        ): NewsDto {
+            error?.let { throw it }
+            return published
+        }
+
+        override suspend fun deleteAnnouncement(complexId: String, announcementId: String) {
+            error?.let { throw it }
         }
 
         override suspend fun getAnnouncementImageUrl(

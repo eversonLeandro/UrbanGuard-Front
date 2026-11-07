@@ -9,5 +9,8 @@ data class NewsFeedUiState(
     val errorMessage: String? = null,
     val isAdmin: Boolean = false,
     val downloadingId: String? = null,
-    val downloadError: String? = null
+    val downloadError: String? = null,
+    val deleteTarget: News? = null,
+    val deletingId: String? = null,
+    val deleteError: String? = null
 )

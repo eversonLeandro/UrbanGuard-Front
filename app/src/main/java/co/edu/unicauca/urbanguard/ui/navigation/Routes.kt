@@ -62,4 +62,7 @@ object Routes {
     const val GUARD_INCIDENT_DETAIL = "guard_incident_detail/{reportId}"
 
     const val PUBLISH_NEWS = "publish_news"
+    const val EDIT_NEWS = "edit_news/{announcementId}"
+
+    fun editNews(announcementId: String): String = "edit_news/$announcementId"
 }

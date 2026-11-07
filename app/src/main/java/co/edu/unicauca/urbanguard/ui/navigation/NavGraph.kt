@@ -48,6 +48,7 @@ import co.edu.unicauca.urbanguard.ui.features.incidents.IncidentFormScreen
 import co.edu.unicauca.urbanguard.ui.features.incidents.IncidentsScreen
 import co.edu.unicauca.urbanguard.ui.features.guard.GuardVisitantesScreen
 import co.edu.unicauca.urbanguard.ui.features.home.HomeScreen
+import co.edu.unicauca.urbanguard.ui.features.news.EditNewsScreen
 import co.edu.unicauca.urbanguard.ui.features.news.NewsFeedScreen
 import co.edu.unicauca.urbanguard.ui.features.news.PublishNewsScreen
 import co.edu.unicauca.urbanguard.ui.features.notifications.NotificationInboxScreen
@@ -572,6 +573,9 @@ fun AppNavGraph(
                 onPublishClick = {
                     navController.navigate(Routes.PUBLISH_NEWS)
                 },
+                onEditClick = { news ->
+                    navController.navigate(Routes.editNews(news.announcementId))
+                },
                 onNavigateBack = {
                     navController.popBackStack()
                 }
@@ -581,6 +585,20 @@ fun AppNavGraph(
         composable(Routes.PUBLISH_NEWS) {
             PublishNewsScreen(
                 onPublished = {
+                    navController.popBackStack()
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Routes.EDIT_NEWS,
+            arguments = listOf(navArgument("announcementId") { type = NavType.StringType })
+        ) {
+            EditNewsScreen(
+                onSaved = {
                     navController.popBackStack()
                 },
                 onNavigateBack = {
