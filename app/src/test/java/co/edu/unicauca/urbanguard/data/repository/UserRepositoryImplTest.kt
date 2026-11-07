@@ -1,5 +1,7 @@
 package co.edu.unicauca.urbanguard.data.repository
 
+import co.edu.unicauca.urbanguard.data.remote.api.dto.UserResponseDto
+
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PasswordChangeTicketResponseDto
 import co.edu.unicauca.urbanguard.data.remote.api.service.UserApi
 import co.edu.unicauca.urbanguard.domain.model.AppError
@@ -59,6 +61,20 @@ class UserRepositoryImplTest {
         override suspend fun createPasswordChangeTicket(): PasswordChangeTicketResponseDto {
             error?.let { throw it }
             return PasswordChangeTicketResponseDto(url = requireNotNull(ticketUrl))
+        }
+
+        // No se usan en este flujo; la interfaz creció con la HU-006.
+        override suspend fun listUsers(estado: String?): List<UserResponseDto> = emptyList()
+
+        override suspend fun deactivateUser(userId: String) {}
+
+        override suspend fun reactivateUser(userId: String): UserResponseDto {
+            error?.let { throw it }
+            return UserResponseDto(
+                publicId = "6f1c9a70-0001-4000-8000-000000000001",
+                userId = userId,
+                activo = true
+            )
         }
     }
 

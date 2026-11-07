@@ -35,6 +35,23 @@ class NetworkErrorMapperTest {
     }
 
     @Test
+    fun `ACCOUNT_DISABLED is reported as a disabled account and uses the support message`() {
+        val error = NetworkErrorMapper.toAppError(
+            httpException(403, "Acceso denegado", businessCode = "ACCOUNT_DISABLED")
+        )
+
+        assertTrue(error is AppError.AccountDisabled)
+        assertEquals(AppError.AccountDisabled.MESSAGE, error.message)
+    }
+
+    @Test
+    fun `a generic 403 remains a permission error`() {
+        val error = NetworkErrorMapper.toAppError(httpException(403, "Acceso denegado"))
+
+        assertTrue(error is AppError.Forbidden)
+    }
+
+    @Test
     fun `409 is reported as a conflict`() {
         val error = NetworkErrorMapper.toAppError(httpException(409, "Conflict"))
 
@@ -107,8 +124,10 @@ class NetworkErrorMapperTest {
         assertEquals(AppError.Unexpected.MESSAGE, error.message)
     }
 
-    private fun httpException(code: Int, message: String): HttpException {
-        val json = """{"status":$code,"error":"Error","message":"$message","path":"/api/test"}"""
+    private fun httpException(code: Int, message: String, businessCode: String? = null): HttpException {
+        val codeJson = businessCode?.let { "\"$it\"" } ?: "null"
+        val json =
+            """{"status":$code,"error":"Error","message":"$message","path":"/api/test","code":$codeJson}"""
         val body = json.toResponseBody("application/json".toMediaType())
         return HttpException(Response.error<Any>(code, body))
     }

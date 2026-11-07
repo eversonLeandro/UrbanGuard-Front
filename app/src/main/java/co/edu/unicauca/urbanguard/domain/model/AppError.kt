@@ -67,7 +67,7 @@ sealed class AppError {
     data class AccountDisabled(override val message: String) : AppError() {
         companion object {
             const val MESSAGE =
-                "Esta cuenta está deshabilitada. Contacta al administrador de tu conjunto."
+                "Tu cuenta se encuentra inhabilitada. Por favor, comunícate con el servicio de soporte."
         }
     }
 

@@ -36,6 +36,7 @@ import co.edu.unicauca.urbanguard.ui.components.PlaceholderScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.AdminSecurityMenuScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.RegisterGuardScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.SuperAdminScreen
+import co.edu.unicauca.urbanguard.ui.features.users.UserListScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.LoginScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.RegisterScreen
 import co.edu.unicauca.urbanguard.ui.features.guard.GuardHomeScreen
@@ -733,8 +734,14 @@ fun AppNavGraph(
                     sessionViewModel.logout {
                         navController.navigateToLogin()
                     }
-                }
+                },
+                onOpenUserManagement = { navController.navigate(Routes.USER_MANAGEMENT) }
             )
+        }
+
+        // ── Consola global (SUPERADMIN, HU-006) ───────────────────────
+        composable(Routes.USER_MANAGEMENT) {
+            UserListScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         // ── Vigilante (rol GUARD) ─────────────────────────────────────

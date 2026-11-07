@@ -64,5 +64,8 @@ object Routes {
     const val PUBLISH_NEWS = "publish_news"
     const val EDIT_NEWS = "edit_news/{announcementId}"
 
+    // Rutas de la consola global (SUPERADMIN, HU-006)
+    const val USER_MANAGEMENT = "user_management"
+
     fun editNews(announcementId: String): String = "edit_news/$announcementId"
 }
