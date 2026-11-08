@@ -44,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
+import co.edu.unicauca.urbanguard.ui.components.ProfileAvatar
+import co.edu.unicauca.urbanguard.ui.components.ProfileRefreshOnResume
 import co.edu.unicauca.urbanguard.ui.theme.UgAmber
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
 import co.edu.unicauca.urbanguard.ui.theme.UgBorderSoft
@@ -63,6 +65,8 @@ fun GuardHomeScreen(
     viewModel: GuardHomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    ProfileRefreshOnResume(uiState.profilePhotoUrl, uiState.profilePhotoExpiresAt,
+        viewModel::ensureFresh)
 
     Column(
         modifier = Modifier
@@ -83,7 +87,8 @@ fun GuardHomeScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // ── Tarjeta de Bienvenida del Guardia ──────────────────
-            GuardWelcomeCard(userName = uiState.userName)
+            GuardWelcomeCard(userName = uiState.userName, photoUrl = uiState.profilePhotoUrl,
+                onImageError = viewModel::onImageError)
 
             // ── Métricas del Día (Tarjetas Idénticas) ────────────────
             Text(
@@ -149,7 +154,7 @@ fun GuardHomeScreen(
  * Row que se emite aqui dentro, asi que la fila se reparte igual que antes.
  */
 @Composable
-private fun GuardWelcomeCard(userName: String) {
+private fun GuardWelcomeCard(userName: String, photoUrl: String?, onImageError: (String) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -179,13 +184,7 @@ private fun GuardWelcomeCard(userName: String) {
                         .border(1.5.dp, UgEmerald, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = if (userName.isNotBlank()) userName.take(1)
-                            .uppercase() else "G",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    ProfileAvatar(userName, photoUrl, 48.dp, UgEmerald.copy(alpha = 0.2f), onImageError)
                 }
                 Spacer(Modifier.width(14.dp))
                 Column {

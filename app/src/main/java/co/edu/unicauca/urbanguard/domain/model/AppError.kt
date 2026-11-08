@@ -9,6 +9,14 @@ package co.edu.unicauca.urbanguard.domain.model
  */
 sealed class AppError {
 
+    data class ImageTooLarge(override val message: String = MESSAGE) : AppError() {
+        companion object { const val MESSAGE = "La imagen supera el tamaño máximo permitido." }
+    }
+
+    data class UnsupportedImage(override val message: String = MESSAGE) : AppError() {
+        companion object { const val MESSAGE = "El formato de la imagen no es compatible." }
+    }
+
     /** Texto final, ya redactado para el usuario. */
     abstract val message: String
 

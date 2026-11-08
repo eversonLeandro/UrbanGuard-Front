@@ -2,9 +2,15 @@ package co.edu.unicauca.urbanguard.data.remote.api.service
 
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PasswordChangeTicketResponseDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.UserResponseDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.OwnProfileDto
+import okhttp3.MultipartBody
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Multipart
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -12,6 +18,16 @@ import retrofit2.http.Query
  * Endpoints de usuario administrados por identity-service a traves del API Gateway.
  */
 interface UserApi {
+
+    @GET("api/users/me/profile")
+    suspend fun getOwnProfile(): OwnProfileDto
+
+    @Multipart
+    @PUT("api/users/me/profile-photo")
+    suspend fun updateProfilePhoto(
+        @Header("Authorization") authorization: String,
+        @Part image: MultipartBody.Part
+    ): OwnProfileDto
 
     /**
      * Solicita al backend la generacion de un ticket seguro de cambio de contrasena en Auth0.

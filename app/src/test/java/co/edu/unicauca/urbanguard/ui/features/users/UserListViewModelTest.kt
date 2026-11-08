@@ -230,6 +230,10 @@ class UserListViewModelTest {
         private val deactivateError: Exception? = null,
         private val reactivateError: Exception? = null
     ) : UserRepository {
+        override suspend fun getOwnProfile() =
+            Result.failure<co.edu.unicauca.urbanguard.domain.model.OwnProfile>(UnsupportedOperationException())
+        override suspend fun updateProfilePhoto(image: okhttp3.MultipartBody.Part, token: String) =
+            Result.failure<co.edu.unicauca.urbanguard.domain.model.OwnProfile>(UnsupportedOperationException())
 
         // Estado mutable: refleja el comportamiento real del backend, donde
         // desactivar mueve la cuenta a inactivos y reactivar la devuelve.

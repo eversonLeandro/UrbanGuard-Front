@@ -4,12 +4,24 @@ import co.edu.unicauca.urbanguard.core.network.apiCall
 import co.edu.unicauca.urbanguard.data.mapper.toDomain
 import co.edu.unicauca.urbanguard.data.remote.api.service.UserApi
 import co.edu.unicauca.urbanguard.domain.model.User
+import co.edu.unicauca.urbanguard.domain.model.OwnProfile
+import okhttp3.MultipartBody
 import co.edu.unicauca.urbanguard.domain.repository.UserRepository
 import javax.inject.Inject
+import javax.inject.Named
 
 class UserRepositoryImpl @Inject constructor(
-    private val userApi: UserApi
+    private val userApi: UserApi,
+    @Named("profileUpload") private val uploadApi: UserApi = userApi
 ) : UserRepository {
+
+    override suspend fun getOwnProfile(): Result<OwnProfile> = apiCall {
+        userApi.getOwnProfile().toDomain()
+    }
+
+    override suspend fun updateProfilePhoto(image: MultipartBody.Part, token: String): Result<OwnProfile> = apiCall {
+        uploadApi.updateProfilePhoto("Bearer $token", image).toDomain()
+    }
 
     /**
      * Delega al endpoint POST /api/users/me/password-change del backend.

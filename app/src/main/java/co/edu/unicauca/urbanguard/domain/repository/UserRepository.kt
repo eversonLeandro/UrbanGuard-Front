@@ -1,12 +1,18 @@
 package co.edu.unicauca.urbanguard.domain.repository
 
 import co.edu.unicauca.urbanguard.domain.model.User
+import co.edu.unicauca.urbanguard.domain.model.OwnProfile
+import okhttp3.MultipartBody
 
 /**
  * Operaciones de usuario propias de identity-service.
  * El sub del JWT autenticado identifica al actor; no se aceptan IDs externos.
  */
 interface UserRepository {
+
+    suspend fun getOwnProfile(): Result<OwnProfile>
+
+    suspend fun updateProfilePhoto(image: MultipartBody.Part, token: String): Result<OwnProfile>
 
     /** Estados del listado administrativo aceptados por el backend (`?estado=`). */
     companion object {

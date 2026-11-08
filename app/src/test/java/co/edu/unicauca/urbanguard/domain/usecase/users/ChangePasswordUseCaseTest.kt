@@ -40,6 +40,10 @@ class ChangePasswordUseCaseTest {
     private class FakeUserRepository(
         private val ticketResult: Result<String>
     ) : UserRepository {
+        override suspend fun getOwnProfile() =
+            Result.failure<co.edu.unicauca.urbanguard.domain.model.OwnProfile>(UnsupportedOperationException())
+        override suspend fun updateProfilePhoto(image: okhttp3.MultipartBody.Part, token: String) =
+            Result.failure<co.edu.unicauca.urbanguard.domain.model.OwnProfile>(UnsupportedOperationException())
         override suspend fun createPasswordChangeTicket(): Result<String> = ticketResult
 
         // No se usan en este flujo; la interfaz creció con la HU-006.

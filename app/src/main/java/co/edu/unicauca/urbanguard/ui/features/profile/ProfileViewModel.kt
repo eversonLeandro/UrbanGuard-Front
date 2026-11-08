@@ -2,7 +2,11 @@ package co.edu.unicauca.urbanguard.ui.features.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.net.Uri
+import co.edu.unicauca.urbanguard.core.media.ProfilePhotoPreparer
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.repository.ProfileStateHolder
+import co.edu.unicauca.urbanguard.domain.repository.UserRepository
 import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.UserRole
@@ -18,10 +22,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
+// Un mismo ViewModel mantiene los flujos aprobados de perfil y contraseña.
+@Suppress("LongParameterList", "TooManyFunctions")
 class ProfileViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val reauthLoginProvider: ReauthLoginProvider,
-    private val changePasswordUseCase: ChangePasswordUseCase
+    private val changePasswordUseCase: ChangePasswordUseCase,
+    private val profileState: ProfileStateHolder,
+    private val users: UserRepository,
+    private val photoPreparer: ProfilePhotoPreparer
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -41,11 +50,111 @@ class ProfileViewModel @Inject constructor(
                             UserRole.SUPERADMIN -> "SUPERADMIN"
                             null -> ""
                         },
-                        role = session?.role
+                        role = session?.role,
+                        profilePhotoUrl = profileState.currentProfile()?.profilePhotoUrl,
+                        profilePhotoExpiresAt = profileState.currentProfile()?.profilePhotoExpiresAt
+                    )
+                }
+                if (session != null) profileState.ensureFresh()
+            }
+        }
+        viewModelScope.launch {
+            profileState.profile.collect {
+                val profile = profileState.currentProfile()
+                _uiState.update {
+                    it.copy(
+                        profilePhotoUrl = profile?.profilePhotoUrl,
+                        profilePhotoExpiresAt = profile?.profilePhotoExpiresAt,
+                        userName = sessionManager.session.value?.name?.takeIf(String::isNotBlank)
+                            ?: profile?.name.orEmpty()
                     )
                 }
             }
         }
+    }
+
+    fun ensureFresh() { viewModelScope.launch { profileState.ensureFresh() } }
+
+    fun onImageError(url: String) {
+        viewModelScope.launch { profileState.refreshAfterImageError(url) }
+    }
+
+    fun onPhotoErrorDismissed() { _uiState.update { it.copy(photoError = null) } }
+
+    fun onCameraDenied() {
+        _uiState.update { it.copy(photoError =
+            "Permite el uso de la cámara para tomar una foto. " +
+                "Puedes elegir una imagen de la galería.") }
+    }
+
+    fun onCameraFailure() {
+        _uiState.update { it.copy(photoError =
+            "No pudimos abrir la cámara. Inténtalo de nuevo o elige una imagen de la galería.") }
+    }
+
+    fun createCameraOutput(): Uri = photoPreparer.cameraOutput().first
+    fun discardCameraOutput(uri: Uri?) = photoPreparer.discardCameraOutput(uri)
+
+    fun updatePhoto(uri: Uri, cameraSource: Boolean = false) {
+        if (_uiState.value.isPhotoUploading) return
+        val expectedUserId = sessionManager.session.value?.userId ?: return
+        val uploadToken = sessionManager.token ?: return
+        _uiState.update { it.copy(isPhotoUploading = true, photoError = null) }
+        viewModelScope.launch {
+            try {
+                val prepared = photoPreparer.prepare(uri)
+                prepared.fold(
+                    onSuccess = photoReady@{ photo ->
+                        try {
+                            if (sessionManager.session.value?.userId != expectedUserId ||
+                                sessionManager.token != uploadToken) return@photoReady
+                            val result = users.updateProfilePhoto(photo.part, uploadToken)
+                            if (sessionManager.session.value?.userId != expectedUserId) return@photoReady
+                            result.fold(
+                            onSuccess = { profileState.publish(it, expectedUserId) },
+                            onFailure = { throwable ->
+                                val error = (throwable as? AppException)?.error
+                                    ?: AppError.Unexpected(AppError.Unexpected.MESSAGE)
+                                if (error is AppError.Timeout || error is AppError.Conflict) {
+                                    val refreshed = profileState.ensureFresh(force = true)
+                                    _uiState.update { state -> state.copy(photoError =
+                                        if (refreshed.isSuccess) UNCERTAIN_MESSAGE else UNCERTAIN_REFRESH_FAILED) }
+                                } else {
+                                    _uiState.update { state -> state.copy(photoError = photoMessage(error)) }
+                                }
+                            }
+                            )
+                        } finally {
+                            photo.cleanup()
+                        }
+                    },
+                    onFailure = { throwable ->
+                        val error = (throwable as? AppException)?.error
+                            ?: AppError.Unexpected(AppError.Unexpected.MESSAGE)
+                        _uiState.update { it.copy(photoError = photoMessage(error)) }
+                    }
+                )
+            } finally {
+                _uiState.update { it.copy(isPhotoUploading = false) }
+                if (cameraSource) photoPreparer.discardCameraOutput(uri)
+            }
+        }
+    }
+
+    private fun photoMessage(error: AppError): String = when (error) {
+        is AppError.ImageTooLarge, is AppError.UnsupportedImage,
+        is AppError.Validation, is AppError.Forbidden,
+        is AppError.SessionExpired -> error.message
+        is AppError.NoConnection -> "No pudimos actualizar la foto. Revisa tu conexión e inténtalo nuevamente."
+        else -> "No pudimos actualizar la foto en este momento."
+    }
+
+    private companion object {
+        const val UNCERTAIN_MESSAGE =
+            "No pudimos confirmar si la foto se actualizó. Mostramos el estado actual de tu perfil."
+        const val UNCERTAIN_REFRESH_FAILED =
+            "No pudimos confirmar si la foto se actualizó ni consultar el estado actual. " +
+                "Inténtalo de nuevo manualmente."
     }
 
     fun onLogout() {

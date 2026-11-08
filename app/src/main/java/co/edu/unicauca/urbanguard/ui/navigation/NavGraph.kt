@@ -735,7 +735,8 @@ fun AppNavGraph(
                         navController.navigateToLogin()
                     }
                 },
-                onOpenUserManagement = { navController.navigate(Routes.USER_MANAGEMENT) }
+                onOpenUserManagement = { navController.navigate(Routes.USER_MANAGEMENT) },
+                onOpenProfile = { navController.navigate(Routes.PROFILE) }
             )
         }
 

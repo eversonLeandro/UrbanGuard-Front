@@ -1,11 +1,16 @@
 package co.edu.unicauca.urbanguard.ui.features.profile
 
 import co.edu.unicauca.urbanguard.domain.model.UserRole
+import java.time.Instant
 
 data class ProfileUiState(
     val userName: String = "",
     val userRole: String = "",
     val role: UserRole? = null,
+    val profilePhotoUrl: String? = null,
+    val profilePhotoExpiresAt: Instant? = null,
+    val isPhotoUploading: Boolean = false,
+    val photoError: String? = null,
 
     // ── Cambio de contraseña ─────────────────────────────────────────────────
 
