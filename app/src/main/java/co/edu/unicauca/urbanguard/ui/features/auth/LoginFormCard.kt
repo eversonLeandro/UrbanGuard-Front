@@ -82,7 +82,8 @@ import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 internal fun LoginFormCard(
     uiState: LoginUiState,
     viewModel: LoginViewModel,
-    colors: LoginColors
+    colors: LoginColors,
+    onNavigateToPasswordReset: (String) -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(20.dp),
@@ -127,10 +128,8 @@ internal fun LoginFormCard(
                 text = "¿Olvidaste tu contraseña?",
                 color = colors.textPrimary,
                 fontSize = 12.5.sp,
-                modifier = Modifier.align(Alignment.End)
-                // Pendiente: conectar con el flujo de recuperación de
-                // contraseña, que quedó fuera del Sprint 1. Por ahora el
-                // enlace es visual pero no navega.
+                modifier = Modifier.align(Alignment.End),
+                onClick = { onNavigateToPasswordReset(uiState.email) }
             )
 
             // Banner de error con animación

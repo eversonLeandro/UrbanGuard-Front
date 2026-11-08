@@ -1,7 +1,10 @@
 package co.edu.unicauca.urbanguard.data.repository
 
 import co.edu.unicauca.urbanguard.core.network.NetworkErrorMapper
+import co.edu.unicauca.urbanguard.core.network.apiCall
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.data.remote.api.dto.PasswordResetRequestDto
+import co.edu.unicauca.urbanguard.data.remote.api.service.AuthApi
 import co.edu.unicauca.urbanguard.data.remote.auth0.Auth0Manager
 import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.UserRole
@@ -12,7 +15,8 @@ import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
     private val auth0Manager: Auth0Manager,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val authApi: AuthApi
 ) : AuthRepository {
 
     /**
@@ -52,6 +56,11 @@ class AuthRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.failure(toAppException(e))
         }
+    }
+
+    override suspend fun requestPasswordReset(email: String): Result<Unit> = apiCall {
+        authApi.requestPasswordReset(PasswordResetRequestDto(email.trim()))
+        Unit
     }
 
     /**

@@ -10,6 +10,15 @@ class AuthInterceptor @Inject constructor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
+        if (original.url.encodedPath == "/api/auth/password-reset" &&
+            original.header("X-UrbanGuard-Public-Request") == "password-reset"
+        ) {
+            val request = original.newBuilder()
+                .removeHeader("X-UrbanGuard-Public-Request")
+                .removeHeader("Authorization")
+                .build()
+            return chain.proceed(request)
+        }
         val token = sessionManager.token
         val request = if (token != null) {
             original.newBuilder().addHeader("Authorization", "Bearer $token").build()

@@ -1,5 +1,6 @@
 package co.edu.unicauca.urbanguard.ui.navigation
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -38,6 +39,7 @@ import co.edu.unicauca.urbanguard.ui.features.admin.RegisterGuardScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.SuperAdminScreen
 import co.edu.unicauca.urbanguard.ui.features.users.UserListScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.LoginScreen
+import co.edu.unicauca.urbanguard.ui.features.auth.PasswordResetScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.RegisterScreen
 import co.edu.unicauca.urbanguard.ui.features.guard.GuardHomeScreen
 import co.edu.unicauca.urbanguard.ui.features.guard.GuardScanQrScreen
@@ -181,7 +183,25 @@ fun AppNavGraph(
                 onNavigateToRegister = {
                     // "¿Nuevo en UrbanGuard? Empezar aquí" → formulario de registro
                     navController.navigate(Routes.REGISTER)
+                },
+                onNavigateToPasswordReset = { email ->
+                    navController.navigate(
+                        "${Routes.PASSWORD_RESET.substringBefore("?")}?email=${Uri.encode(email)}"
+                    )
                 }
+            )
+        }
+
+        composable(
+            route = Routes.PASSWORD_RESET,
+            arguments = listOf(navArgument("email") {
+                type = NavType.StringType
+                defaultValue = ""
+            })
+        ) { backStackEntry ->
+            PasswordResetScreen(
+                initialEmail = backStackEntry.arguments?.getString("email").orEmpty(),
+                onNavigateToLogin = { navController.popBackStack() }
             )
         }
 
