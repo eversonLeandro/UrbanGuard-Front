@@ -103,6 +103,7 @@ fun LoginScreen(
     onLoginSuccess: (role: UserRole) -> Unit,
     onNavigateToOnboarding: () -> Unit,
     onNavigateToRegister: () -> Unit = onNavigateToOnboarding,
+    onNavigateToPasswordReset: (String) -> Unit = {},
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -174,7 +175,8 @@ fun LoginScreen(
             LoginFormCard(
                 uiState = uiState,
                 viewModel = viewModel,
-                colors = colors
+                colors = colors,
+                onNavigateToPasswordReset = onNavigateToPasswordReset
             )
         }
 

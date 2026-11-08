@@ -3,6 +3,7 @@ package co.edu.unicauca.urbanguard.ui.navigation
 // Rutas de navegación — una constante por pantalla
 object Routes {
     const val LOGIN = "login"
+    const val PASSWORD_RESET = "password_reset?email={email}"
     const val CONJUNTO_CODE = "conjunto_code"
     const val ACTIVATE_CONJUNTO = "activate_conjunto"
     const val REGISTER_CONJUNTO = "register_conjunto/{activationCode}"

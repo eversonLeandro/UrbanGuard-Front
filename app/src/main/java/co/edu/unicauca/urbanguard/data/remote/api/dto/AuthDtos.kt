@@ -12,3 +12,11 @@ data class LoginResponseDto(
     val role: String,
     val conjuntosAsociados: List<ConjuntoUserAssociationDto>? = null
 )
+
+data class PasswordResetRequestDto(
+    val email: String
+)
+
+data class PasswordResetResponseDto(
+    val message: String
+)

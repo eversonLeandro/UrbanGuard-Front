@@ -119,6 +119,8 @@ class LoginViewModelTest {
             )
         }
 
+        override suspend fun requestPasswordReset(email: String): Result<Unit> = Result.success(Unit)
+
         override suspend fun restoreSession(): UserSession? = null
 
         override suspend fun logout() = Unit
