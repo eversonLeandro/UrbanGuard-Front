@@ -7,7 +7,7 @@ data class LinkByCodeUiState(
     val code: String = "",
     val codeError: String? = null,
 
-    // Apartamento del futuro residente (solo dígitos, sin negativos)
+    // Apartamento del futuro residente (letras, números, espacios y guion)
     val apartamento: String = "",
     val apartamentoError: String? = null,
 

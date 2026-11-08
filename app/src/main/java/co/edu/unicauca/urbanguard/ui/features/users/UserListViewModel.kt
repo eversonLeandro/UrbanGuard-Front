@@ -50,43 +50,26 @@ class UserListViewModel @Inject constructor(
             errorMessage = null,
             successMessage = null
         )
-        viewModelScope.launch {
-            listUsers(filter.apiValue).fold(
-                onSuccess = { users ->
-                    _uiState.value = _uiState.value.copy(
-                        users = users,
-                        isLoading = false,
-                        isRefreshing = false
-                    )
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        isRefreshing = false,
-                        errorMessage = AppError.from(error).message
-                    )
-                }
-            )
-        }
+        reloadFilter()
     }
 
     /** Restaura el estado de carga tras un error sin vaciar la lista visible. */
     fun onRetry() {
         _uiState.value = _uiState.value.copy(isRefreshing = true, errorMessage = null)
-        selectFilterKeepingState(_uiState.value.filter)
+        reloadFilter()
     }
 
     fun onQueryChange(value: String) {
         _uiState.value = _uiState.value.copy(query = value)
     }
 
-    /** Abre el diálogo de confirmación; el desactivado real ocurre en [onConfirmDeactivate]. */
-    fun onRequestDeactivate(user: User) {
-        _uiState.value = _uiState.value.copy(pendingDeactivation = user, errorMessage = null)
-    }
-
-    fun onDismissDeactivateDialog() {
-        _uiState.value = _uiState.value.copy(pendingDeactivation = null)
+    /** Abre o cierra el diálogo; el desactivado real ocurre en [onConfirmDeactivate]. */
+    fun onDeactivateDialogChange(user: User?) {
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            pendingDeactivation = user,
+            errorMessage = if (user == null) current.errorMessage else null
+        )
     }
 
     fun onConfirmDeactivate() {
@@ -100,14 +83,9 @@ class UserListViewModel @Inject constructor(
         performAction(user.userId, isDeactivation = false)
     }
 
-    /** Descarta el mensaje efímero de éxito cuando la snackbar termina. */
-    fun onSuccessMessageShown() {
-        _uiState.value = _uiState.value.copy(successMessage = null)
-    }
-
-    /** Descarta el banner de error (p. ej. el 409 de la red de seguridad). */
-    fun onErrorMessageShown() {
-        _uiState.value = _uiState.value.copy(errorMessage = null)
+    /** Descarta los mensajes efímeros cuando la UI ya los consumió. */
+    fun onFeedbackShown() {
+        _uiState.value = _uiState.value.copy(successMessage = null, errorMessage = null)
     }
 
     private fun performAction(userId: String, isDeactivation: Boolean) {
@@ -122,42 +100,36 @@ class UserListViewModel @Inject constructor(
             if (isDeactivation) {
                 deactivateUser(userId).fold(
                     onSuccess = {
-                        onActionSuccess(isDeactivation = true)
+                        finishAction(isDeactivation = true)
                         // La fila sale de la vista de inmediato (optimista) y la
                         // recarga del filtro confirma con el servidor.
-                        refreshCurrentFilter(userId)
+                        reloadFilter(userId)
                     },
-                    onFailure = { onActionFailure(it) }
+                    onFailure = { finishAction(error = it) }
                 )
             } else {
                 reactivateUser(userId).fold(
                     onSuccess = { updated ->
-                        onActionSuccess(isDeactivation = false)
+                        finishAction(isDeactivation = false)
                         // La lista cargada pertenece al filtro "inactivos": la cuenta
                         // reactivada sale de la vista y la recarga lo confirma.
-                        refreshCurrentFilter(updated.userId)
+                        reloadFilter(updated.userId)
                     },
-                    onFailure = { onActionFailure(it) }
+                    onFailure = { finishAction(error = it) }
                 )
             }
         }
     }
 
-    private fun onActionSuccess(isDeactivation: Boolean) {
+    private fun finishAction(isDeactivation: Boolean? = null, error: Throwable? = null) {
         _uiState.value = _uiState.value.copy(
             actionInProgressUserId = null,
-            successMessage = if (isDeactivation) {
-                "Acceso revocado. El historial de la cuenta se conserva."
-            } else {
-                "Acceso restaurado."
-            }
-        )
-    }
-
-    private fun onActionFailure(error: Throwable) {
-        _uiState.value = _uiState.value.copy(
-            actionInProgressUserId = null,
-            errorMessage = AppError.from(error).message
+            successMessage = when {
+                error != null -> null
+                isDeactivation == true -> "Acceso revocado. El historial de la cuenta se conserva."
+                else -> "Acceso restaurado."
+            },
+            errorMessage = error?.let { AppError.from(it).message }
         )
     }
 
@@ -165,16 +137,14 @@ class UserListViewModel @Inject constructor(
      * Saca la fila de la lista cargada tan pronto la acción terminó bien, y la
      * recarga del filtro vigente reemplaza el ajuste local con el estado real.
      */
-    private fun refreshCurrentFilter(userId: String) {
-        _uiState.value = _uiState.value.copy(
-            users = _uiState.value.users.filterNot { it.userId == userId }
-        )
-        selectFilterKeepingState(_uiState.value.filter)
-    }
-
-    private fun selectFilterKeepingState(filter: UserListFilter) {
+    private fun reloadFilter(removedUserId: String? = null) {
+        if (removedUserId != null) {
+            _uiState.value = _uiState.value.copy(
+                users = _uiState.value.users.filterNot { it.userId == removedUserId }
+            )
+        }
         viewModelScope.launch {
-            listUsers(filter.apiValue).fold(
+            listUsers(_uiState.value.filter.apiValue).fold(
                 onSuccess = { users ->
                     _uiState.value = _uiState.value.copy(
                         users = users,

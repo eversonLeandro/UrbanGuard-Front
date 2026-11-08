@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.push.PushRegistrar
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.RequestLinkUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.SearchConjuntoUseCase
+import co.edu.unicauca.urbanguard.domain.validation.UnitIdentifierValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,26 +33,15 @@ class LinkByCodeViewModel @Inject constructor(
         )
     }
 
-    // Máximo de dígitos permitidos para el número de apartamento
     fun onApartamentoChange(value: String) {
-        // Solo dígitos (bloquea signos y negativos) + límite de longitud
-        val filtered = value.filter { it.isDigit() }.take(APARTAMENTO_MAX_LENGTH)
         _uiState.value = _uiState.value.copy(
-            apartamento = filtered,
+            apartamento = UnitIdentifierValidator.sanitize(value),
             apartamentoError = null
         )
     }
 
-    private fun validateApartamento(): String? {
-        val apartamento = _uiState.value.apartamento
-        if (apartamento.isBlank()) {
-            return "Ingresa el número de apartamento"
-        }
-        if (apartamento.length < APARTAMENTO_MIN_LENGTH) {
-            return "El apartamento debe tener al menos $APARTAMENTO_MIN_LENGTH dígitos"
-        }
-        return null
-    }
+    private fun validateApartamento(): String? =
+        UnitIdentifierValidator.validate(_uiState.value.apartamento)
 
     fun onSearchClick() {
         if (_uiState.value.isSearching) return
@@ -96,7 +86,7 @@ class LinkByCodeViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(apartamentoError = apartamentoError)
             return
         }
-        val apartamento = _uiState.value.apartamento
+        val apartamento = _uiState.value.apartamento.trim()
         val unidad = _uiState.value.conjuntoFound?.unidades
             ?.firstOrNull { it.identifier.equals(apartamento, ignoreCase = true) }
         if (unidad == null) {
@@ -133,8 +123,4 @@ class LinkByCodeViewModel @Inject constructor(
         }
     }
 
-    companion object {
-        private const val APARTAMENTO_MIN_LENGTH = 1
-        private const val APARTAMENTO_MAX_LENGTH = 4
-    }
 }

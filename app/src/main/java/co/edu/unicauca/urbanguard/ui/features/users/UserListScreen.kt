@@ -74,7 +74,6 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
  * defensa de UX; el backend además responde 409 si el servidor recibe un
  * intento de autodesactivación.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserListScreen(
     onNavigateBack: () -> Unit = {},
@@ -87,27 +86,14 @@ fun UserListScreen(
     LaunchedEffect(state.successMessage) {
         state.successMessage?.let { message ->
             snackbarHostState.showSnackbar(message)
-            viewModel.onSuccessMessageShown()
+            viewModel.onFeedbackShown()
         }
     }
 
     Scaffold(
         containerColor = UgBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text("Gestión de usuarios", fontWeight = FontWeight.Bold, color = UgNavy) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = UgNavy
-                        )
-                    }
-                }
-            )
-        }
+        topBar = { UserListTopBar(onNavigateBack = onNavigateBack) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -165,7 +151,7 @@ fun UserListScreen(
                 state.isLoading -> FullLoading()
                 state.errorMessage != null -> ErrorBanner(
                     message = state.errorMessage!!,
-                    onDismiss = viewModel::onErrorMessageShown
+                    onDismiss = viewModel::onFeedbackShown
                 )
                 else -> UserResults(state = state, viewModel = viewModel)
             }
@@ -179,9 +165,26 @@ fun UserListScreen(
             isSelf = pending.userId == state.myUserId,
             inProgress = state.actionInProgressUserId == pending.userId,
             onConfirm = viewModel::onConfirmDeactivate,
-            onDismiss = viewModel::onDismissDeactivateDialog
+            onDismiss = { viewModel.onDeactivateDialogChange(null) }
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun UserListTopBar(onNavigateBack: () -> Unit) {
+    TopAppBar(
+        title = { Text("Gestión de usuarios", fontWeight = FontWeight.Bold, color = UgNavy) },
+        navigationIcon = {
+            IconButton(onClick = onNavigateBack) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Volver",
+                    tint = UgNavy
+                )
+            }
+        }
+    )
 }
 
 @Composable
@@ -360,7 +363,7 @@ private fun UserRow(state: UserListUiState, user: User, viewModel: UserListViewM
                     )
                 } else {
                     IconButton(
-                        onClick = { viewModel.onRequestDeactivate(user) },
+                        onClick = { viewModel.onDeactivateDialogChange(user) },
                         modifier = Modifier.size(38.dp)
                     ) {
                         Icon(

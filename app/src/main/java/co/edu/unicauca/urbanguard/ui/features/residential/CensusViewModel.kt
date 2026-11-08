@@ -4,7 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.AppError
+import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.usecase.residential.GetCensusUseCase
+import co.edu.unicauca.urbanguard.domain.usecase.residential.RegisterUnitUseCase
+import co.edu.unicauca.urbanguard.domain.usecase.residential.UpdateUnitUseCase
+import co.edu.unicauca.urbanguard.domain.validation.UnitIdentifierValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,10 +20,14 @@ import javax.inject.Inject
 @HiltViewModel
 class CensusViewModel @Inject constructor(
     private val getCensusUseCase: GetCensusUseCase,
+    private val registerUnitUseCase: RegisterUnitUseCase,
+    private val updateUnitUseCase: UpdateUnitUseCase,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(CensusUiState())
+    private val _uiState = MutableStateFlow(
+        CensusUiState(isAdmin = sessionManager.currentRole() == UserRole.ADMIN)
+    )
     val uiState: StateFlow<CensusUiState> = _uiState.asStateFlow()
     private var loadJob: Job? = null
     private var hasObservedScreenResume = false
@@ -88,7 +96,131 @@ class CensusViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(selectedUnitId = null)
     }
 
+    fun onRegisterUnit() {
+        val state = _uiState.value
+        if (state.isRegistering) return
+        if (sessionManager.currentRole() != UserRole.ADMIN) {
+            _uiState.value = state.copy(registrationError = AppError.Forbidden(NO_ADMIN_MESSAGE))
+            return
+        }
+        val complexId = sessionManager.getActiveConjunto()?.conjuntoId
+        if (complexId.isNullOrBlank()) {
+            _uiState.value = state.copy(
+                registrationError = AppError.Validation(NO_ACTIVE_COMPLEX_MESSAGE)
+            )
+            return
+        }
+
+        _uiState.value = state.copy(
+            isRegistering = true,
+            registrationSuccess = null,
+            registrationError = null
+        )
+        viewModelScope.launch {
+            registerUnitUseCase(complexId).fold(
+                onSuccess = { unit ->
+                    _uiState.value = _uiState.value.copy(
+                        isRegistering = false,
+                        registrationSuccess = "Apartamento ${unit.identifier} agregado"
+                    )
+                    onRefresh()
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isRegistering = false,
+                        registrationError = AppError.from(error)
+                    )
+                }
+            )
+        }
+    }
+
+    fun onDismissFeedback() {
+        _uiState.value = _uiState.value.copy(
+            registrationSuccess = null,
+            registrationError = null,
+            updateUnitSuccess = null
+        )
+    }
+
+    fun onEditUnitDialogChange(visible: Boolean) {
+        val state = _uiState.value
+        if (state.isUpdatingUnit) return
+        if (visible && (!state.isAdmin || state.selectedUnit == null)) return
+        _uiState.value = state.copy(
+            isEditingUnit = visible,
+            updateUnitError = null,
+            updateUnitSuccess = null
+        )
+    }
+
+    fun onUpdateUnit(identifier: String) {
+        val state = _uiState.value
+        if (state.isUpdatingUnit) return
+        if (!state.isAdmin || sessionManager.currentRole() != UserRole.ADMIN) {
+            _uiState.value = state.copy(
+                updateUnitError = AppError.Forbidden(NO_ADMIN_EDIT_MESSAGE)
+            )
+            return
+        }
+        val unit = state.selectedUnit
+        if (unit == null) {
+            _uiState.value = state.copy(
+                updateUnitError = AppError.Validation(NO_UNIT_SELECTED_MESSAGE)
+            )
+            return
+        }
+        val complexId = sessionManager.getActiveConjunto()?.conjuntoId
+        if (complexId.isNullOrBlank()) {
+            _uiState.value = state.copy(
+                updateUnitError = AppError.Validation(NO_ACTIVE_COMPLEX_MESSAGE)
+            )
+            return
+        }
+
+        val trimmedIdentifier = identifier.trim()
+        UnitIdentifierValidator.validate(trimmedIdentifier)?.let { message ->
+            _uiState.value = state.copy(updateUnitError = AppError.Validation(message))
+            return
+        }
+        if (trimmedIdentifier == unit.identifier) {
+            _uiState.value = state.copy(
+                isEditingUnit = false,
+                updateUnitError = null
+            )
+            return
+        }
+
+        _uiState.value = state.copy(
+            isUpdatingUnit = true,
+            updateUnitError = null,
+            updateUnitSuccess = null
+        )
+        viewModelScope.launch {
+            updateUnitUseCase(complexId, unit.id, trimmedIdentifier).fold(
+                onSuccess = { updatedIdentifier ->
+                    _uiState.value = _uiState.value.copy(
+                        isUpdatingUnit = false,
+                        isEditingUnit = false,
+                        updateUnitSuccess = "Apartamento $updatedIdentifier actualizado"
+                    )
+                    onRefresh()
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isUpdatingUnit = false,
+                        updateUnitError = AppError.from(error)
+                    )
+                }
+            )
+        }
+    }
+
     private companion object {
+        const val NO_ADMIN_EDIT_MESSAGE =
+            "No tienes permisos de administrador para editar apartamentos."
+        const val NO_UNIT_SELECTED_MESSAGE = "No se seleccionó un apartamento."
+        const val NO_ADMIN_MESSAGE = "No tienes permisos de administrador para agregar apartamentos."
         const val NO_ACTIVE_COMPLEX_MESSAGE = "No hay un conjunto activo seleccionado."
     }
 }
