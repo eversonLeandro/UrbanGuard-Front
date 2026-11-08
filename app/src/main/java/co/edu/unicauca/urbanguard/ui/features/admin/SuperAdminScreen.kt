@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Construction
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -59,7 +60,8 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 @Composable
 fun SuperAdminScreen(
     onLogout: () -> Unit = {},
-    onOpenUserManagement: () -> Unit = {}
+    onOpenUserManagement: () -> Unit = {},
+    onOpenProfile: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -84,6 +86,7 @@ fun SuperAdminScreen(
 
             // ── Gestión de cuentas (HU-006) ─────────────────────────────
             UserManagementCard(onClick = onOpenUserManagement)
+            ProfileAccessCard(onClick = onOpenProfile)
 
             // ── Métricas de Plataforma ───────────────────────────────
             PlatformMetrics()
@@ -93,6 +96,23 @@ fun SuperAdminScreen(
 
             // ── Botón de Cerrar Sesión ──────────────────────────────
             SuperAdminLogoutButton(onClick = onLogout)
+        }
+    }
+}
+
+@Composable
+private fun ProfileAccessCard(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Person, contentDescription = null, tint = UgEmerald)
+            Spacer(Modifier.width(12.dp))
+            Text("Mi perfil", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, color = UgNavy)
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = UgTextSecondary)
         }
     }
 }

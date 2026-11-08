@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.ui.features.home
 
 import co.edu.unicauca.urbanguard.core.session.NoOpRolePersistence
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.testProfileState
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoUserAssociation
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
@@ -48,7 +49,7 @@ class HomeViewModelTest {
             )
         )
 
-        val viewModel = HomeViewModel(sessionManager)
+        val viewModel = HomeViewModel(sessionManager, testProfileState(sessionManager))
         advanceUntilIdle()
 
         assertEquals("Torres del Prado", viewModel.uiState.value.conjuntoName)
@@ -69,7 +70,7 @@ class HomeViewModelTest {
             )
         )
 
-        val viewModel = HomeViewModel(sessionManager)
+        val viewModel = HomeViewModel(sessionManager, testProfileState(sessionManager))
         advanceUntilIdle()
 
         assertEquals("", viewModel.uiState.value.conjuntoName)
@@ -90,7 +91,7 @@ class HomeViewModelTest {
                 )
             )
         )
-        val viewModel = HomeViewModel(sessionManager)
+        val viewModel = HomeViewModel(sessionManager, testProfileState(sessionManager))
         advanceUntilIdle()
         assertEquals("", viewModel.uiState.value.conjuntoName)
 
@@ -115,7 +116,7 @@ class HomeViewModelTest {
                 conjuntoActivoNombre = "Nombre Cacheado"
             )
         )
-        val viewModel = HomeViewModel(sessionManager)
+        val viewModel = HomeViewModel(sessionManager, testProfileState(sessionManager))
         advanceUntilIdle()
         assertEquals("Nombre Cacheado", viewModel.uiState.value.conjuntoName)
 

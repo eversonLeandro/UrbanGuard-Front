@@ -3,6 +3,7 @@ package co.edu.unicauca.urbanguard.ui.features.guard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.repository.ProfileStateHolder
 import co.edu.unicauca.urbanguard.domain.usecase.onboarding.GetMyConjuntosUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +16,8 @@ import javax.inject.Inject
 @HiltViewModel
 class GuardHomeViewModel @Inject constructor(
     private val sessionManager: SessionManager,
-    private val getMyConjuntosUseCase: GetMyConjuntosUseCase
+    private val getMyConjuntosUseCase: GetMyConjuntosUseCase,
+    private val profileState: ProfileStateHolder
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GuardHomeUiState())
@@ -44,9 +46,24 @@ class GuardHomeViewModel @Inject constructor(
                         userName = session?.name?.takeIf { it.isNotBlank() }
                             ?: session?.userId?.takeIf { it.isNotBlank() }
                             .orEmpty(),
-                        conjuntoName = sessionManager.getActiveConjunto()?.nombre.orEmpty()
+                        conjuntoName = sessionManager.getActiveConjunto()?.nombre.orEmpty(),
+                        profilePhotoUrl = profileState.currentProfile()?.profilePhotoUrl,
+                        profilePhotoExpiresAt = profileState.currentProfile()?.profilePhotoExpiresAt
                     )
                 }
+                if (session != null) profileState.ensureFresh()
+            }
+        }
+
+        viewModelScope.launch {
+            profileState.profile.collect {
+                val profile = profileState.currentProfile()
+                _uiState.update { it.copy(
+                    profilePhotoUrl = profile?.profilePhotoUrl,
+                    profilePhotoExpiresAt = profile?.profilePhotoExpiresAt,
+                    userName = sessionManager.session.value?.name?.takeIf(String::isNotBlank)
+                        ?: profile?.name.orEmpty()
+                ) }
             }
         }
 
@@ -64,4 +81,7 @@ class GuardHomeViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = false) }
         }
     }
+
+    fun ensureFresh() { viewModelScope.launch { profileState.ensureFresh() } }
+    fun onImageError(url: String) { viewModelScope.launch { profileState.refreshAfterImageError(url) } }
 }

@@ -179,6 +179,8 @@ private fun titleFor(error: AppError): String = when (error) {
     is AppError.RateLimited -> "Demasiados intentos"
     is AppError.ServerError -> "Servicio caído"
     is AppError.Validation -> "Datos inválidos"
+    is AppError.ImageTooLarge -> "Imagen demasiado grande"
+    is AppError.UnsupportedImage -> "Formato no compatible"
     is AppError.Unexpected -> "Error inesperado"
 }
 

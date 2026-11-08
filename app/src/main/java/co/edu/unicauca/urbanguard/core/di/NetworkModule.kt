@@ -14,6 +14,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import javax.inject.Named
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -53,4 +54,24 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideUserApi(retrofit: Retrofit): UserApi = retrofit.create(UserApi::class.java)
+
+    /** Solo el PUT de foto usa este cliente: no repetir ni seguir redirecciones del cuerpo. */
+    @Provides
+    @Singleton
+    @Named("profileUpload")
+    fun provideProfileUploadClient(okHttpClient: OkHttpClient): OkHttpClient =
+        okHttpClient.newBuilder()
+            .apply { interceptors().removeAll { it is AuthInterceptor } }
+            .retryOnConnectionFailure(false)
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .build()
+
+    @Provides
+    @Singleton
+    @Named("profileUpload")
+    fun provideProfileUploadUserApi(
+        retrofit: Retrofit,
+        @Named("profileUpload") client: OkHttpClient
+    ): UserApi = retrofit.newBuilder().client(client).build().create(UserApi::class.java)
 }

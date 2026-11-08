@@ -344,7 +344,7 @@ class ResidentPqrsScreensTest {
 
     @Test fun `tarjeta Home residente abre Mis PQRS y no bandeja admin`() {
         val session = activeSession()
-        val vm = HomeViewModel(session)
+        val vm = HomeViewModel(session, co.edu.unicauca.urbanguard.testProfileState(session))
         var residentOpens = 0
         var adminOpens = 0
         compose.setContent {
@@ -363,7 +363,7 @@ class ResidentPqrsScreensTest {
     @Test fun `tarjeta Home admin conserva acceso a su bandeja`() {
         val session = activeSession()
         session.saveSession(requireNotNull(session.session.value).copy(role = UserRole.ADMIN))
-        val vm = HomeViewModel(session)
+        val vm = HomeViewModel(session, co.edu.unicauca.urbanguard.testProfileState(session))
         var residentOpens = 0
         var adminOpens = 0
         compose.setContent {
