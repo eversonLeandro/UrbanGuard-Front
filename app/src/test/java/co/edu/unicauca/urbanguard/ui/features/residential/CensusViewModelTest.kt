@@ -5,12 +5,18 @@ import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoUserAssociation
+import co.edu.unicauca.urbanguard.domain.model.OwnerTenant
+import co.edu.unicauca.urbanguard.domain.model.OwnerTenantDraft
+import co.edu.unicauca.urbanguard.domain.model.RegisteredResidentialUnit
 import co.edu.unicauca.urbanguard.domain.model.ResidentialResident
 import co.edu.unicauca.urbanguard.domain.model.ResidentialUnit
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
 import co.edu.unicauca.urbanguard.domain.repository.ResidentialRepository
 import co.edu.unicauca.urbanguard.domain.usecase.residential.GetCensusUseCase
+import co.edu.unicauca.urbanguard.domain.usecase.residential.RegisterUnitUseCase
+import co.edu.unicauca.urbanguard.domain.usecase.residential.UpdateUnitUseCase
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -53,6 +59,7 @@ class CensusViewModelTest {
         assertEquals(expected, viewModel.uiState.value.units)
         assertFalse(viewModel.uiState.value.isLoading)
         assertTrue(viewModel.uiState.value.error == null)
+        assertTrue(viewModel.uiState.value.isAdmin)
     }
 
     @Test
@@ -79,6 +86,8 @@ class CensusViewModelTest {
         val repository = FakeResidentialRepository(Result.success(emptyList()))
         val viewModel = CensusViewModel(
             GetCensusUseCase(repository),
+            RegisterUnitUseCase(repository),
+            UpdateUnitUseCase(repository),
             SessionManager(NoOpRolePersistence)
         )
 
@@ -144,6 +153,173 @@ class CensusViewModelTest {
         assertEquals(unit.id, viewModel.uiState.value.selectedUnit?.id)
     }
 
+    @Test
+    fun `registrar apartamento muestra exito y refresca el censo`() = runTest {
+        val repository = FakeResidentialRepository(Result.success(emptyList()))
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+        val newUnit = ResidentialUnit("unit-2", "2", emptyList())
+        repository.result = Result.success(listOf(newUnit))
+        repository.registerResult = Result.success(
+            RegisteredResidentialUnit("unit-2", "2", 1)
+        )
+
+        viewModel.onRegisterUnit()
+        advanceUntilIdle()
+
+        assertEquals("complex-1", repository.lastRegisterComplexId)
+        assertEquals(1, repository.registerCalls)
+        assertEquals(2, repository.calls)
+        assertEquals(listOf(newUnit), viewModel.uiState.value.units)
+        assertEquals("Apartamento 2 agregado", viewModel.uiState.value.registrationSuccess)
+        assertTrue(viewModel.uiState.value.registrationError == null)
+        assertFalse(viewModel.uiState.value.isRegistering)
+    }
+
+    @Test
+    fun `registrar apartamento muestra el error y conserva el censo`() = runTest {
+        val unit = ResidentialUnit("unit-1", "1", emptyList())
+        val repository = FakeResidentialRepository(Result.success(listOf(unit)))
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+        repository.registerResult = Result.failure(
+            AppException(AppError.Forbidden("Acceso denegado"))
+        )
+
+        viewModel.onRegisterUnit()
+        advanceUntilIdle()
+
+        assertEquals(1, repository.registerCalls)
+        assertEquals(1, repository.calls)
+        assertEquals(listOf(unit), viewModel.uiState.value.units)
+        assertTrue(viewModel.uiState.value.registrationError is AppError.Forbidden)
+        assertEquals(
+            "Acceso denegado",
+            viewModel.uiState.value.registrationError?.message
+        )
+        assertTrue(viewModel.uiState.value.registrationSuccess == null)
+        assertFalse(viewModel.uiState.value.isRegistering)
+    }
+
+    @Test
+    fun `registrar apartamento ignora dobles envios mientras esta en curso`() = runTest {
+        val repository = FakeResidentialRepository(Result.success(emptyList()))
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+        val gate = CompletableDeferred<Unit>()
+        repository.registerGate = gate
+        repository.result = Result.success(listOf(ResidentialUnit("unit-2", "2", emptyList())))
+        repository.registerResult = Result.success(
+            RegisteredResidentialUnit("unit-2", "2", 1)
+        )
+
+        viewModel.onRegisterUnit()
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.isRegistering)
+
+        viewModel.onRegisterUnit()
+        assertEquals(1, repository.registerCalls)
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isRegistering)
+    }
+
+    @Test
+    fun `editar apartamento muestra exito y refresca el censo`() = runTest {
+        val original = ResidentialUnit("unit-1", "101", emptyList())
+        val repository = FakeResidentialRepository(Result.success(listOf(original)))
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+        viewModel.onUnitSelected(original.id)
+        viewModel.onEditUnitDialogChange(true)
+        val renamed = original.copy(identifier = "A-101")
+        repository.result = Result.success(listOf(renamed))
+        repository.updateResult = Result.success("A-101")
+
+        viewModel.onUpdateUnit("  A-101  ")
+        advanceUntilIdle()
+
+        assertEquals("complex-1", repository.lastUpdateComplexId)
+        assertEquals("unit-1", repository.lastUpdateUnitId)
+        assertEquals("A-101", repository.lastUpdateIdentifier)
+        assertEquals(1, repository.updateCalls)
+        assertEquals(2, repository.calls)
+        assertEquals(listOf(renamed), viewModel.uiState.value.units)
+        assertEquals("Apartamento A-101 actualizado", viewModel.uiState.value.updateUnitSuccess)
+        assertTrue(viewModel.uiState.value.updateUnitError == null)
+        assertFalse(viewModel.uiState.value.isEditingUnit)
+        assertFalse(viewModel.uiState.value.isUpdatingUnit)
+    }
+
+    @Test
+    fun `editar apartamento con el mismo valor no llama al backend y cierra el dialogo`() = runTest {
+        val unit = ResidentialUnit("unit-1", "101", emptyList())
+        val repository = FakeResidentialRepository(Result.success(listOf(unit)))
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+        viewModel.onUnitSelected(unit.id)
+        viewModel.onEditUnitDialogChange(true)
+
+        viewModel.onUpdateUnit("  101  ")
+        advanceUntilIdle()
+
+        assertEquals(0, repository.updateCalls)
+        assertEquals(1, repository.calls)
+        assertFalse(viewModel.uiState.value.isEditingUnit)
+        assertTrue(viewModel.uiState.value.updateUnitError == null)
+        assertTrue(viewModel.uiState.value.updateUnitSuccess == null)
+    }
+
+    @Test
+    fun `editar apartamento muestra el error y mantiene el dialogo abierto`() = runTest {
+        val unit = ResidentialUnit("unit-1", "101", emptyList())
+        val repository = FakeResidentialRepository(Result.success(listOf(unit)))
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+        viewModel.onUnitSelected(unit.id)
+        viewModel.onEditUnitDialogChange(true)
+        repository.updateResult = Result.failure(
+            AppException(AppError.Forbidden("Acceso denegado"))
+        )
+
+        viewModel.onUpdateUnit("A-101")
+        advanceUntilIdle()
+
+        assertEquals(1, repository.updateCalls)
+        assertEquals(1, repository.calls)
+        assertEquals(listOf(unit), viewModel.uiState.value.units)
+        assertTrue(viewModel.uiState.value.updateUnitError is AppError.Forbidden)
+        assertEquals("Acceso denegado", viewModel.uiState.value.updateUnitError?.message)
+        assertTrue(viewModel.uiState.value.isEditingUnit)
+        assertFalse(viewModel.uiState.value.isUpdatingUnit)
+        assertTrue(viewModel.uiState.value.updateUnitSuccess == null)
+    }
+
+    @Test
+    fun `editar apartamento ignora dobles envios mientras esta en curso`() = runTest {
+        val unit = ResidentialUnit("unit-1", "101", emptyList())
+        val repository = FakeResidentialRepository(Result.success(listOf(unit)))
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+        viewModel.onUnitSelected(unit.id)
+        viewModel.onEditUnitDialogChange(true)
+        val gate = CompletableDeferred<Unit>()
+        repository.updateGate = gate
+        repository.updateResult = Result.success("A-101")
+
+        viewModel.onUpdateUnit("A-101")
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.isUpdatingUnit)
+
+        viewModel.onUpdateUnit("B-101")
+        assertEquals(1, repository.updateCalls)
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isUpdatingUnit)
+    }
+
     private fun createViewModel(repository: FakeResidentialRepository): CensusViewModel {
         val sessionManager = SessionManager(NoOpRolePersistence).apply {
             saveSession(UserSession("token", "user-1", "Admin", UserRole.ADMIN))
@@ -152,7 +328,12 @@ class CensusViewModelTest {
             )
             setActiveConjunto("complex-1")
         }
-        return CensusViewModel(GetCensusUseCase(repository), sessionManager)
+        return CensusViewModel(
+            GetCensusUseCase(repository),
+            RegisterUnitUseCase(repository),
+            UpdateUnitUseCase(repository),
+            sessionManager
+        )
     }
 }
 
@@ -161,10 +342,47 @@ private class FakeResidentialRepository(
 ) : ResidentialRepository {
     var calls = 0
     var lastComplexId: String? = null
+    var registerResult: Result<RegisteredResidentialUnit> =
+        Result.success(RegisteredResidentialUnit("unit-new", "2", 1))
+    var registerCalls = 0
+    var lastRegisterComplexId: String? = null
+    var registerGate: CompletableDeferred<Unit>? = null
+    var updateResult: Result<String> = Result.success("unit-new")
+    var updateCalls = 0
+    var lastUpdateComplexId: String? = null
+    var lastUpdateUnitId: String? = null
+    var lastUpdateIdentifier: String? = null
+    var updateGate: CompletableDeferred<Unit>? = null
 
     override suspend fun getCensus(complexId: String): Result<List<ResidentialUnit>> {
         calls++
         lastComplexId = complexId
         return result
     }
+
+    override suspend fun registerUnit(complexId: String): Result<RegisteredResidentialUnit> {
+        registerCalls++
+        lastRegisterComplexId = complexId
+        registerGate?.await()
+        return registerResult
+    }
+
+    override suspend fun updateUnit(
+        complexId: String,
+        unitId: String,
+        identifier: String
+    ): Result<String> {
+        updateCalls++
+        lastUpdateComplexId = complexId
+        lastUpdateUnitId = unitId
+        lastUpdateIdentifier = identifier
+        updateGate?.await()
+        return updateResult
+    }
+
+    override suspend fun registerOwnerTenant(
+        complexId: String,
+        unitId: String,
+        draft: OwnerTenantDraft
+    ): Result<OwnerTenant> = Result.failure(AppException(AppError.Unexpected("No usado")))
 }

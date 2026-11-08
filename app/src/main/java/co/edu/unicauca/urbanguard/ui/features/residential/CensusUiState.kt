@@ -16,7 +16,15 @@ data class CensusUiState(
     val error: AppError? = null,
     val searchQuery: String = "",
     val filter: CensusUnitFilter = CensusUnitFilter.ALL,
-    val selectedUnitId: String? = null
+    val selectedUnitId: String? = null,
+    val isAdmin: Boolean = false,
+    val isRegistering: Boolean = false,
+    val registrationSuccess: String? = null,
+    val registrationError: AppError? = null,
+    val isEditingUnit: Boolean = false,
+    val isUpdatingUnit: Boolean = false,
+    val updateUnitSuccess: String? = null,
+    val updateUnitError: AppError? = null
 ) {
     val isEmpty: Boolean
         get() = !isLoading && error == null && units.isEmpty()

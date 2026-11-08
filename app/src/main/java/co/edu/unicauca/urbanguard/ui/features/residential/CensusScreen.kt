@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,10 +24,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apartment
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -44,7 +46,10 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -76,77 +81,144 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 fun CensusScreen(viewModel: CensusViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
-    val visibleUnits = remember(state.units, state.searchQuery, state.filter) {
-        state.visibleUnits()
-    }
+    val visibleUnits = remember(state.units, state.searchQuery, state.filter) { state.visibleUnits() }
+    var showRegisterDialog by rememberSaveable { mutableStateOf(false) }
+    var showResidentDialog by rememberSaveable { mutableStateOf(false) }
+    var residentSuccess by rememberSaveable { mutableStateOf<String?>(null) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.onScreenResumed()
-            }
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.onScreenResumed()
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(UgBackground)
-            .imePadding()
-    ) {
+    Column(modifier = Modifier.fillMaxSize().background(UgBackground).imePadding()) {
         UrbanGuardTopBar(title = "Censo de apartamentos")
-        when {
-            state.isLoading && state.units.isEmpty() -> Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = UgEmerald)
+        RegistrationFeedback(
+            successMessage = residentSuccess ?: state.registrationSuccess ?: state.updateUnitSuccess,
+            errorMessage = state.registrationError?.message,
+            onDismiss = {
+                residentSuccess = null
+                viewModel.onDismissFeedback()
             }
-
-            state.error != null -> ErrorView(
-                error = state.error!!,
-                modifier = Modifier.weight(1f),
-                onRetry = viewModel::onRefresh
-            )
-
-            state.isEmpty -> Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 12.dp)
-            ) {
-                CensusStatistics(state)
-                EmptyCensus(modifier = Modifier.weight(1f))
-            }
-
-            else -> {
-                if (state.isLoading) {
-                    LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = UgEmerald
-                    )
-                }
-                CensusContent(
-                    state = state,
-                    visibleUnits = visibleUnits,
-                    onSearchQueryChange = viewModel::onSearchQueryChange,
-                    onFilterChange = viewModel::onFilterChange,
-                    onUnitSelected = viewModel::onUnitSelected
-                )
-            }
-        }
+        )
+        CensusStateContent(
+            state = state,
+            visibleUnits = visibleUnits,
+            onRefresh = viewModel::onRefresh,
+            onSearchQueryChange = viewModel::onSearchQueryChange,
+            onFilterChange = viewModel::onFilterChange,
+            onUnitSelected = viewModel::onUnitSelected,
+            onAddUnit = { showRegisterDialog = true }
+        )
     }
 
     state.selectedUnit?.let { selectedUnit ->
         if (!state.isLoading && state.error == null) {
             UnitDetailSheet(
                 unit = selectedUnit,
+                isAdmin = state.isAdmin,
+                onEditUnit = { viewModel.onEditUnitDialogChange(true) },
+                onAssignResident = { showResidentDialog = true },
                 onDismiss = viewModel::onDismissUnitDetail
+            )
+        }
+    }
+
+    val editingUnit = state.selectedUnit
+    if (state.isEditingUnit && editingUnit != null) {
+        EditUnitDialog(
+            currentIdentifier = editingUnit.identifier,
+            isUpdating = state.isUpdatingUnit,
+            serverError = state.updateUnitError,
+            onConfirm = viewModel::onUpdateUnit,
+            onDismiss = { viewModel.onEditUnitDialogChange(false) }
+        )
+    }
+
+    if (showRegisterDialog) {
+        RegisterUnitDialog(
+            onConfirm = {
+                showRegisterDialog = false
+                viewModel.onRegisterUnit()
+            },
+            onDismiss = { showRegisterDialog = false }
+        )
+    }
+
+    ResidentRegistrationDialog(
+        unit = state.selectedUnit,
+        visible = showResidentDialog,
+        onRegistered = { message ->
+            showResidentDialog = false
+            residentSuccess = message
+            viewModel.onDismissFeedback()
+            viewModel.onRefresh()
+        },
+        onDismiss = { showResidentDialog = false }
+    )
+}
+
+@Composable
+private fun ColumnScope.CensusStateContent(
+    state: CensusUiState,
+    visibleUnits: List<ResidentialUnit>,
+    onRefresh: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onFilterChange: (CensusUnitFilter) -> Unit,
+    onUnitSelected: (String) -> Unit,
+    onAddUnit: () -> Unit
+) {
+    when {
+        state.isLoading && state.units.isEmpty() -> Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = UgEmerald)
+        }
+
+        state.error != null -> ErrorView(
+            error = state.error!!,
+            modifier = Modifier.weight(1f),
+            onRetry = onRefresh
+        )
+
+        state.isEmpty -> Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp)
+        ) {
+            CensusStatistics(state)
+            if (state.isAdmin) {
+                Spacer(Modifier.height(12.dp))
+                RegisterUnitButton(
+                    isRegistering = state.isRegistering,
+                    onClick = onAddUnit
+                )
+            }
+            EmptyCensus(modifier = Modifier.weight(1f))
+        }
+
+        else -> {
+            if (state.isLoading) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = UgEmerald
+                )
+            }
+            CensusContent(
+                state = state,
+                visibleUnits = visibleUnits,
+                onSearchQueryChange = onSearchQueryChange,
+                onFilterChange = onFilterChange,
+                onUnitSelected = onUnitSelected,
+                onAddUnit = onAddUnit
             )
         }
     }
@@ -207,7 +279,8 @@ private fun CensusContent(
     visibleUnits: List<ResidentialUnit>,
     onSearchQueryChange: (String) -> Unit,
     onFilterChange: (CensusUnitFilter) -> Unit,
-    onUnitSelected: (String) -> Unit
+    onUnitSelected: (String) -> Unit,
+    onAddUnit: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -216,6 +289,13 @@ private fun CensusContent(
             .padding(top = 12.dp)
     ) {
         CensusStatistics(state = state)
+        if (state.isAdmin) {
+            Spacer(Modifier.height(12.dp))
+            RegisterUnitButton(
+                isRegistering = state.isRegistering,
+                onClick = onAddUnit
+            )
+        }
         Spacer(Modifier.height(12.dp))
         CensusSearchAndFilters(
             state = state,
@@ -434,6 +514,9 @@ private fun EmptyCensus(modifier: Modifier = Modifier) {
 @OptIn(ExperimentalMaterial3Api::class)
 private fun UnitDetailSheet(
     unit: ResidentialUnit,
+    isAdmin: Boolean,
+    onEditUnit: () -> Unit,
+    onAssignResident: () -> Unit,
     onDismiss: () -> Unit
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -462,16 +545,39 @@ private fun UnitDetailSheet(
                     style = MaterialTheme.typography.titleMedium
                 )
                 unit.residents.forEach { resident ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = UgSuccessText,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(10.dp))
-                        Text(resident.fullName, color = UgNavy)
-                    }
+                    CensusResidentRow(resident)
+                }
+            }
+            if (isAdmin && unit.residents.isEmpty()) {
+                Button(
+                    onClick = onAssignResident,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = UgEmerald)
+                ) {
+                    Text(
+                        text = "Asignar residente",
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+            if (isAdmin) {
+                Button(
+                    onClick = onEditUnit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = UgNavy)
+                ) {
+                    Text(
+                        text = "Editar apartamento",
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }

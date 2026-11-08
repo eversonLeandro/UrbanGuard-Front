@@ -196,10 +196,10 @@ fun ApartamentoField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text("Número de apartamento") },
+            label = { Text("Número o identificador de apartamento") },
             placeholder = {
                 Text(
-                    "Ej: 302",
+                    "Ej: 302 o A-101",
                     color = UgEmerald,
                     fontSize = 13.sp
                 )
@@ -208,7 +208,7 @@ fun ApartamentoField(
             isError = error != null,
             shape = RoundedCornerShape(8.dp),
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
+                keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Done
             ),
             keyboardActions = KeyboardActions(

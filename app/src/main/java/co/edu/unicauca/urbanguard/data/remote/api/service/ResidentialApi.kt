@@ -1,7 +1,15 @@
 package co.edu.unicauca.urbanguard.data.remote.api.service
 
+import co.edu.unicauca.urbanguard.data.remote.api.dto.CreateOwnerTenantRequestDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.CreateUnitResponseDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.OwnerTenantResponseDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.ResidentialUnitDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.UpdateUnitRequestDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.UpdateUnitResponseDto
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
+import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ResidentialApi {
@@ -9,4 +17,23 @@ interface ResidentialApi {
     suspend fun getCensus(
         @Path("complexId") complexId: String
     ): List<ResidentialUnitDto>
+
+    @POST("api/complexes/{complexId}/units")
+    suspend fun createUnit(
+        @Path("complexId") complexId: String
+    ): CreateUnitResponseDto
+
+    @PATCH("api/complexes/{complexId}/units/{unitId}")
+    suspend fun updateUnit(
+        @Path("complexId") complexId: String,
+        @Path("unitId") unitId: String,
+        @Body request: UpdateUnitRequestDto
+    ): UpdateUnitResponseDto
+
+    @POST("api/complexes/{complexId}/units/{unitId}/residents")
+    suspend fun createOwnerTenant(
+        @Path("complexId") complexId: String,
+        @Path("unitId") unitId: String,
+        @Body request: CreateOwnerTenantRequestDto
+    ): OwnerTenantResponseDto
 }

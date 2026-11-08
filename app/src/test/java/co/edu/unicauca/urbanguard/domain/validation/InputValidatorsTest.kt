@@ -78,6 +78,26 @@ class InputValidatorsTest {
     }
 
     @Test
+    fun `un documento acepta letras numeros y guion pero rechaza vacios y simbolos`() {
+        listOf("123456789", "CC-102030", "abc123").forEach { document ->
+            assertTrue("Debería aceptarse: '$document'", InputValidators.isValidDocument(document))
+        }
+        listOf("", "   ", "12 34", "12.34", "12_34", "#123").forEach { document ->
+            assertFalse("No debería aceptarse: '$document'", InputValidators.isValidDocument(document))
+        }
+    }
+
+    @Test
+    fun `un documento mas largo que el maximo del backend se rechaza`() {
+        assertTrue(
+            InputValidators.isValidDocument("1".repeat(InputValidators.DOCUMENT_MAX_LENGTH))
+        )
+        assertFalse(
+            InputValidators.isValidDocument("1".repeat(InputValidators.DOCUMENT_MAX_LENGTH + 1))
+        )
+    }
+
+    @Test
     fun `a short password is reported as such`() {
         val violations = InputValidators.passwordPolicyViolations("Ab1")
 

@@ -2,9 +2,15 @@ package co.edu.unicauca.urbanguard.data.repository
 
 import co.edu.unicauca.urbanguard.core.network.apiCall
 import co.edu.unicauca.urbanguard.data.mapper.toDomain
+import co.edu.unicauca.urbanguard.data.mapper.toRequestDto
+import co.edu.unicauca.urbanguard.data.mapper.toUpdatedIdentifier
+import co.edu.unicauca.urbanguard.data.remote.api.dto.UpdateUnitRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.service.ResidentialApi
 import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.AppException
+import co.edu.unicauca.urbanguard.domain.model.OwnerTenant
+import co.edu.unicauca.urbanguard.domain.model.OwnerTenantDraft
+import co.edu.unicauca.urbanguard.domain.model.RegisteredResidentialUnit
 import co.edu.unicauca.urbanguard.domain.model.ResidentialUnit
 import co.edu.unicauca.urbanguard.domain.repository.ResidentialRepository
 import javax.inject.Inject
@@ -15,10 +21,64 @@ class ResidentialRepositoryImpl @Inject constructor(
 
     override suspend fun getCensus(complexId: String): Result<List<ResidentialUnit>> {
         if (complexId.isBlank()) {
-            return Result.failure(
-                AppException(AppError.Validation("No hay un conjunto activo seleccionado."))
-            )
+            return noActiveComplexFailure()
         }
         return apiCall { api.getCensus(complexId).map { it.toDomain() } }
+    }
+
+    override suspend fun registerUnit(complexId: String): Result<RegisteredResidentialUnit> {
+        if (complexId.isBlank()) {
+            return noActiveComplexFailure()
+        }
+        return apiCall { api.createUnit(complexId).toDomain() }
+    }
+
+    override suspend fun updateUnit(
+        complexId: String,
+        unitId: String,
+        identifier: String
+    ): Result<String> {
+        if (complexId.isBlank()) {
+            return noActiveComplexFailure()
+        }
+        if (unitId.isBlank()) {
+            return invalidUnitFailure()
+        }
+        return apiCall {
+            api.updateUnit(
+                complexId = complexId,
+                unitId = unitId,
+                request = UpdateUnitRequestDto(identifier)
+            ).toUpdatedIdentifier()
+        }
+    }
+
+    override suspend fun registerOwnerTenant(
+        complexId: String,
+        unitId: String,
+        draft: OwnerTenantDraft
+    ): Result<OwnerTenant> {
+        if (complexId.isBlank()) {
+            return noActiveComplexFailure()
+        }
+        if (unitId.isBlank()) {
+            return invalidUnitFailure()
+        }
+        return apiCall {
+            api.createOwnerTenant(complexId, unitId, draft.toRequestDto()).toDomain()
+        }
+    }
+
+    private fun <T> noActiveComplexFailure(): Result<T> = Result.failure(
+        AppException(AppError.Validation(NO_ACTIVE_COMPLEX_MESSAGE))
+    )
+
+    private fun <T> invalidUnitFailure(): Result<T> = Result.failure(
+        AppException(AppError.Validation(NO_UNIT_MESSAGE))
+    )
+
+    private companion object {
+        const val NO_ACTIVE_COMPLEX_MESSAGE = "No hay un conjunto activo seleccionado."
+        const val NO_UNIT_MESSAGE = "No se seleccionó un apartamento."
     }
 }

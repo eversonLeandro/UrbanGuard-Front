@@ -8,5 +8,6 @@ data class ResidentialUnitDto(
 
 data class ResidentialResidentDto(
     val userId: String? = null,
-    val fullName: String? = null
+    val fullName: String? = null,
+    val type: String? = null
 )

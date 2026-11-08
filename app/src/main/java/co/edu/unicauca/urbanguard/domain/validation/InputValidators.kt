@@ -51,9 +51,11 @@ object InputValidators {
      * un viaje de ida y vuelta al servidor.
      */
     private val PHONE_REGEX = Regex("^[+0-9()\\- ]*$")
+    private val DOCUMENT_REGEX = Regex("^[A-Za-z0-9-]+$")
 
     const val PHONE_MAX_LENGTH = 30
     const val NAME_MAX_LENGTH = 100
+    const val DOCUMENT_MAX_LENGTH = 30
 
     /**
      * Valida un teléfono de contacto.
@@ -72,6 +74,17 @@ object InputValidators {
     fun isValidName(name: String): Boolean {
         val trimmed = name.trim()
         return trimmed.isNotEmpty() && trimmed.length <= NAME_MAX_LENGTH
+    }
+
+    /**
+     * Valida el documento del residente con las mismas reglas de
+     * `CreateOwnerTenantRequest`: letras, números y guion, hasta 30 caracteres.
+     */
+    fun isValidDocument(document: String): Boolean {
+        val trimmed = document.trim()
+        return trimmed.isNotEmpty() &&
+            trimmed.length <= DOCUMENT_MAX_LENGTH &&
+            DOCUMENT_REGEX.matches(trimmed)
     }
 
     /**
