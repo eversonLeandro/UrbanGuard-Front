@@ -36,6 +36,7 @@ import co.edu.unicauca.urbanguard.ui.components.PlaceholderScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.AdminSecurityMenuScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.RegisterGuardScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.SuperAdminScreen
+import co.edu.unicauca.urbanguard.ui.features.users.UserListScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.LoginScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.RegisterScreen
 import co.edu.unicauca.urbanguard.ui.features.guard.GuardHomeScreen
@@ -72,6 +73,10 @@ import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolRouteFormScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolRoutesScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolShiftDetailScreen
 import co.edu.unicauca.urbanguard.ui.features.profile.ProfileScreen
+import co.edu.unicauca.urbanguard.ui.features.packages.PackageListScreen
+import co.edu.unicauca.urbanguard.ui.features.packages.RegisterPackageScreen
+import co.edu.unicauca.urbanguard.ui.features.packages.PackageDetailScreen
+import co.edu.unicauca.urbanguard.ui.features.packages.PackageMetricsScreen
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.GenerateQrScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.GeneratedPassScreen
@@ -295,8 +300,13 @@ fun AppNavGraph(
                 },
                 onOpenPqrsInbox = { navController.navigate(Routes.PQRS_INBOX) },
                 onOpenMyPqrs = { navController.navigate(Routes.MY_PQRS) },
-                onOpenNews = { navController.navigate(Routes.NEWS) }
+                onOpenNews = { navController.navigate(Routes.NEWS) },
+                onOpenPackageMetrics = { navController.navigate(Routes.PACKAGE_METRICS) }
             )
+        }
+
+        composable(Routes.PACKAGE_METRICS) {
+            PackageMetricsScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable(Routes.PQRS_INBOX) {
@@ -671,9 +681,26 @@ fun AppNavGraph(
         }
 
         composable(Routes.PACKAGES) {
-            PlaceholderScreen(
-                title = "Mis paquetes",
-                icon = Icons.Default.Inventory2
+            PackageListScreen(
+                onRegisterPackage = { navController.navigate(Routes.REGISTER_PACKAGE) },
+                onPackageDetail = { packageId -> navController.navigate("packages/detail/$packageId") },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Routes.PACKAGE_DETAIL,
+            arguments = listOf(navArgument("packageId") { type = NavType.StringType })
+        ) {
+            PackageDetailScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.REGISTER_PACKAGE) {
+            RegisterPackageScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onSaved = {
+                    navController.popBackStack()
+                }
             )
         }
 
@@ -707,8 +734,15 @@ fun AppNavGraph(
                     sessionViewModel.logout {
                         navController.navigateToLogin()
                     }
-                }
+                },
+                onOpenUserManagement = { navController.navigate(Routes.USER_MANAGEMENT) },
+                onOpenProfile = { navController.navigate(Routes.PROFILE) }
             )
+        }
+
+        // ── Consola global (SUPERADMIN, HU-006) ───────────────────────
+        composable(Routes.USER_MANAGEMENT) {
+            UserListScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         // ── Vigilante (rol GUARD) ─────────────────────────────────────
@@ -720,6 +754,9 @@ fun AppNavGraph(
                 },
                 onReportIncident = {
                     navController.navigate(Routes.GUARD_INCIDENTS)
+                },
+                onPackages = {
+                    navController.navigate(Routes.PACKAGES)
                 }
             )
         }

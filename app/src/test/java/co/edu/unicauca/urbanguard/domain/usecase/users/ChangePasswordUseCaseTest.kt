@@ -2,6 +2,8 @@ package co.edu.unicauca.urbanguard.domain.usecase.users
 
 import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.AppException
+import co.edu.unicauca.urbanguard.domain.model.User
+
 import co.edu.unicauca.urbanguard.domain.repository.UserRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -38,6 +40,19 @@ class ChangePasswordUseCaseTest {
     private class FakeUserRepository(
         private val ticketResult: Result<String>
     ) : UserRepository {
+        override suspend fun getOwnProfile() =
+            Result.failure<co.edu.unicauca.urbanguard.domain.model.OwnProfile>(UnsupportedOperationException())
+        override suspend fun updateProfilePhoto(image: okhttp3.MultipartBody.Part, token: String) =
+            Result.failure<co.edu.unicauca.urbanguard.domain.model.OwnProfile>(UnsupportedOperationException())
         override suspend fun createPasswordChangeTicket(): Result<String> = ticketResult
+
+        // No se usan en este flujo; la interfaz creció con la HU-006.
+        override suspend fun listUsers(estado: String): Result<List<User>> =
+            Result.success(emptyList())
+
+        override suspend fun deactivateUser(userId: String): Result<Unit> = Result.success(Unit)
+
+        override suspend fun reactivateUser(userId: String): Result<User> =
+            Result.failure(IllegalStateException("No soportado en este test"))
     }
 }

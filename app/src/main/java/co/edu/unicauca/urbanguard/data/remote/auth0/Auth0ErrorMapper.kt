@@ -58,6 +58,9 @@ internal object Auth0ErrorMapper {
     private val CREDENTIAL_ERROR_CODES =
         setOf("invalid_grant", "wrong_email_password", "invalid_user_password")
 
+    private val DISABLED_ACCOUNT_CODES =
+        setOf("blocked_user", "user_blocked", "user_disabled")
+
     private val WEAK_PASSWORD_CODES =
         setOf("invalid_password", "password_strength_error", "password_dictionary_error")
 
@@ -74,10 +77,10 @@ internal object Auth0ErrorMapper {
         val code = error.getCode().orEmpty().trim().lowercase()
         val description = error.getDescription().orEmpty().trim()
 
-        val mapped = credentialError(error, code, description)
+        val mapped = accountStateError(error, code, description)
+            ?: credentialError(error, code, description)
             ?: passwordPolicyError(error, code)
             ?: sessionError(error, code)
-            ?: accountStateError(error, code)
             ?: infrastructureError(error, code, description)
             ?: unmappedError(code, description)
 
@@ -144,15 +147,28 @@ internal object Auth0ErrorMapper {
     /** Cuenta bloqueada por intentos o desactivada por el administrador. */
     private fun accountStateError(
         error: AuthenticationException,
-        code: String
+        code: String,
+        description: String
     ): AppError? = when {
         error.isTooManyAttempts || code == "too_many_attempts" ->
             AppError.AccountBlocked(AppError.AccountBlocked.MESSAGE)
 
-        error.isAccessDenied || code == "access_denied" ->
+        error.isAccessDenied || code in DISABLED_ACCOUNT_CODES ||
+                isDisabledAccountDescription(description) ->
             AppError.AccountDisabled(AppError.AccountDisabled.MESSAGE)
 
         else -> null
+    }
+
+    private fun isDisabledAccountDescription(description: String): Boolean {
+        val normalized = description.lowercase()
+        return normalized.contains("user is blocked") ||
+                normalized.contains("user account is blocked") ||
+                normalized.contains("user has been blocked") ||
+                normalized.contains("user account has been blocked") ||
+                normalized.contains("account has been blocked") ||
+                normalized.contains("user is disabled") ||
+                normalized.contains("account is disabled")
     }
 
     /**

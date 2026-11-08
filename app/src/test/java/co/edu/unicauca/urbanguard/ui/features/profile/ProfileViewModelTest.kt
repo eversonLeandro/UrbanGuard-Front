@@ -2,10 +2,14 @@ package co.edu.unicauca.urbanguard.ui.features.profile
 
 import co.edu.unicauca.urbanguard.core.session.NoOpRolePersistence
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.core.media.ProfilePhotoPreparer
+import co.edu.unicauca.urbanguard.domain.repository.ProfileStateHolder
 import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
+
+import co.edu.unicauca.urbanguard.domain.model.User
 import co.edu.unicauca.urbanguard.domain.repository.ReauthLoginProvider
 import co.edu.unicauca.urbanguard.domain.repository.UserRepository
 import co.edu.unicauca.urbanguard.domain.usecase.users.ChangePasswordUseCase
@@ -23,6 +27,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.RobolectricTestRunner
 
 /**
  * Flujo de cambio de contraseña: ticket directo, reautenticación cuando el
@@ -30,6 +37,7 @@ import org.junit.Test
  * La URL del ticket nunca se transforma en el ViewModel.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
 class ProfileViewModelTest {
 
     @Before
@@ -86,7 +94,10 @@ class ProfileViewModelTest {
         val viewModel = ProfileViewModel(
             sessionManager,
             FakeReauthLoginProvider(loginResult = Result.success(session)),
-            ChangePasswordUseCase(FakeUserRepository(Result.success("https://ticket/reintento")))
+            ChangePasswordUseCase(FakeUserRepository(Result.success("https://ticket/reintento"))),
+            ProfileStateHolder(FakeUserRepository(Result.success("ticket")), sessionManager),
+            FakeUserRepository(Result.success("ticket")),
+            ProfilePhotoPreparer(RuntimeEnvironment.getApplication())
         )
 
         viewModel.onReauthSubmit("ana@urbanguard.co", "secreta")
@@ -131,17 +142,35 @@ class ProfileViewModelTest {
             UserSession(token = "token", userId = "auth0|1", name = "Ana", role = UserRole.RESIDENT)
         )
     ): ProfileViewModel {
+        val session = SessionManager(NoOpRolePersistence)
+        val users = FakeUserRepository(ticketResult)
         return ProfileViewModel(
-            SessionManager(NoOpRolePersistence),
+            session,
             FakeReauthLoginProvider(loginResult),
-            ChangePasswordUseCase(FakeUserRepository(ticketResult))
+            ChangePasswordUseCase(users),
+            ProfileStateHolder(users, session),
+            users,
+            ProfilePhotoPreparer(RuntimeEnvironment.getApplication())
         )
     }
 
     private class FakeUserRepository(
         private val ticketResult: Result<String>
     ) : UserRepository {
+        override suspend fun getOwnProfile() =
+            Result.failure<co.edu.unicauca.urbanguard.domain.model.OwnProfile>(UnsupportedOperationException())
+        override suspend fun updateProfilePhoto(image: okhttp3.MultipartBody.Part, token: String) =
+            Result.failure<co.edu.unicauca.urbanguard.domain.model.OwnProfile>(UnsupportedOperationException())
         override suspend fun createPasswordChangeTicket(): Result<String> = ticketResult
+
+        // No se usan en este flujo; la interfaz creció con la HU-006.
+        override suspend fun listUsers(estado: String): Result<List<User>> =
+            Result.success(emptyList())
+
+        override suspend fun deactivateUser(userId: String): Result<Unit> = Result.success(Unit)
+
+        override suspend fun reactivateUser(userId: String): Result<User> =
+            Result.failure(IllegalStateException("No soportado en este test"))
     }
 
     private class FakeReauthLoginProvider(

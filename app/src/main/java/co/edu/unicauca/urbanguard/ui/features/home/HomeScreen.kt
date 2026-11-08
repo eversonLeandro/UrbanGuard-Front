@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
+import co.edu.unicauca.urbanguard.ui.components.ProfileAvatar
+import co.edu.unicauca.urbanguard.ui.components.ProfileRefreshOnResume
 import co.edu.unicauca.urbanguard.ui.theme.UgAmber
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
 import co.edu.unicauca.urbanguard.ui.theme.UgBorder
@@ -71,9 +73,12 @@ fun HomeScreen(
     onOpenPqrsInbox: () -> Unit = {},
     onOpenMyPqrs: () -> Unit = {},
     onOpenNews: () -> Unit = {},
+    onOpenPackageMetrics: (() -> Unit)? = null,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    ProfileRefreshOnResume(uiState.profilePhotoUrl, uiState.profilePhotoExpiresAt,
+        viewModel::ensureFresh)
 
     Column(
         modifier = Modifier
@@ -97,7 +102,9 @@ fun HomeScreen(
             HomeHeroCard(
                 userName = uiState.userName,
                 userRole = uiState.userRole,
-                conjuntoName = uiState.conjuntoName
+                conjuntoName = uiState.conjuntoName,
+                photoUrl = uiState.profilePhotoUrl,
+                onImageError = viewModel::onImageError
             )
 
             // ── Acciones Administrativas (solo ADMIN) ───────────────────
@@ -116,7 +123,8 @@ fun HomeScreen(
                     UserRole.RESIDENT -> onOpenMyPqrs
                     else -> null
                 },
-                onOpenNews = onOpenNews
+                onOpenNews = onOpenNews,
+                onOpenPackageMetrics = if (uiState.role == UserRole.ADMIN) onOpenPackageMetrics else null
             )
 
             // ── Selector de conjunto ───────────────────────────────────
@@ -137,7 +145,9 @@ fun HomeScreen(
 @Composable
 private fun HomeHeroHeader(
     userName: String,
-    userRole: String
+    userRole: String,
+    photoUrl: String?,
+    onImageError: (String) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -151,13 +161,7 @@ private fun HomeHeroHeader(
                 .border(1.5.dp, UgEmerald, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = if (userName.isNotBlank()) userName.take(1)
-                    .uppercase() else "U",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
+            ProfileAvatar(userName, photoUrl, 48.dp, UgEmerald.copy(alpha = 0.2f), onImageError)
         }
         Spacer(Modifier.width(14.dp))
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -205,7 +209,9 @@ private fun HomeHeroHeader(
 private fun HomeHeroCard(
     userName: String,
     userRole: String,
-    conjuntoName: String
+    conjuntoName: String,
+    photoUrl: String?,
+    onImageError: (String) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -221,7 +227,8 @@ private fun HomeHeroCard(
             .padding(22.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            HomeHeroHeader(userName = userName, userRole = userRole)
+            HomeHeroHeader(userName = userName, userRole = userRole,
+                photoUrl = photoUrl, onImageError = onImageError)
 
             HorizontalDivider(color = Color.White.copy(alpha = 0.12f), thickness = 1.dp)
 
@@ -293,7 +300,8 @@ private fun AdminActionsSection(
 private fun CommunityServicesSection(
     onOpenGenerateQr: () -> Unit,
     onOpenPqrsInbox: (() -> Unit)? = null,
-    onOpenNews: () -> Unit
+    onOpenNews: () -> Unit,
+    onOpenPackageMetrics: (() -> Unit)? = null
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
@@ -321,7 +329,9 @@ private fun CommunityServicesSection(
                 subtitle = "Entregas en portería",
                 icon = Icons.Default.Inventory2,
                 badgeColor = UgInfoIcon,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).let { base ->
+                    if (onOpenPackageMetrics != null) base.clickable(onClick = onOpenPackageMetrics) else base
+                }
             )
         }
 
@@ -531,4 +541,3 @@ private fun AdminQuickActionCard(
         }
     }
 }
-

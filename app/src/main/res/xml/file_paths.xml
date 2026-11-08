@@ -9,6 +9,9 @@
     <cache-path
         name="incidents"
         path="incidents/" />
+    <cache-path
+        name="profile"
+        path="profile/" />
     <!-- Carpeta donde se descargan adjuntos de comunicados -->
     <cache-path
         name="news_attachments"

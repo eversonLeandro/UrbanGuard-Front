@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.ui.features.guard
 
 import co.edu.unicauca.urbanguard.core.session.NoOpRolePersistence
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.testProfileState
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoUserAssociation
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
@@ -50,7 +51,7 @@ class GuardHomeViewModelTest {
             )
         )
 
-        val viewModel = GuardHomeViewModel(sessionManager, useCase)
+        val viewModel = GuardHomeViewModel(sessionManager, useCase, testProfileState(sessionManager))
         advanceUntilIdle()
 
         assertEquals("c1", sessionManager.session.value?.conjuntoActivoId)
@@ -81,7 +82,7 @@ class GuardHomeViewModelTest {
             )
         )
 
-        val viewModel = GuardHomeViewModel(sessionManager, useCase)
+        val viewModel = GuardHomeViewModel(sessionManager, useCase, testProfileState(sessionManager))
         advanceUntilIdle()
 
         assertEquals("c1", sessionManager.session.value?.conjuntoActivoId)
@@ -101,7 +102,7 @@ class GuardHomeViewModelTest {
         )
         val useCase = GetMyConjuntosUseCase(FakeConjuntoAssociationRepository(failure = true))
 
-        val viewModel = GuardHomeViewModel(sessionManager, useCase)
+        val viewModel = GuardHomeViewModel(sessionManager, useCase, testProfileState(sessionManager))
         advanceUntilIdle()
 
         // Sin datos reales la pantalla queda honesta: nombre de la sesion y nada más

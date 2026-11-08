@@ -1,6 +1,12 @@
 package co.edu.unicauca.urbanguard.ui.features.profile
 
 import android.net.Uri
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -50,6 +56,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +65,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -67,6 +76,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import co.edu.unicauca.urbanguard.ui.components.LogoutDialog
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
+import co.edu.unicauca.urbanguard.ui.components.ProfileAvatar
+import co.edu.unicauca.urbanguard.ui.components.ProfileRefreshOnResume
 import co.edu.unicauca.urbanguard.ui.theme.UgBackground
 import co.edu.unicauca.urbanguard.ui.theme.UgBorder
 import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
@@ -80,12 +91,17 @@ import co.edu.unicauca.urbanguard.ui.theme.UgNavyGradient
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 @Composable
+// Conserva la tarjeta y secciones existentes; solo añade avatar y estado de carga.
+@Suppress("LongMethod")
 fun ProfileScreen(
     onLogout: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
+    val openPhotoDialog = rememberProfilePhotoActions(viewModel, uiState.isPhotoUploading)
+    ProfileRefreshOnResume(uiState.profilePhotoUrl, uiState.profilePhotoExpiresAt,
+        viewModel::ensureFresh)
 
     PasswordChangeTicketEffect(
         ticketUrl = uiState.ticketUrl,
@@ -111,8 +127,16 @@ fun ProfileScreen(
             // ── Card de Perfil de Usuario ─────────────────────────────────
             UserProfileCard(
                 userName = uiState.userName,
-                userRole = uiState.userRole
+                userRole = uiState.userRole,
+                photoUrl = uiState.profilePhotoUrl,
+                isPhotoUploading = uiState.isPhotoUploading,
+                onAvatarClick = openPhotoDialog,
+                onImageError = viewModel::onImageError
             )
+
+            uiState.photoError?.let { message ->
+                PasswordChangeErrorBanner(message, viewModel::onPhotoErrorDismissed)
+            }
 
             // ── Error de cambio de contraseña ─────────────────────────────
             if (uiState.passwordChangeError != null) {
@@ -173,6 +197,65 @@ fun ProfileScreen(
         onReauthConfirm = { email, password -> viewModel.onReauthSubmit(email, password) },
         onReauthDismiss = viewModel::onReauthDismissed
     )
+
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun rememberProfilePhotoActions(
+    viewModel: ProfileViewModel,
+    isUploading: Boolean
+): () -> Unit {
+    var showDialog by remember { mutableStateOf(false) }
+    var pendingCameraUri by rememberSaveable { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) viewModel.updatePhoto(uri)
+    }
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        val uri = pendingCameraUri?.let(Uri::parse)
+        pendingCameraUri = null
+        if (success && uri != null) viewModel.updatePhoto(uri, cameraSource = true)
+        else viewModel.discardCameraOutput(uri)
+    }
+    val launchCamera: () -> Unit = {
+        try {
+            val uri = viewModel.createCameraOutput()
+            pendingCameraUri = uri.toString()
+            camera.launch(uri)
+        } catch (_: Exception) {
+            viewModel.discardCameraOutput(pendingCameraUri?.let(Uri::parse))
+            pendingCameraUri = null
+            viewModel.onCameraFailure()
+        }
+    }
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) launchCamera() else viewModel.onCameraDenied()
+    }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Foto de perfil") },
+            text = { Text("Elige cómo quieres actualizar tu foto.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDialog = false
+                    val granted = ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.CAMERA
+                    ) == PackageManager.PERMISSION_GRANTED
+                    if (granted) launchCamera() else permission.launch(Manifest.permission.CAMERA)
+                }, enabled = !isUploading) { Text("Tomar foto") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showDialog = false
+                    picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }, enabled = !isUploading) { Text("Elegir de la galería") }
+            }
+        )
+    }
+    return { if (!isUploading) showDialog = true }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -238,7 +321,11 @@ private fun PasswordChangeTicketEffect(
 @Composable
 private fun UserProfileCard(
     userName: String,
-    userRole: String
+    userRole: String,
+    photoUrl: String?,
+    isPhotoUploading: Boolean,
+    onAvatarClick: () -> Unit,
+    onImageError: (String) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -259,15 +346,17 @@ private fun UserProfileCard(
                     .size(64.dp)
                     .clip(CircleShape)
                     .background(UgNavyGradient)
-                    .border(2.dp, UgEmerald, CircleShape),
+                    .border(2.dp, UgEmerald, CircleShape)
+                    .semantics {
+                        contentDescription = if (photoUrl == null) "Agregar foto de perfil"
+                        else "Cambiar foto de perfil"
+                    }
+                    .clickable(enabled = !isPhotoUploading, onClick = onAvatarClick),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = if (userName.isNotBlank()) userName.take(1).uppercase() else "U",
-                    color = Color.White,
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                ProfileAvatar(userName, photoUrl, 64.dp, UgNavy, onImageError)
+                if (isPhotoUploading) CircularProgressIndicator(
+                    modifier = Modifier.size(32.dp), color = UgEmerald, strokeWidth = 3.dp)
             }
 
             Spacer(Modifier.width(16.dp))
