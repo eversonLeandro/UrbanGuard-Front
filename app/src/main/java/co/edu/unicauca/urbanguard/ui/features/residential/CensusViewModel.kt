@@ -52,7 +52,7 @@ class CensusViewModel @Inject constructor(
         loadJob?.cancel()
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
         loadJob = viewModelScope.launch {
-            getCensusUseCase(complexId, _uiState.value.statusFilter.apiValue).fold(
+            getCensusUseCase(complexId).fold(
                 onSuccess = { units ->
                     val selectedId = _uiState.value.selectedUnitId
                         ?.takeIf { selectedId -> units.any { it.id == selectedId } }
@@ -89,13 +89,6 @@ class CensusViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(filter = filter)
     }
 
-    fun onStatusFilterChange(filter: CensusStatusFilter) {
-        if (_uiState.value.statusFilter != filter) {
-            _uiState.value = _uiState.value.copy(statusFilter = filter)
-            onRefresh()
-        }
-    }
-
     fun onChangeResidentStatus(unitId: String, resident: ResidentialResident) {
         val state = _uiState.value
         if (state.isChangingResidentStatus) return
@@ -105,7 +98,7 @@ class CensusViewModel @Inject constructor(
             )
             return
         }
-        val residentId = resident.ownerTenantId
+        val residentId = resident.ownerTenantId ?: resident.membershipId
         if (residentId.isNullOrBlank() || unitId.isBlank()) {
             _uiState.value = state.copy(
                 residentStatusError = AppError.Validation(INVALID_RESIDENT_MESSAGE)

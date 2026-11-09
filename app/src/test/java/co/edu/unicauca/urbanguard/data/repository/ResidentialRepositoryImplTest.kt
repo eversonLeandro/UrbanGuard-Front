@@ -32,7 +32,11 @@ class ResidentialRepositoryImplTest {
                     id = "unit-1",
                     identifier = "101",
                     residents = listOf(
-                        ResidentialResidentDto(userId = "user-1", fullName = "Ana Pérez")
+                        ResidentialResidentDto(
+                            userId = "user-1",
+                            membershipId = "membership-1",
+                            fullName = "Ana Pérez"
+                        )
                     )
                 ),
                 ResidentialUnitDto(id = "unit-2", identifier = "102", residents = emptyList())
@@ -44,6 +48,8 @@ class ResidentialRepositoryImplTest {
         assertTrue(result.isSuccess)
         assertEquals("complex-1", api.lastComplexId)
         assertEquals("Ana Pérez", result.getOrThrow().first().residents.single().fullName)
+        assertEquals("membership-1", result.getOrThrow().first().residents.single().membershipId)
+        assertEquals("todos", api.lastEstado)
         assertTrue(result.getOrThrow().last().residents.isEmpty())
     }
 
@@ -362,6 +368,7 @@ private class FakeResidentialApi(
 ) : ResidentialApi {
     var calls = 0
     var lastComplexId: String? = null
+    var lastEstado: String? = null
     var createCalls = 0
     var lastCreateComplexId: String? = null
     var updateCalls = 0
@@ -379,6 +386,7 @@ private class FakeResidentialApi(
     ): List<ResidentialUnitDto> {
         calls++
         lastComplexId = complexId
+        lastEstado = estado
         return units
     }
 

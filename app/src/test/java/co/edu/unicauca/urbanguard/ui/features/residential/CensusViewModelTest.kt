@@ -68,6 +68,26 @@ class CensusViewModelTest {
     }
 
     @Test
+    fun `cambia estado de residente usando membershipId cuando no hay ownerTenantId`() = runTest {
+        val resident = ResidentialResident(
+            membershipId = "membership-1",
+            fullName = "Ana Pérez"
+        )
+        val unit = ResidentialUnit("unit-1", "101", listOf(resident))
+        val repository = FakeResidentialRepository(Result.success(listOf(unit)))
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.onChangeResidentStatus(unit.id, resident)
+        advanceUntilIdle()
+
+        assertEquals(1, repository.statusCalls)
+        assertEquals("membership-1", repository.lastStatusResidentId)
+        assertEquals(false, repository.lastStatusActive)
+        assertEquals("Registro de Ana Pérez inactivado", viewModel.uiState.value.residentStatusSuccess)
+    }
+
+    @Test
     fun `muestra error y permite reintentar`() = runTest {
         val repository = FakeResidentialRepository(
             Result.failure(AppException(AppError.NoConnection("Sin conexión")))
@@ -360,6 +380,9 @@ private class FakeResidentialRepository(
     var lastUpdateUnitId: String? = null
     var lastUpdateIdentifier: String? = null
     var updateGate: CompletableDeferred<Unit>? = null
+    var statusCalls = 0
+    var lastStatusResidentId: String? = null
+    var lastStatusActive: Boolean? = null
 
     override suspend fun getCensus(complexId: String): Result<List<ResidentialUnit>> {
         calls++
@@ -381,7 +404,12 @@ private class FakeResidentialRepository(
         unitId: String,
         residentId: String,
         active: Boolean
-    ): Result<Unit> = Result.success(Unit)
+    ): Result<Unit> {
+        statusCalls++
+        lastStatusResidentId = residentId
+        lastStatusActive = active
+        return Result.success(Unit)
+    }
 
     override suspend fun registerUnit(complexId: String): Result<RegisteredResidentialUnit> {
         registerCalls++

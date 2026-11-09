@@ -9,6 +9,7 @@ data class ResidentialUnitDto(
 data class ResidentialResidentDto(
     val userId: String? = null,
     val ownerTenantId: String? = null,
+    val membershipId: String? = null,
     val fullName: String? = null,
     val type: String? = null,
     val active: Boolean = true

@@ -20,7 +20,7 @@ class ResidentialRepositoryImpl @Inject constructor(
 ) : ResidentialRepository {
 
     override suspend fun getCensus(complexId: String): Result<List<ResidentialUnit>> =
-        getCensus(complexId, "activos")
+        getCensus(complexId, "todos")
 
     override suspend fun getCensus(complexId: String, status: String): Result<List<ResidentialUnit>> {
         if (complexId.isBlank()) {

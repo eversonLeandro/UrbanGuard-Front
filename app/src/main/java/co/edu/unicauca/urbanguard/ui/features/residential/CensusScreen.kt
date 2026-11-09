@@ -83,7 +83,7 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 fun CensusScreen(viewModel: CensusViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
-    val visibleUnits = remember(state.units, state.searchQuery, state.filter, state.statusFilter) {
+    val visibleUnits = remember(state.units, state.searchQuery, state.filter) {
         state.visibleUnits()
     }
     var showRegisterDialog by rememberSaveable { mutableStateOf(false) }
@@ -116,7 +116,6 @@ fun CensusScreen(viewModel: CensusViewModel = hiltViewModel()) {
             onRefresh = viewModel::onRefresh,
             onSearchQueryChange = viewModel::onSearchQueryChange,
             onFilterChange = viewModel::onFilterChange,
-            onStatusFilterChange = viewModel::onStatusFilterChange,
             onUnitSelected = viewModel::onUnitSelected,
             onAddUnit = { showRegisterDialog = true }
         )
@@ -207,7 +206,6 @@ private fun ColumnScope.CensusStateContent(
     onRefresh: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onFilterChange: (CensusUnitFilter) -> Unit,
-    onStatusFilterChange: (CensusStatusFilter) -> Unit,
     onUnitSelected: (String) -> Unit,
     onAddUnit: () -> Unit
 ) {
@@ -257,7 +255,6 @@ private fun ColumnScope.CensusStateContent(
                 visibleUnits = visibleUnits,
                 onSearchQueryChange = onSearchQueryChange,
                 onFilterChange = onFilterChange,
-                onStatusFilterChange = onStatusFilterChange,
                 onUnitSelected = onUnitSelected,
                 onAddUnit = onAddUnit
             )
@@ -320,7 +317,6 @@ private fun CensusContent(
     visibleUnits: List<ResidentialUnit>,
     onSearchQueryChange: (String) -> Unit,
     onFilterChange: (CensusUnitFilter) -> Unit,
-    onStatusFilterChange: (CensusStatusFilter) -> Unit,
     onUnitSelected: (String) -> Unit,
     onAddUnit: () -> Unit
 ) {
@@ -344,7 +340,6 @@ private fun CensusContent(
             state = state,
             onSearchQueryChange = onSearchQueryChange,
             onFilterChange = onFilterChange,
-            onStatusFilterChange = onStatusFilterChange,
             onSearch = { keyboardController?.hide() }
         )
         Spacer(Modifier.height(8.dp))
@@ -385,7 +380,6 @@ private fun CensusFilterBar(
     state: CensusUiState,
     onSearchQueryChange: (String) -> Unit,
     onFilterChange: (CensusUnitFilter) -> Unit,
-    onStatusFilterChange: (CensusStatusFilter) -> Unit,
     onSearch: () -> Unit
 ) {
     OutlinedTextField(
@@ -422,19 +416,6 @@ private fun CensusFilterBar(
             FilterChip(
                 selected = state.filter == filter,
                 onClick = { onFilterChange(filter) },
-                label = { Text(filter.label, fontSize = 12.sp) }
-            )
-        }
-    }
-    Spacer(Modifier.height(8.dp))
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        CensusStatusFilter.entries.forEach { filter ->
-            FilterChip(
-                selected = state.statusFilter == filter,
-                onClick = { onStatusFilterChange(filter) },
                 label = { Text(filter.label, fontSize = 12.sp) }
             )
         }
@@ -654,10 +635,11 @@ private fun UnitDetailSheet(
                     style = MaterialTheme.typography.titleMedium
                 )
                 unit.residents.forEach { resident ->
+                    val residentId = resident.ownerTenantId ?: resident.membershipId
                     CensusResidentRow(
                         resident = resident,
-                        canManage = isAdmin && resident.ownerTenantId != null,
-                        isChanging = isChangingResidentStatus && changingResidentId == resident.ownerTenantId,
+                        canManage = isAdmin && residentId != null,
+                        isChanging = isChangingResidentStatus && changingResidentId == residentId,
                         onChangeStatus = { onChangeResidentStatus(resident) }
                     )
                 }

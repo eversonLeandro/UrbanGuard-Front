@@ -10,19 +10,12 @@ enum class CensusUnitFilter(val label: String) {
     UNOCCUPIED("Sin asociar")
 }
 
-enum class CensusStatusFilter(val label: String, val apiValue: String) {
-    ACTIVE("Activos", "activos"),
-    INACTIVE("Inactivos", "inactivos"),
-    ALL("Todos los estados", "todos")
-}
-
 data class CensusUiState(
     val isLoading: Boolean = false,
     val units: List<ResidentialUnit> = emptyList(),
     val error: AppError? = null,
     val searchQuery: String = "",
     val filter: CensusUnitFilter = CensusUnitFilter.ALL,
-    val statusFilter: CensusStatusFilter = CensusStatusFilter.ACTIVE,
     val selectedUnitId: String? = null,
     val isAdmin: Boolean = false,
     val isRegistering: Boolean = false,

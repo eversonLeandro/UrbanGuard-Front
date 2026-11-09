@@ -3,6 +3,7 @@ package co.edu.unicauca.urbanguard.data.repository
 import co.edu.unicauca.urbanguard.core.network.apiCall
 import co.edu.unicauca.urbanguard.data.mapper.toCreateGuardRequestDto
 import co.edu.unicauca.urbanguard.data.mapper.toDomain
+import co.edu.unicauca.urbanguard.data.mapper.toDomainOrNull
 import co.edu.unicauca.urbanguard.data.remote.api.service.GuardApi
 import co.edu.unicauca.urbanguard.domain.model.CreatedGuard
 import co.edu.unicauca.urbanguard.domain.model.GuardMembership
@@ -33,7 +34,11 @@ class GuardRepositoryImpl @Inject constructor(
         if (complexId.isBlank()) {
             return Result.failure(IllegalArgumentException("No hay un conjunto activo seleccionado."))
         }
-        return apiCall { guardApi.getGuards(complexId, status).map { it.toDomain() } }
+        return apiCall {
+            // `toDomainOrNull` + `mapNotNull`: una fila inválida o sin identidad
+            // se descarta sola; el resto del listado llega intacto al admin.
+            guardApi.getGuards(complexId, status).mapNotNull { it.toDomainOrNull() }
+        }
     }
 
     override suspend fun setGuardActive(

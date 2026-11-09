@@ -787,6 +787,13 @@ fun AppNavGraph(
                 },
                 onPackages = {
                     navController.navigate(Routes.PACKAGES)
+                },
+                // Salida del guardia sin membresía activa: cierra sesión completa
+                // y limpia el back stack, mismo camino que el resto de la app.
+                onLogout = {
+                    sessionViewModel.logout {
+                        navController.navigateToLogin()
+                    }
                 }
             )
         }
