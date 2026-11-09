@@ -294,6 +294,18 @@ class RegisterGuardViewModelTest {
             lastTelefono = telefono
             return if (error != null) Result.failure(error) else Result.success(created!!)
         }
+
+        override suspend fun getGuards(
+            complexId: String,
+            status: String
+        ): Result<List<co.edu.unicauca.urbanguard.domain.model.GuardMembership>> =
+            Result.success(emptyList())
+
+        override suspend fun setGuardActive(
+            complexId: String,
+            membershipId: String,
+            active: Boolean
+        ): Result<Unit> = Result.success(Unit)
     }
 
     private companion object {

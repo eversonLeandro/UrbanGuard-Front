@@ -31,7 +31,9 @@ class ResidentialRepositoryImplTest {
                 ResidentialUnitDto(
                     id = "unit-1",
                     identifier = "101",
-                    residents = listOf(ResidentialResidentDto("user-1", "Ana Pérez"))
+                    residents = listOf(
+                        ResidentialResidentDto(userId = "user-1", fullName = "Ana Pérez")
+                    )
                 ),
                 ResidentialUnitDto(id = "unit-2", identifier = "102", residents = emptyList())
             )
@@ -371,7 +373,10 @@ private class FakeResidentialApi(
     var lastResidentUnitId: String? = null
     var lastResidentRequest: CreateOwnerTenantRequestDto? = null
 
-    override suspend fun getCensus(complexId: String): List<ResidentialUnitDto> {
+    override suspend fun getCensus(
+        complexId: String,
+        estado: String
+    ): List<ResidentialUnitDto> {
         calls++
         lastComplexId = complexId
         return units
@@ -409,4 +414,16 @@ private class FakeResidentialApi(
         residentError?.let { throw it }
         return createdResident
     }
+
+    override suspend fun deactivateOwnerTenant(
+        complexId: String,
+        unitId: String,
+        residentId: String
+    ) = Unit
+
+    override suspend fun reactivateOwnerTenant(
+        complexId: String,
+        unitId: String,
+        residentId: String
+    ) = Unit
 }

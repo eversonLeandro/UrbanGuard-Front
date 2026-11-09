@@ -15,6 +15,7 @@ import co.edu.unicauca.urbanguard.domain.model.UserSession
 import co.edu.unicauca.urbanguard.domain.repository.ResidentialRepository
 import co.edu.unicauca.urbanguard.domain.usecase.residential.GetCensusUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.residential.RegisterUnitUseCase
+import co.edu.unicauca.urbanguard.domain.usecase.residential.SetOwnerTenantActiveUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.residential.UpdateUnitUseCase
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +48,11 @@ class CensusViewModelTest {
     @Test
     fun `carga el censo del conjunto activo e incluye apartamentos vacios`() = runTest {
         val expected = listOf(
-            ResidentialUnit("unit-1", "101", listOf(ResidentialResident("user-1", "Ana Pérez"))),
+            ResidentialUnit(
+                "unit-1",
+                "101",
+                listOf(ResidentialResident(userId = "user-1", fullName = "Ana Pérez"))
+            ),
             ResidentialUnit("unit-2", "102", emptyList())
         )
         val repository = FakeResidentialRepository(Result.success(expected))
@@ -88,6 +93,7 @@ class CensusViewModelTest {
             GetCensusUseCase(repository),
             RegisterUnitUseCase(repository),
             UpdateUnitUseCase(repository),
+            SetOwnerTenantActiveUseCase(repository),
             SessionManager(NoOpRolePersistence)
         )
 
@@ -105,7 +111,7 @@ class CensusViewModelTest {
                     ResidentialUnit(
                         "unit-1",
                         "101",
-                        listOf(ResidentialResident("user-1", "Ana Pérez"))
+                        listOf(ResidentialResident(userId = "user-1", fullName = "Ana Pérez"))
                     )
                 )
             )
@@ -132,7 +138,7 @@ class CensusViewModelTest {
         val unit = ResidentialUnit(
             "unit-1",
             "101",
-            listOf(ResidentialResident("user-1", "Ana Pérez"))
+            listOf(ResidentialResident(userId = "user-1", fullName = "Ana Pérez"))
         )
         val repository = FakeResidentialRepository(Result.success(listOf(unit)))
         val viewModel = createViewModel(repository)
@@ -332,6 +338,7 @@ class CensusViewModelTest {
             GetCensusUseCase(repository),
             RegisterUnitUseCase(repository),
             UpdateUnitUseCase(repository),
+            SetOwnerTenantActiveUseCase(repository),
             sessionManager
         )
     }
@@ -359,6 +366,22 @@ private class FakeResidentialRepository(
         lastComplexId = complexId
         return result
     }
+
+    override suspend fun getCensus(
+        complexId: String,
+        status: String
+    ): Result<List<ResidentialUnit>> {
+        calls++
+        lastComplexId = complexId
+        return result
+    }
+
+    override suspend fun setOwnerTenantActive(
+        complexId: String,
+        unitId: String,
+        residentId: String,
+        active: Boolean
+    ): Result<Unit> = Result.success(Unit)
 
     override suspend fun registerUnit(complexId: String): Result<RegisteredResidentialUnit> {
         registerCalls++

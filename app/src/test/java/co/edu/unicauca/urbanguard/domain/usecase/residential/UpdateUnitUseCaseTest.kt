@@ -83,6 +83,18 @@ class UpdateUnitUseCaseTest {
         override suspend fun getCensus(complexId: String): Result<List<ResidentialUnit>> =
             Result.success(emptyList())
 
+        override suspend fun getCensus(
+            complexId: String,
+            status: String
+        ): Result<List<ResidentialUnit>> = Result.success(emptyList())
+
+        override suspend fun setOwnerTenantActive(
+            complexId: String,
+            unitId: String,
+            residentId: String,
+            active: Boolean
+        ): Result<Unit> = Result.success(Unit)
+
         override suspend fun registerUnit(complexId: String): Result<RegisteredResidentialUnit> =
             Result.failure(AppException(AppError.Unexpected("No usado")))
 

@@ -24,8 +24,10 @@ fun CreateUnitResponseDto.toDomain(): RegisteredResidentialUnit = RegisteredResi
 
 private fun ResidentialResidentDto.toDomain(): ResidentialResident = ResidentialResident(
     userId = userId?.takeIf(String::isNotBlank),
+    ownerTenantId = ownerTenantId?.takeIf(String::isNotBlank),
     fullName = required(fullName),
-    type = residentType(type)
+    type = residentType(type),
+    active = active
 )
 
 private fun residentType(value: String?): ResidentType? = when (value?.trim()?.uppercase()) {

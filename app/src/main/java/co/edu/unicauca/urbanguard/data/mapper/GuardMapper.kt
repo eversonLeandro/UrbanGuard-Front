@@ -2,7 +2,9 @@ package co.edu.unicauca.urbanguard.data.mapper
 
 import co.edu.unicauca.urbanguard.data.remote.api.dto.CreateGuardRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.CreateGuardResponseDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.GuardMembershipDto
 import co.edu.unicauca.urbanguard.domain.model.CreatedGuard
+import co.edu.unicauca.urbanguard.domain.model.GuardMembership
 import co.edu.unicauca.urbanguard.domain.model.MembershipRole
 
 /**
@@ -41,3 +43,13 @@ fun CreateGuardResponseDto.toDomain(): CreatedGuard = CreatedGuard(
     nombres = nombres,
     role = runCatching { MembershipRole.valueOf(role) }.getOrNull() ?: MembershipRole.GUARD
 )
+
+fun GuardMembershipDto.toDomain(): GuardMembership {
+    val fullName = listOfNotNull(nombres?.trim(), apellidos?.trim())
+        .filter(String::isNotBlank)
+        .joinToString(" ")
+    if (membershipId.isBlank() || userId.isBlank() || fullName.isBlank()) {
+        throw IllegalArgumentException("El servidor devolvió datos inválidos para un vigilante.")
+    }
+    return GuardMembership(membershipId, userId, email, fullName, active)
+}

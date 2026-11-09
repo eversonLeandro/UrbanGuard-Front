@@ -10,12 +10,19 @@ enum class CensusUnitFilter(val label: String) {
     UNOCCUPIED("Sin asociar")
 }
 
+enum class CensusStatusFilter(val label: String, val apiValue: String) {
+    ACTIVE("Activos", "activos"),
+    INACTIVE("Inactivos", "inactivos"),
+    ALL("Todos los estados", "todos")
+}
+
 data class CensusUiState(
     val isLoading: Boolean = false,
     val units: List<ResidentialUnit> = emptyList(),
     val error: AppError? = null,
     val searchQuery: String = "",
     val filter: CensusUnitFilter = CensusUnitFilter.ALL,
+    val statusFilter: CensusStatusFilter = CensusStatusFilter.ACTIVE,
     val selectedUnitId: String? = null,
     val isAdmin: Boolean = false,
     val isRegistering: Boolean = false,
@@ -24,7 +31,11 @@ data class CensusUiState(
     val isEditingUnit: Boolean = false,
     val isUpdatingUnit: Boolean = false,
     val updateUnitSuccess: String? = null,
-    val updateUnitError: AppError? = null
+    val updateUnitError: AppError? = null,
+    val isChangingResidentStatus: Boolean = false,
+    val changingResidentId: String? = null,
+    val residentStatusSuccess: String? = null,
+    val residentStatusError: AppError? = null
 ) {
     val isEmpty: Boolean
         get() = !isLoading && error == null && units.isEmpty()

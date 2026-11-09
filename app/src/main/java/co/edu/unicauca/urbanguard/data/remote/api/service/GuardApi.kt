@@ -2,9 +2,13 @@ package co.edu.unicauca.urbanguard.data.remote.api.service
 
 import co.edu.unicauca.urbanguard.data.remote.api.dto.CreateGuardRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.CreateGuardResponseDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.GuardMembershipDto
 import retrofit2.http.Body
 import retrofit2.http.POST
+import retrofit2.http.GET
+import retrofit2.http.DELETE
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
  * Interfaz Retrofit para el alta de vigilantes (HU-009), vía API Gateway.
@@ -33,4 +37,22 @@ interface GuardApi {
         @Path("complexId") complexId: String,
         @Body body: CreateGuardRequestDto
     ): CreateGuardResponseDto
+
+    @GET("api/complexes/{complexId}/guards")
+    suspend fun getGuards(
+        @Path("complexId") complexId: String,
+        @Query("estado") status: String
+    ): List<GuardMembershipDto>
+
+    @DELETE("api/complexes/{complexId}/guards/{membershipId}")
+    suspend fun deactivateGuard(
+        @Path("complexId") complexId: String,
+        @Path("membershipId") membershipId: String
+    )
+
+    @POST("api/complexes/{complexId}/guards/{membershipId}/reactivate")
+    suspend fun reactivateGuard(
+        @Path("complexId") complexId: String,
+        @Path("membershipId") membershipId: String
+    )
 }

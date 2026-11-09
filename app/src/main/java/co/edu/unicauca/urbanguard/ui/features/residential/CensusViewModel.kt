@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.AppError
+import co.edu.unicauca.urbanguard.domain.model.ResidentialResident
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.usecase.residential.GetCensusUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.residential.RegisterUnitUseCase
+import co.edu.unicauca.urbanguard.domain.usecase.residential.SetOwnerTenantActiveUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.residential.UpdateUnitUseCase
 import co.edu.unicauca.urbanguard.domain.validation.UnitIdentifierValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +24,7 @@ class CensusViewModel @Inject constructor(
     private val getCensusUseCase: GetCensusUseCase,
     private val registerUnitUseCase: RegisterUnitUseCase,
     private val updateUnitUseCase: UpdateUnitUseCase,
+    private val setOwnerTenantActiveUseCase: SetOwnerTenantActiveUseCase,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -49,7 +52,7 @@ class CensusViewModel @Inject constructor(
         loadJob?.cancel()
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
         loadJob = viewModelScope.launch {
-            getCensusUseCase(complexId).fold(
+            getCensusUseCase(complexId, _uiState.value.statusFilter.apiValue).fold(
                 onSuccess = { units ->
                     val selectedId = _uiState.value.selectedUnitId
                         ?.takeIf { selectedId -> units.any { it.id == selectedId } }
@@ -84,6 +87,68 @@ class CensusViewModel @Inject constructor(
 
     fun onFilterChange(filter: CensusUnitFilter) {
         _uiState.value = _uiState.value.copy(filter = filter)
+    }
+
+    fun onStatusFilterChange(filter: CensusStatusFilter) {
+        if (_uiState.value.statusFilter != filter) {
+            _uiState.value = _uiState.value.copy(statusFilter = filter)
+            onRefresh()
+        }
+    }
+
+    fun onChangeResidentStatus(unitId: String, resident: ResidentialResident) {
+        val state = _uiState.value
+        if (state.isChangingResidentStatus) return
+        if (!state.isAdmin || sessionManager.currentRole() != UserRole.ADMIN) {
+            _uiState.value = state.copy(
+                residentStatusError = AppError.Forbidden(NO_ADMIN_RESIDENT_MESSAGE)
+            )
+            return
+        }
+        val residentId = resident.ownerTenantId
+        if (residentId.isNullOrBlank() || unitId.isBlank()) {
+            _uiState.value = state.copy(
+                residentStatusError = AppError.Validation(INVALID_RESIDENT_MESSAGE)
+            )
+            return
+        }
+        val complexId = sessionManager.getActiveConjunto()?.conjuntoId
+        if (complexId.isNullOrBlank()) {
+            _uiState.value = state.copy(
+                residentStatusError = AppError.Validation(NO_ACTIVE_COMPLEX_MESSAGE)
+            )
+            return
+        }
+
+        _uiState.value = state.copy(
+            isChangingResidentStatus = true,
+            changingResidentId = residentId,
+            residentStatusSuccess = null,
+            residentStatusError = null
+        )
+        viewModelScope.launch {
+            setOwnerTenantActiveUseCase(complexId, unitId, residentId, !resident.active).fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        isChangingResidentStatus = false,
+                        changingResidentId = null,
+                        residentStatusSuccess = if (resident.active) {
+                            "Registro de ${resident.fullName} inactivado"
+                        } else {
+                            "Registro de ${resident.fullName} reactivado"
+                        }
+                    )
+                    onRefresh()
+                },
+                onFailure = { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isChangingResidentStatus = false,
+                        changingResidentId = null,
+                        residentStatusError = AppError.from(error)
+                    )
+                }
+            )
+        }
     }
 
     fun onUnitSelected(unitId: String) {
@@ -139,7 +204,9 @@ class CensusViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             registrationSuccess = null,
             registrationError = null,
-            updateUnitSuccess = null
+            updateUnitSuccess = null,
+            residentStatusSuccess = null,
+            residentStatusError = null
         )
     }
 
@@ -222,5 +289,8 @@ class CensusViewModel @Inject constructor(
         const val NO_UNIT_SELECTED_MESSAGE = "No se seleccionó un apartamento."
         const val NO_ADMIN_MESSAGE = "No tienes permisos de administrador para agregar apartamentos."
         const val NO_ACTIVE_COMPLEX_MESSAGE = "No hay un conjunto activo seleccionado."
+        const val NO_ADMIN_RESIDENT_MESSAGE =
+            "No tienes permisos de administrador para cambiar el estado del residente."
+        const val INVALID_RESIDENT_MESSAGE = "No se pudo identificar el registro del residente."
     }
 }

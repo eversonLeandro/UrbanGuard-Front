@@ -47,6 +47,7 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 @Composable
 fun AdminSecurityMenuScreen(
     onNavigateToRegisterGuard: () -> Unit = {},
+    onNavigateToGuardManagement: () -> Unit = {},
     onNavigateToPatrolHistory: () -> Unit = {},
     onNavigateToPatrolPoints: () -> Unit = {},
     onNavigateToPatrolRoutes: () -> Unit = {},
@@ -81,6 +82,13 @@ fun AdminSecurityMenuScreen(
                 subtitle = "Crear cuenta y acceso para un nuevo guardia",
                 icon = Icons.Default.Security,
                 onClick = onNavigateToRegisterGuard
+            )
+
+            SecurityOptionCard(
+                title = "Gestionar vigilantes",
+                subtitle = "Consultar, inactivar o reactivar accesos de este conjunto",
+                icon = Icons.Default.Security,
+                onClick = onNavigateToGuardManagement
             )
 
             if (PatrolConstants.PATROL_HISTORY_REMOTE) {

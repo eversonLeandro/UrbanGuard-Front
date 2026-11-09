@@ -74,7 +74,7 @@ class CensusUiStateTest {
                     id = "unit-$number",
                     identifier = number.toString(),
                     residents = if (number % 2 == 0) {
-                        listOf(ResidentialResident("resident-$number", "Residente $number"))
+                        listOf(ResidentialResident(userId = "resident-$number", fullName = "Residente $number"))
                     } else {
                         emptyList()
                     }
@@ -92,19 +92,19 @@ class CensusUiStateTest {
         ResidentialUnit(
             "unit-10",
             "10",
-            listOf(ResidentialResident("resident-ana", "Ana Pérez"))
+            listOf(ResidentialResident(userId = "resident-ana", fullName = "Ana Pérez"))
         ),
         ResidentialUnit("unit-2", "2", emptyList()),
         ResidentialUnit(
             "unit-1",
             "1",
-            listOf(ResidentialResident("resident-carlos", "Carlos Ruiz"))
+            listOf(ResidentialResident(userId = "resident-carlos", fullName = "Carlos Ruiz"))
         ),
         ResidentialUnit("unit-100", "100", emptyList()),
         ResidentialUnit(
             "unit-20",
             "20",
-            listOf(ResidentialResident("resident-luz", "Luz Díaz"))
+            listOf(ResidentialResident(userId = "resident-luz", fullName = "Luz Díaz"))
         )
     )
 }
