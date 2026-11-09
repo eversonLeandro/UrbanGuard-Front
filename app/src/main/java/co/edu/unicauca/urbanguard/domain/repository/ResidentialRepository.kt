@@ -8,6 +8,15 @@ import co.edu.unicauca.urbanguard.domain.model.ResidentialUnit
 interface ResidentialRepository {
     suspend fun getCensus(complexId: String): Result<List<ResidentialUnit>>
 
+    suspend fun getCensus(complexId: String, status: String): Result<List<ResidentialUnit>>
+
+    suspend fun setOwnerTenantActive(
+        complexId: String,
+        unitId: String,
+        residentId: String,
+        active: Boolean
+    ): Result<Unit>
+
     suspend fun registerUnit(complexId: String): Result<RegisteredResidentialUnit>
 
     suspend fun updateUnit(

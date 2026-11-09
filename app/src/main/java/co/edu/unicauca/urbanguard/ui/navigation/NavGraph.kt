@@ -36,6 +36,7 @@ import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.ui.components.PlaceholderScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.AdminSecurityMenuScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.RegisterGuardScreen
+import co.edu.unicauca.urbanguard.ui.features.admin.GuardManagementScreen
 import co.edu.unicauca.urbanguard.ui.features.admin.SuperAdminScreen
 import co.edu.unicauca.urbanguard.ui.features.users.UserListScreen
 import co.edu.unicauca.urbanguard.ui.features.auth.LoginScreen
@@ -422,6 +423,9 @@ fun AppNavGraph(
                 onNavigateToRegisterGuard = {
                     navController.navigate(Routes.REGISTER_GUARD)
                 },
+                onNavigateToGuardManagement = {
+                    navController.navigate(Routes.GUARD_MANAGEMENT)
+                },
                 onNavigateToPatrolHistory = {
                     navController.navigate(Routes.PATROL_HISTORY)
                 },
@@ -516,6 +520,12 @@ fun AppNavGraph(
                 onNavigateBack = {
                     navController.popBackStack()
                 }
+            )
+        }
+
+        composable(Routes.GUARD_MANAGEMENT) {
+            GuardManagementScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -777,6 +787,13 @@ fun AppNavGraph(
                 },
                 onPackages = {
                     navController.navigate(Routes.PACKAGES)
+                },
+                // Salida del guardia sin membresía activa: cierra sesión completa
+                // y limpia el back stack, mismo camino que el resto de la app.
+                onLogout = {
+                    sessionViewModel.logout {
+                        navController.navigateToLogin()
+                    }
                 }
             )
         }

@@ -7,5 +7,12 @@ data class GuardHomeUiState(
     val userName: String = "",
     val conjuntoName: String = "",
     val profilePhotoUrl: String? = null,
-    val profilePhotoExpiresAt: Instant? = null
+    val profilePhotoExpiresAt: Instant? = null,
+    /**
+     * El guardia quedó sin ninguna membresía activa (p. ej. el admin lo
+     * inactivó desde la gestión del conjunto). La pantalla de locked view
+     * sustituye TODO el panel de vigilancia: solo queda cerrar sesión o
+     * reintentar la carga; ninguna acción ni navegación queda disponible.
+     */
+    val hasNoAccess: Boolean = false
 )

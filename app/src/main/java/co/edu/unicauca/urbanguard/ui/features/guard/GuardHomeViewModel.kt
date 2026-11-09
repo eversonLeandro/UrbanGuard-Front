@@ -68,18 +68,31 @@ class GuardHomeViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            getMyConjuntosUseCase().onSuccess { conjuntos ->
-                sessionManager.setAssociations(conjuntos)
-                // El guardia pertenece a un solo conjunto: si la sesion aun no tiene
-                // ninguno resuelto (la lista persistida no lo incluia), se activa el
-                // primero. SessionManager ya conserva el activo cuando sigue vigente.
-                if (sessionManager.session.value?.conjuntoActivoId == null && conjuntos.isNotEmpty()) {
-                    sessionManager.setActiveConjunto(conjuntos.first().conjuntoId)
-                }
-            }
-            _uiState.update { it.copy(isLoading = false) }
+            loadConjuntos()
         }
+    }
+
+    /** Reintenta la carga de membresías: usado por la vista de bloqueo. */
+    fun reloadConjunto() {
+        viewModelScope.launch { loadConjuntos() }
+    }
+
+    private suspend fun loadConjuntos() {
+        _uiState.update { it.copy(isLoading = true, hasNoAccess = false) }
+        getMyConjuntosUseCase().onSuccess { conjuntos ->
+            sessionManager.setAssociations(conjuntos)
+            // El guardia pertenece a un solo conjunto: si la sesion aun no tiene
+            // ninguno resuelto (la lista persistida no lo incluia), se activa el
+            // primero. SessionManager ya conserva el activo cuando sigue vigente.
+            if (sessionManager.session.value?.conjuntoActivoId == null && conjuntos.isNotEmpty()) {
+                sessionManager.setActiveConjunto(conjuntos.first().conjuntoId)
+            }
+            // Membresías vacías ⇒ el admin inactivó al guardia (o nunca lo
+            // agregó). Se bloquea el panel completo en vez de dejar que
+            // cada pantalla fallen "por no estar en el conjunto".
+            _uiState.update { it.copy(hasNoAccess = conjuntos.isEmpty()) }
+        }
+        _uiState.update { it.copy(isLoading = false) }
     }
 
     fun ensureFresh() { viewModelScope.launch { profileState.ensureFresh() } }

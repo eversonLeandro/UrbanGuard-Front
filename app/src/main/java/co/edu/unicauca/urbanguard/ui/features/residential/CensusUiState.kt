@@ -24,7 +24,11 @@ data class CensusUiState(
     val isEditingUnit: Boolean = false,
     val isUpdatingUnit: Boolean = false,
     val updateUnitSuccess: String? = null,
-    val updateUnitError: AppError? = null
+    val updateUnitError: AppError? = null,
+    val isChangingResidentStatus: Boolean = false,
+    val changingResidentId: String? = null,
+    val residentStatusSuccess: String? = null,
+    val residentStatusError: AppError? = null
 ) {
     val isEmpty: Boolean
         get() = !isLoading && error == null && units.isEmpty()

@@ -9,4 +9,10 @@ class GetCensusUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(complexId: String): Result<List<ResidentialUnit>> =
         repository.getCensus(complexId)
+
+    suspend operator fun invoke(
+        complexId: String,
+        status: String
+    ): Result<List<ResidentialUnit>> =
+        repository.getCensus(complexId, status)
 }

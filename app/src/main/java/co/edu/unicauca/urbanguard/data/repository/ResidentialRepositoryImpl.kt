@@ -19,11 +19,31 @@ class ResidentialRepositoryImpl @Inject constructor(
     private val api: ResidentialApi
 ) : ResidentialRepository {
 
-    override suspend fun getCensus(complexId: String): Result<List<ResidentialUnit>> {
+    override suspend fun getCensus(complexId: String): Result<List<ResidentialUnit>> =
+        getCensus(complexId, "todos")
+
+    override suspend fun getCensus(complexId: String, status: String): Result<List<ResidentialUnit>> {
         if (complexId.isBlank()) {
             return noActiveComplexFailure()
         }
-        return apiCall { api.getCensus(complexId).map { it.toDomain() } }
+        return apiCall { api.getCensus(complexId, status).map { it.toDomain() } }
+    }
+
+    override suspend fun setOwnerTenantActive(
+        complexId: String,
+        unitId: String,
+        residentId: String,
+        active: Boolean
+    ): Result<Unit> {
+        if (complexId.isBlank()) return noActiveComplexFailure()
+        if (unitId.isBlank() || residentId.isBlank()) return invalidUnitFailure()
+        return apiCall {
+            if (active) {
+                api.reactivateOwnerTenant(complexId, unitId, residentId)
+            } else {
+                api.deactivateOwnerTenant(complexId, unitId, residentId)
+            }
+        }
     }
 
     override suspend fun registerUnit(complexId: String): Result<RegisteredResidentialUnit> {

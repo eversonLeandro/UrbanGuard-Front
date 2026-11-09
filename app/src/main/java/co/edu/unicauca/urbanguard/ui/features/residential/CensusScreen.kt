@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -66,6 +67,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.domain.model.ResidentialUnit
+import co.edu.unicauca.urbanguard.domain.model.ResidentialResident
 import co.edu.unicauca.urbanguard.ui.components.ErrorView
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgAmberSoft
@@ -81,10 +83,13 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 fun CensusScreen(viewModel: CensusViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
-    val visibleUnits = remember(state.units, state.searchQuery, state.filter) { state.visibleUnits() }
+    val visibleUnits = remember(state.units, state.searchQuery, state.filter) {
+        state.visibleUnits()
+    }
     var showRegisterDialog by rememberSaveable { mutableStateOf(false) }
     var showResidentDialog by rememberSaveable { mutableStateOf(false) }
     var residentSuccess by rememberSaveable { mutableStateOf<String?>(null) }
+    var residentToChange by remember { mutableStateOf<ResidentialResident?>(null) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -97,8 +102,9 @@ fun CensusScreen(viewModel: CensusViewModel = hiltViewModel()) {
     Column(modifier = Modifier.fillMaxSize().background(UgBackground).imePadding()) {
         UrbanGuardTopBar(title = "Censo de apartamentos")
         RegistrationFeedback(
-            successMessage = residentSuccess ?: state.registrationSuccess ?: state.updateUnitSuccess,
-            errorMessage = state.registrationError?.message,
+            successMessage = state.residentStatusSuccess ?: residentSuccess
+                ?: state.registrationSuccess ?: state.updateUnitSuccess,
+            errorMessage = state.residentStatusError?.message ?: state.registrationError?.message,
             onDismiss = {
                 residentSuccess = null
                 viewModel.onDismissFeedback()
@@ -122,7 +128,39 @@ fun CensusScreen(viewModel: CensusViewModel = hiltViewModel()) {
                 isAdmin = state.isAdmin,
                 onEditUnit = { viewModel.onEditUnitDialogChange(true) },
                 onAssignResident = { showResidentDialog = true },
+                isChangingResidentStatus = state.isChangingResidentStatus,
+                changingResidentId = state.changingResidentId,
+                onChangeResidentStatus = { resident -> residentToChange = resident },
                 onDismiss = viewModel::onDismissUnitDetail
+            )
+        }
+        residentToChange?.let { resident ->
+            val active = resident.active
+            AlertDialog(
+                onDismissRequest = { residentToChange = null },
+                title = { Text(if (active) "Inactivar registro" else "Reactivar registro") },
+                text = {
+                    Text(
+                        if (active) {
+                            "¿Deseas inactivar a ${resident.fullName}? El registro y su historial se conservarán."
+                        } else {
+                            "¿Deseas reactivar el registro de ${resident.fullName}?"
+                        }
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            state.selectedUnit?.let { unit ->
+                                viewModel.onChangeResidentStatus(unit.id, resident)
+                            }
+                            residentToChange = null
+                        }
+                    ) { Text(if (active) "Inactivar" else "Reactivar") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { residentToChange = null }) { Text("Cancelar") }
+                }
             )
         }
     }
@@ -564,8 +602,11 @@ private fun EmptyCensus(modifier: Modifier = Modifier) {
 private fun UnitDetailSheet(
     unit: ResidentialUnit,
     isAdmin: Boolean,
+    isChangingResidentStatus: Boolean,
+    changingResidentId: String?,
     onEditUnit: () -> Unit,
     onAssignResident: () -> Unit,
+    onChangeResidentStatus: (ResidentialResident) -> Unit,
     onDismiss: () -> Unit
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -594,7 +635,13 @@ private fun UnitDetailSheet(
                     style = MaterialTheme.typography.titleMedium
                 )
                 unit.residents.forEach { resident ->
-                    CensusResidentRow(resident)
+                    val residentId = resident.ownerTenantId ?: resident.membershipId
+                    CensusResidentRow(
+                        resident = resident,
+                        canManage = isAdmin && residentId != null,
+                        isChanging = isChangingResidentStatus && changingResidentId == residentId,
+                        onChangeStatus = { onChangeResidentStatus(resident) }
+                    )
                 }
             }
             if (isAdmin && unit.residents.isEmpty()) {

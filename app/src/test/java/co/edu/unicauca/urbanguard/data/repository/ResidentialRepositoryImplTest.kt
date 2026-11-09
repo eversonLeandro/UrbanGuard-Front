@@ -31,7 +31,13 @@ class ResidentialRepositoryImplTest {
                 ResidentialUnitDto(
                     id = "unit-1",
                     identifier = "101",
-                    residents = listOf(ResidentialResidentDto("user-1", "Ana Pérez"))
+                    residents = listOf(
+                        ResidentialResidentDto(
+                            userId = "user-1",
+                            membershipId = "membership-1",
+                            fullName = "Ana Pérez"
+                        )
+                    )
                 ),
                 ResidentialUnitDto(id = "unit-2", identifier = "102", residents = emptyList())
             )
@@ -42,6 +48,8 @@ class ResidentialRepositoryImplTest {
         assertTrue(result.isSuccess)
         assertEquals("complex-1", api.lastComplexId)
         assertEquals("Ana Pérez", result.getOrThrow().first().residents.single().fullName)
+        assertEquals("membership-1", result.getOrThrow().first().residents.single().membershipId)
+        assertEquals("todos", api.lastEstado)
         assertTrue(result.getOrThrow().last().residents.isEmpty())
     }
 
@@ -360,6 +368,7 @@ private class FakeResidentialApi(
 ) : ResidentialApi {
     var calls = 0
     var lastComplexId: String? = null
+    var lastEstado: String? = null
     var createCalls = 0
     var lastCreateComplexId: String? = null
     var updateCalls = 0
@@ -371,9 +380,13 @@ private class FakeResidentialApi(
     var lastResidentUnitId: String? = null
     var lastResidentRequest: CreateOwnerTenantRequestDto? = null
 
-    override suspend fun getCensus(complexId: String): List<ResidentialUnitDto> {
+    override suspend fun getCensus(
+        complexId: String,
+        estado: String
+    ): List<ResidentialUnitDto> {
         calls++
         lastComplexId = complexId
+        lastEstado = estado
         return units
     }
 
@@ -409,4 +422,16 @@ private class FakeResidentialApi(
         residentError?.let { throw it }
         return createdResident
     }
+
+    override suspend fun deactivateOwnerTenant(
+        complexId: String,
+        unitId: String,
+        residentId: String
+    ) = Unit
+
+    override suspend fun reactivateOwnerTenant(
+        complexId: String,
+        unitId: String,
+        residentId: String
+    ) = Unit
 }

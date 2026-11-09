@@ -107,7 +107,7 @@ class UserListViewModelTest {
         val viewModel = createViewModel(repo)
         advanceUntilIdle()
 
-        viewModel.onRequestDeactivate(OTRO)
+        viewModel.onDeactivateDialogChange(OTRO)
         assertEquals(OTRO, viewModel.uiState.value.pendingDeactivation)
 
         viewModel.onConfirmDeactivate()
@@ -137,7 +137,7 @@ class UserListViewModelTest {
         val viewModel = createViewModel(repo)
         advanceUntilIdle()
 
-        viewModel.onRequestDeactivate(OTRO)
+        viewModel.onDeactivateDialogChange(OTRO)
         viewModel.onConfirmDeactivate()
         advanceUntilIdle()
 
@@ -184,7 +184,7 @@ class UserListViewModelTest {
         val viewModel = createViewModel(repo)
         advanceUntilIdle()
 
-        viewModel.onRequestDeactivate(OTRO)
+        viewModel.onDeactivateDialogChange(OTRO)
         viewModel.onConfirmDeactivate()
         // Segundo toque mientras la primera sigue en vuelo (sin advanceUntilIdle).
         viewModel.onConfirmDeactivate()

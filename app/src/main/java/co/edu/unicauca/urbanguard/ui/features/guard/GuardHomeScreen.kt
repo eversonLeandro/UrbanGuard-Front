@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.ReportProblem
@@ -40,6 +41,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -62,6 +64,7 @@ fun GuardHomeScreen(
     onScanQr: () -> Unit = {},
     onReportIncident: () -> Unit = {},
     onPackages: () -> Unit = {},
+    onLogout: () -> Unit = {},
     viewModel: GuardHomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -77,6 +80,19 @@ fun GuardHomeScreen(
             title = "Panel de Vigilancia",
             onNotificationsClick = onNotificationsClick
         )
+
+        // Sin membresía activa: la pantalla completa se sustituye por la vista
+        // de bloqueo. No se ofrecen acciones ni accesos rápidos: solo cerrar
+        // sesión o reintentar la carga por si el admin ha reactivado al guardia.
+        if (uiState.hasNoAccess) {
+            GuardLockedView(
+                userName = uiState.userName,
+                isRefreshing = uiState.isLoading,
+                onRefresh = viewModel::reloadConjunto,
+                onLogout = onLogout
+            )
+            return@Column
+        }
 
         Column(
             modifier = Modifier
@@ -143,6 +159,86 @@ fun GuardHomeScreen(
             )
 
             GuardRecentActivityCard()
+        }
+    }
+}
+
+/**
+ * Vista de bloqueo para un guardia sin ninguna membresía activa: sustituye
+ * todo el panel para que ningún flujo quede disponible. Se muestra el nombre
+ * para que quede claro qué cuenta está logueada, el mensaje del porqué, y las
+ * dos únicas salidas: reintentar (por si el admin lo reactiva) o cerrar sesión.
+ */
+@Composable
+private fun GuardLockedView(
+    userName: String,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    onLogout: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 28.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(UgAmber.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Lock,
+                contentDescription = null,
+                tint = UgAmber,
+                modifier = Modifier.size(34.dp)
+            )
+        }
+        Spacer(Modifier.height(18.dp))
+        Text(
+            "Sin acceso activo",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = UgNavy
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            if (userName.isBlank()) {
+                "Tu cuenta no está asignada a ningún conjunto activo. " +
+                    "Pide al administrador que te reactive."
+            } else {
+                "$userName, tu cuenta no está asignada a ningún conjunto activo. " +
+                    "Pide al administrador que te reactive."
+            },
+            fontSize = 13.5.sp,
+            color = UgTextSecondary,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(28.dp))
+        Button(
+            onClick = onRefresh,
+            enabled = !isRefreshing,
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = UgEmerald),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(if (isRefreshing) "Actualizando…" else "Actualizar", color = Color.White)
+        }
+        Spacer(Modifier.height(10.dp))
+        Button(
+            onClick = onLogout,
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = UgNavy.copy(alpha = 0.08f)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Cerrar sesión", color = UgNavy)
         }
     }
 }

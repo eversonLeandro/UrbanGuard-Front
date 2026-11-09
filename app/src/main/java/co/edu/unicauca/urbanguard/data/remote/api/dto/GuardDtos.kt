@@ -34,3 +34,12 @@ data class CreateGuardResponseDto(
     val nombres: String,
     val role: String
 )
+
+data class GuardMembershipDto(
+    val membershipId: String,
+    val userId: String,
+    val email: String? = null,
+    val nombres: String? = null,
+    val apellidos: String? = null,
+    val active: Boolean
+)

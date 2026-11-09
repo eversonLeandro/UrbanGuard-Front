@@ -40,6 +40,7 @@ object Routes {
     const val CONJUNTO_SELECTION = "conjunto_selection"
     const val ADMIN = "admin"
     const val REGISTER_GUARD = "register_guard"
+    const val GUARD_MANAGEMENT = "guard_management"
     const val PATROL_HISTORY = "patrol_history"
     const val PATROL_POINTS = "patrol_points"
     const val PATROL_POINT_FORM = "patrol_point_form?pointId={pointId}"

@@ -15,6 +15,7 @@ import co.edu.unicauca.urbanguard.domain.model.UserSession
 import co.edu.unicauca.urbanguard.domain.repository.ResidentialRepository
 import co.edu.unicauca.urbanguard.domain.usecase.residential.GetCensusUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.residential.RegisterUnitUseCase
+import co.edu.unicauca.urbanguard.domain.usecase.residential.SetOwnerTenantActiveUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.residential.UpdateUnitUseCase
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +48,11 @@ class CensusViewModelTest {
     @Test
     fun `carga el censo del conjunto activo e incluye apartamentos vacios`() = runTest {
         val expected = listOf(
-            ResidentialUnit("unit-1", "101", listOf(ResidentialResident("user-1", "Ana Pérez"))),
+            ResidentialUnit(
+                "unit-1",
+                "101",
+                listOf(ResidentialResident(userId = "user-1", fullName = "Ana Pérez"))
+            ),
             ResidentialUnit("unit-2", "102", emptyList())
         )
         val repository = FakeResidentialRepository(Result.success(expected))
@@ -60,6 +65,26 @@ class CensusViewModelTest {
         assertFalse(viewModel.uiState.value.isLoading)
         assertTrue(viewModel.uiState.value.error == null)
         assertTrue(viewModel.uiState.value.isAdmin)
+    }
+
+    @Test
+    fun `cambia estado de residente usando membershipId cuando no hay ownerTenantId`() = runTest {
+        val resident = ResidentialResident(
+            membershipId = "membership-1",
+            fullName = "Ana Pérez"
+        )
+        val unit = ResidentialUnit("unit-1", "101", listOf(resident))
+        val repository = FakeResidentialRepository(Result.success(listOf(unit)))
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+
+        viewModel.onChangeResidentStatus(unit.id, resident)
+        advanceUntilIdle()
+
+        assertEquals(1, repository.statusCalls)
+        assertEquals("membership-1", repository.lastStatusResidentId)
+        assertEquals(false, repository.lastStatusActive)
+        assertEquals("Registro de Ana Pérez inactivado", viewModel.uiState.value.residentStatusSuccess)
     }
 
     @Test
@@ -88,6 +113,7 @@ class CensusViewModelTest {
             GetCensusUseCase(repository),
             RegisterUnitUseCase(repository),
             UpdateUnitUseCase(repository),
+            SetOwnerTenantActiveUseCase(repository),
             SessionManager(NoOpRolePersistence)
         )
 
@@ -105,7 +131,7 @@ class CensusViewModelTest {
                     ResidentialUnit(
                         "unit-1",
                         "101",
-                        listOf(ResidentialResident("user-1", "Ana Pérez"))
+                        listOf(ResidentialResident(userId = "user-1", fullName = "Ana Pérez"))
                     )
                 )
             )
@@ -132,7 +158,7 @@ class CensusViewModelTest {
         val unit = ResidentialUnit(
             "unit-1",
             "101",
-            listOf(ResidentialResident("user-1", "Ana Pérez"))
+            listOf(ResidentialResident(userId = "user-1", fullName = "Ana Pérez"))
         )
         val repository = FakeResidentialRepository(Result.success(listOf(unit)))
         val viewModel = createViewModel(repository)
@@ -332,6 +358,7 @@ class CensusViewModelTest {
             GetCensusUseCase(repository),
             RegisterUnitUseCase(repository),
             UpdateUnitUseCase(repository),
+            SetOwnerTenantActiveUseCase(repository),
             sessionManager
         )
     }
@@ -353,11 +380,35 @@ private class FakeResidentialRepository(
     var lastUpdateUnitId: String? = null
     var lastUpdateIdentifier: String? = null
     var updateGate: CompletableDeferred<Unit>? = null
+    var statusCalls = 0
+    var lastStatusResidentId: String? = null
+    var lastStatusActive: Boolean? = null
 
     override suspend fun getCensus(complexId: String): Result<List<ResidentialUnit>> {
         calls++
         lastComplexId = complexId
         return result
+    }
+
+    override suspend fun getCensus(
+        complexId: String,
+        status: String
+    ): Result<List<ResidentialUnit>> {
+        calls++
+        lastComplexId = complexId
+        return result
+    }
+
+    override suspend fun setOwnerTenantActive(
+        complexId: String,
+        unitId: String,
+        residentId: String,
+        active: Boolean
+    ): Result<Unit> {
+        statusCalls++
+        lastStatusResidentId = residentId
+        lastStatusActive = active
+        return Result.success(Unit)
     }
 
     override suspend fun registerUnit(complexId: String): Result<RegisteredResidentialUnit> {

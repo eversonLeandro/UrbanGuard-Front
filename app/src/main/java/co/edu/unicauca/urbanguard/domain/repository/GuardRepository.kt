@@ -1,6 +1,7 @@
 package co.edu.unicauca.urbanguard.domain.repository
 
 import co.edu.unicauca.urbanguard.domain.model.CreatedGuard
+import co.edu.unicauca.urbanguard.domain.model.GuardMembership
 
 interface GuardRepository {
 
@@ -20,4 +21,12 @@ interface GuardRepository {
         apellidos: String,
         telefono: String
     ): Result<CreatedGuard>
+
+    suspend fun getGuards(complexId: String, status: String): Result<List<GuardMembership>>
+
+    suspend fun setGuardActive(
+        complexId: String,
+        membershipId: String,
+        active: Boolean
+    ): Result<Unit>
 }
