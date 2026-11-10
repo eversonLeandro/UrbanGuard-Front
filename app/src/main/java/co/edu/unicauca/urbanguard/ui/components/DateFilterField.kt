@@ -27,6 +27,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,14 +63,16 @@ fun DateFilterField(
     modifier: Modifier = Modifier.width(140.dp).height(50.dp),
     onClearDate: (() -> Unit)? = null,
     placeholder: String = "Fecha",
-    dateFormat: DateTimeFormatter = DEFAULT_DATE_FORMAT
+    dateFormat: DateTimeFormatter = DEFAULT_DATE_FORMAT,
+    label: String? = null
 ) {
-    Box(modifier = modifier) {
+    Box(modifier = modifier, propagateMinConstraints = true) {
         Row(
             modifier = Modifier.fillMaxSize()
                 .background(Color.White, RoundedCornerShape(10.dp))
                 .border(1.dp, UgBorder, RoundedCornerShape(10.dp))
                 .clickable { onShowDatePicker() }
+                .semantics { label?.let { contentDescription = it } }
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

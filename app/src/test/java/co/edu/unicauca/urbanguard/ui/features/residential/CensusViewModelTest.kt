@@ -364,7 +364,7 @@ class CensusViewModelTest {
     }
 }
 
-private class FakeResidentialRepository(
+internal class FakeResidentialRepository(
     var result: Result<List<ResidentialUnit>>
 ) : ResidentialRepository {
     var calls = 0

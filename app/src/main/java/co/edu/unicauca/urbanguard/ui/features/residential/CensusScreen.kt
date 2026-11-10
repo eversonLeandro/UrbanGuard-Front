@@ -80,7 +80,10 @@ import co.edu.unicauca.urbanguard.ui.theme.UgSuccessText
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 @Composable
-fun CensusScreen(viewModel: CensusViewModel = hiltViewModel()) {
+fun CensusScreen(
+    onNavigateBack: (() -> Unit)? = null,
+    viewModel: CensusViewModel = hiltViewModel()
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val visibleUnits = remember(state.units, state.searchQuery, state.filter) {
@@ -100,7 +103,7 @@ fun CensusScreen(viewModel: CensusViewModel = hiltViewModel()) {
     }
 
     Column(modifier = Modifier.fillMaxSize().background(UgBackground).imePadding()) {
-        UrbanGuardTopBar(title = "Censo de apartamentos")
+        UrbanGuardTopBar(title = "Censo de apartamentos", onNavigateBack = onNavigateBack)
         RegistrationFeedback(
             successMessage = state.residentStatusSuccess ?: residentSuccess
                 ?: state.registrationSuccess ?: state.updateUnitSuccess,

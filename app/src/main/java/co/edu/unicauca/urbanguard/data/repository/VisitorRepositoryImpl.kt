@@ -3,20 +3,28 @@ package co.edu.unicauca.urbanguard.data.repository
 import android.util.Log
 import co.edu.unicauca.urbanguard.core.common.VisitorConstants
 import co.edu.unicauca.urbanguard.core.network.NetworkErrorMapper
+import co.edu.unicauca.urbanguard.core.network.apiCall
+import co.edu.unicauca.urbanguard.data.mapper.invalidHistoryResponse
 import co.edu.unicauca.urbanguard.data.mapper.toDomain
+import co.edu.unicauca.urbanguard.data.mapper.toVisitorHistoryPage
 import co.edu.unicauca.urbanguard.data.mapper.toVisitorInvitation
 import co.edu.unicauca.urbanguard.data.mapper.toVisitorQrRequestDto
 import co.edu.unicauca.urbanguard.data.mapper.toVisitorValidationResult
 import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorQrResponseDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorValidationRequestDto
 import co.edu.unicauca.urbanguard.data.remote.api.service.VisitorApi
+import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.VisitorAuthorization
+import co.edu.unicauca.urbanguard.domain.model.VisitorHistoryPage
 import co.edu.unicauca.urbanguard.domain.model.VisitorInvitation
 import co.edu.unicauca.urbanguard.domain.model.VisitorValidationFailure
 import co.edu.unicauca.urbanguard.domain.model.VisitorValidationResult
 import co.edu.unicauca.urbanguard.domain.model.sortedForResident
 import co.edu.unicauca.urbanguard.domain.repository.VisitorRepository
+import com.google.gson.JsonParseException
+import com.google.gson.stream.MalformedJsonException
+import java.io.EOFException
 import java.io.IOException
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
@@ -97,6 +105,28 @@ class VisitorRepositoryImpl @Inject constructor(
         } catch (e: DateTimeParseException) {
             Result.failure(Exception(NetworkErrorMapper.map(e), e))
         }
+    }
+
+    override suspend fun getVisitorHistory(
+        complexId: String,
+        from: LocalDate?,
+        to: LocalDate?,
+        page: Int,
+        size: Int
+    ): Result<VisitorHistoryPage> = apiCall {
+        if (complexId.isBlank()) {
+            throw AppException(AppError.Validation(VisitorConstants.MSG_NO_ACTIVE_COMPLEX))
+        }
+        val response = try {
+            api.getVisitorHistory(complexId, from?.toString(), to?.toString(), page, size)
+        } catch (error: JsonParseException) {
+            invalidHistoryResponse(error)
+        } catch (error: MalformedJsonException) {
+            invalidHistoryResponse(error)
+        } catch (error: EOFException) {
+            invalidHistoryResponse(error)
+        }
+        response.toVisitorHistoryPage(page, size)
     }
 
     /**
