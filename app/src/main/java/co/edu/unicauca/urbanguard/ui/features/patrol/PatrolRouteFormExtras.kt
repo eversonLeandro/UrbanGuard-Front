@@ -70,17 +70,17 @@ fun RouteSummaryHeader(pointCount: Int, scheduleCount: Int) {
 }
 
 @Composable
-fun SchedulePresetRow(onPreset: (Int, Int, Boolean) -> Unit) {
+fun SchedulePresetRow(onPreset: (Int, Int) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         FilterChip(
             selected = false,
-            onClick = { onPreset(8, 0, false) },
+            onClick = { onPreset(8, 0) },
             label = { Text("Mañana 08:00", fontSize = 12.sp) },
             colors = FilterChipDefaults.filterChipColors(selectedContainerColor = UgEmerald)
         )
         FilterChip(
             selected = false,
-            onClick = { onPreset(22, 0, true) },
+            onClick = { onPreset(22, 0) },
             label = { Text("Noche 22:00", fontSize = 12.sp) },
             colors = FilterChipDefaults.filterChipColors(selectedContainerColor = UgEmerald)
         )

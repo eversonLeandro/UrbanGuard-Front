@@ -33,7 +33,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -150,6 +149,13 @@ fun PatrolRoutesScreen(
                     routeName = pending.name,
                     onConfirm = viewModel::onConfirmDelete,
                     onDismiss = viewModel::onDismissDelete
+                )
+            }
+
+            uiState.routeChangeBlockedMessage?.let { message ->
+                PatrolRouteChangeBlockedDialog(
+                    message = message,
+                    onDismiss = viewModel::onDismissRouteChangeBlocked
                 )
             }
         }

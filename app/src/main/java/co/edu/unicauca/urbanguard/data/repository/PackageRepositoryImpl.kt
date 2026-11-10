@@ -56,7 +56,6 @@ class PackageRepositoryImpl @Inject constructor(private val api: PackageApi) : P
             registration.recipientName,
             registration.sender,
             registration.description,
-            registration.observations,
             null
         ))
         val metadataBody = metadata.toRequestBody("application/json; charset=utf-8".toMediaType())

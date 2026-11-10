@@ -50,7 +50,7 @@ class PatrolRouteRepositoryImpl @Inject constructor(
             }
             Result.success(saved)
         } catch (e: HttpException) {
-            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+            Result.failure(NetworkErrorMapper.toAppException(e))
         } catch (e: IOException) {
             Log.w(TAG, "Sin conexión al guardar ruta", e)
             Result.failure(Exception(NetworkErrorMapper.map(e), e))
@@ -65,7 +65,7 @@ class PatrolRouteRepositoryImpl @Inject constructor(
             api.deleteRoute(complexId, routeId)
             Result.success(Unit)
         } catch (e: HttpException) {
-            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+            Result.failure(NetworkErrorMapper.toAppException(e))
         } catch (e: IOException) {
             Log.w(TAG, "Sin conexión al eliminar ruta", e)
             Result.failure(Exception(NetworkErrorMapper.map(e), e))

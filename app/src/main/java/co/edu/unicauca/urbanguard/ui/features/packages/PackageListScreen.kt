@@ -250,7 +250,7 @@ private fun PackageCard(parcel: Package, canDeliver: Boolean, onDeliver: () -> U
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text("PAQUETE", color = UgEmerald, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     Text(
-                        parcel.description,
+                        parcel.description ?: "Paquete sin descripción",
                         fontWeight = FontWeight.Bold,
                         color = UgNavy,
                         fontSize = 16.sp,

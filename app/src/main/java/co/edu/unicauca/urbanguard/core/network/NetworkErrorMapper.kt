@@ -23,6 +23,7 @@ import java.net.SocketTimeoutException
 object NetworkErrorMapper {
     private const val TAG = "NetworkErrorMapper"
     private const val ACCOUNT_DISABLED_CODE = "ACCOUNT_DISABLED"
+    private const val ROUTE_HAS_OPEN_OCCURRENCE_CODE = "ROUTE_HAS_OPEN_OCCURRENCE"
 
     /**
      * Fases de error de Spring en inglés. El backend las mete en `message`
@@ -93,6 +94,12 @@ object NetworkErrorMapper {
 
         if (body?.code == ACCOUNT_DISABLED_CODE) {
             return AppError.AccountDisabled(AppError.AccountDisabled.MESSAGE)
+        }
+
+        if (body?.code == ROUTE_HAS_OPEN_OCCURRENCE_CODE) {
+            return AppError.RouteChangeBlocked(
+                bodyMessage.takeIf(::isUsable) ?: AppError.RouteChangeBlocked.MESSAGE
+            )
         }
 
         if (bodyMessage.isNotEmpty() && isUsable(bodyMessage)) {

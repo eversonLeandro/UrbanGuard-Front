@@ -11,6 +11,7 @@ data class PatrolRoutesUiState(
     val isLoading: Boolean = false,
     val routes: List<PatrolRoute> = emptyList(),
     val errorMessage: String? = null,
+    val routeChangeBlockedMessage: String? = null,
     val pendingDelete: PatrolRoute? = null
 ) {
     val isEmpty: Boolean = routes.isEmpty() && !isLoading && errorMessage == null

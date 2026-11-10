@@ -59,6 +59,21 @@ class NetworkErrorMapperTest {
     }
 
     @Test
+    fun `open patrol occurrence is reported as a typed route change block`() {
+        val message = "No se puede editar esta ronda mientras siga activa."
+        val error = NetworkErrorMapper.toAppError(
+            httpException(
+                409,
+                message,
+                businessCode = "ROUTE_HAS_OPEN_OCCURRENCE"
+            )
+        )
+
+        assertTrue(error is AppError.RouteChangeBlocked)
+        assertEquals(message, error.message)
+    }
+
+    @Test
     fun `429 is reported as rate limited`() {
         val error = NetworkErrorMapper.toAppError(httpException(429, ""))
 
