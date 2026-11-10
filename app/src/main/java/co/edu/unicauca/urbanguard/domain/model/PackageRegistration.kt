@@ -6,7 +6,6 @@ data class PackageRegistration(
     val residentId: String?,
     val recipientName: String,
     val sender: String?,
-    val description: String,
-    val observations: String?,
+    val description: String?,
     val photoPath: String?
 )

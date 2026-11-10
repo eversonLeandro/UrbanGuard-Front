@@ -3,6 +3,7 @@ package co.edu.unicauca.urbanguard.ui.features.patrol
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import co.edu.unicauca.urbanguard.domain.model.PatrolSchedule
 import java.time.DayOfWeek
 import java.time.LocalTime
 import java.time.ZoneId
@@ -32,5 +33,28 @@ class PatrolRouteFormUiStateTest {
 
         assertEquals(LocalTime.of(0, 5), schedule.time)
         assertTrue(DayOfWeek.SATURDAY in schedule.days)
+    }
+
+    @Test
+    fun withSharedDays_appliesTheSameSelectionToEverySchedule() {
+        val schedules = listOf(
+            PatrolSchedule(LocalTime.of(8, 0), setOf(DayOfWeek.MONDAY)),
+            PatrolSchedule(LocalTime.of(22, 0), setOf(DayOfWeek.FRIDAY))
+        )
+        val selectedDays = setOf(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY)
+
+        val updated = schedules.withSharedDays(selectedDays)
+
+        assertEquals(listOf(selectedDays, selectedDays), updated.map { it.days })
+        assertEquals(listOf(LocalTime.of(8, 0), LocalTime.of(22, 0)), updated.map { it.time })
+    }
+
+    @Test
+    fun togglingSharedDay_updatesSelectionWithoutChangingOtherDays() {
+        val selectedDays = setOf(DayOfWeek.MONDAY, DayOfWeek.FRIDAY)
+
+        val updated = selectedDays.withToggledDay(DayOfWeek.TUESDAY, selected = true)
+
+        assertEquals(setOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.FRIDAY), updated)
     }
 }

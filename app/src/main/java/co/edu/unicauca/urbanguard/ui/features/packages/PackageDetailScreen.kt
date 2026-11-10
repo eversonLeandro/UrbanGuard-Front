@@ -132,7 +132,7 @@ private fun PackageDetailContent(parcel: Package) {
             }
         }
 
-        DetailCard("Descripción", Icons.Default.Description, parcel.description)
+        DetailCard("Descripción", Icons.Default.Description, parcel.description ?: "Sin descripción")
         DetailCard("Observaciones", Icons.Default.Description, parcel.observations ?: "Sin observaciones")
         Spacer(Modifier.height(8.dp))
     }

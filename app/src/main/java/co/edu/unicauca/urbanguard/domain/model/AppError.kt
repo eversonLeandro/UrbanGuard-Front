@@ -126,6 +126,14 @@ sealed class AppError {
         }
     }
 
+    /** Una ronda activa o disponible temporalmente bloquea los cambios de ruta. */
+    data class RouteChangeBlocked(override val message: String) : AppError() {
+        companion object {
+            const val MESSAGE =
+                "Esta ruta tiene una ronda disponible o en curso. Inténtalo cuando termine o venza."
+        }
+    }
+
     /** Demasiadas solicitudes en poco tiempo. */
     data class RateLimited(override val message: String) : AppError() {
         companion object {

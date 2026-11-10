@@ -10,7 +10,7 @@ data class PackageDto(
     val residentId: UUID?,
     val recipientName: String,
     val sender: String?,
-    val description: String,
+    val description: String?,
     val observations: String?,
     val status: String,
     val receivedAt: String,
@@ -25,8 +25,7 @@ data class RegisterPackageRequestDto(
     val residentId: String?,
     val recipientName: String,
     val sender: String?,
-    val description: String,
-    val observations: String?,
+    val description: String?,
     val evidenceUrl: String? = null
 )
 

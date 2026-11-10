@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.common.PatrolConstants
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.model.AppError
+import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.DeletePatrolRouteUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolRoutesUseCase
@@ -52,9 +54,15 @@ class PatrolRoutesViewModel @Inject constructor(
             savePatrolRouteUseCase(route.copy(isActive = isActive)).fold(
                 onSuccess = { onRefresh() },
                 onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: PatrolConstants.MSG_SAVE_ERROR
-                    )
+                    if (error is AppException && error.error is AppError.RouteChangeBlocked) {
+                        _uiState.value = _uiState.value.copy(
+                            routeChangeBlockedMessage = error.error.message
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = error.message ?: PatrolConstants.MSG_SAVE_ERROR
+                        )
+                    }
                 }
             )
         }
@@ -76,12 +84,22 @@ class PatrolRoutesViewModel @Inject constructor(
             deletePatrolRouteUseCase(complexId, routeId).fold(
                 onSuccess = { onRefresh() },
                 onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: PatrolConstants.MSG_DELETE_ROUTE_ERROR
-                    )
+                    if (error is AppException && error.error is AppError.RouteChangeBlocked) {
+                        _uiState.value = _uiState.value.copy(
+                            routeChangeBlockedMessage = error.error.message
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = error.message ?: PatrolConstants.MSG_DELETE_ROUTE_ERROR
+                        )
+                    }
                 }
             )
         }
+    }
+
+    fun onDismissRouteChangeBlocked() {
+        _uiState.value = _uiState.value.copy(routeChangeBlockedMessage = null)
     }
 
     private fun activeComplexId(): String? {

@@ -8,7 +8,7 @@ data class Package(
     val residentId: String?,
     val recipientName: String,
     val sender: String?,
-    val description: String,
+    val description: String?,
     val observations: String?,
     val status: PackageStatus,
     val receivedAt: String,

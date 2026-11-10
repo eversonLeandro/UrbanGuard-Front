@@ -4,14 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.common.PatrolConstants
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.model.AppError
+import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
 import co.edu.unicauca.urbanguard.domain.model.PatrolRouteValidation
 import co.edu.unicauca.urbanguard.domain.model.PatrolSchedule
 import co.edu.unicauca.urbanguard.domain.model.validatePatrolRoute
-import co.edu.unicauca.urbanguard.domain.model.weekDays
-import co.edu.unicauca.urbanguard.domain.model.withAddedSchedule
 import co.edu.unicauca.urbanguard.domain.model.withPickedTime
-import co.edu.unicauca.urbanguard.domain.model.withToggledDay
 import co.edu.unicauca.urbanguard.domain.model.withoutSchedule
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolPointsUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolRoutesUseCase
@@ -51,9 +50,8 @@ sealed interface RouteScheduleEvent {
     /** Fija la hora elegida en el reloj abierto. */
     data class PickTime(val hour: Int, val minute: Int) : RouteScheduleEvent
 
-    /** Marca o desmarca un día de la repetición indicada. */
+    /** Marca o desmarca un día compartido por todos los horarios de la ruta. */
     data class ToggleDay(
-        val index: Int,
         val day: DayOfWeek,
         val selected: Boolean
     ) : RouteScheduleEvent
@@ -122,11 +120,15 @@ class PatrolRouteFormViewModel @Inject constructor(
     }
 
     fun onScheduleEvent(event: RouteScheduleEvent) {
-        val schedules = _uiState.value.schedules
+        val state = _uiState.value
+        val schedules = state.schedules
         when (event) {
             RouteScheduleEvent.Add ->
-                _uiState.value = _uiState.value.copy(
-                    schedules = schedules.withAddedSchedule(),
+                _uiState.value = state.copy(
+                    schedules = schedules + PatrolSchedule(
+                        time = LocalTime.of(8, 0),
+                        days = state.selectedDays
+                    ),
                     formError = null
                 )
             is RouteScheduleEvent.Remove ->
@@ -146,15 +148,14 @@ class PatrolRouteFormViewModel @Inject constructor(
                     ),
                     editingTimeIndex = null
                 )
-            is RouteScheduleEvent.ToggleDay ->
-                _uiState.value = _uiState.value.copy(
-                    schedules = schedules.withToggledDay(
-                        event.index,
-                        event.day,
-                        event.selected
-                    ),
+            is RouteScheduleEvent.ToggleDay -> {
+                val days = state.selectedDays.withToggledDay(event.day, event.selected)
+                _uiState.value = state.copy(
+                    selectedDays = days,
+                    schedules = schedules.withSharedDays(days),
                     formError = null
                 )
+            }
         }
     }
 
@@ -163,14 +164,11 @@ class PatrolRouteFormViewModel @Inject constructor(
     }
 
     /** Agrega un horario preset (p. ej. mañana 08:00 o noche 22:00). */
-    fun onAddPreset(hour: Int, minute: Int, everyDay: Boolean) {
-        val days = if (everyDay) {
-            weekDays().toSet()
-        } else {
-            defaultWorkDays()
-        }
+    fun onAddPreset(hour: Int, minute: Int) {
         val current = _uiState.value.schedules.toMutableList()
-        current.add(PatrolSchedule(time = LocalTime.of(hour, minute), days = days))
+        current.add(
+            PatrolSchedule(time = LocalTime.of(hour, minute), days = _uiState.value.selectedDays)
+        )
         _uiState.value = _uiState.value.copy(schedules = current, formError = null)
     }
 
@@ -198,8 +196,16 @@ class PatrolRouteFormViewModel @Inject constructor(
         }
     }
 
+    fun onDismissRouteChangeBlocked() {
+        _uiState.value = _uiState.value.copy(routeChangeBlockedMessage = null)
+    }
+
     private fun saveRoute(state: PatrolRouteFormUiState, complexId: String) {
-        _uiState.value = state.copy(isSaving = true, errorMessage = null)
+        _uiState.value = state.copy(
+            isSaving = true,
+            errorMessage = null,
+            routeChangeBlockedMessage = null
+        )
         viewModelScope.launch {
             savePatrolRouteUseCase(
                 PatrolRoute(
@@ -213,10 +219,17 @@ class PatrolRouteFormViewModel @Inject constructor(
             ).fold(
                 onSuccess = { eventChannel.send(PatrolRouteFormEvent.Saved) },
                 onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        isSaving = false,
-                        errorMessage = error.message ?: PatrolConstants.MSG_SAVE_ERROR
-                    )
+                    if (error is AppException && error.error is AppError.RouteChangeBlocked) {
+                        _uiState.value = _uiState.value.copy(
+                            isSaving = false,
+                            routeChangeBlockedMessage = error.error.message
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            isSaving = false,
+                            errorMessage = error.message ?: PatrolConstants.MSG_SAVE_ERROR
+                        )
+                    }
                 }
             )
         }
@@ -224,18 +237,22 @@ class PatrolRouteFormViewModel @Inject constructor(
 
     private suspend fun loadRoute(complexId: String, routeId: String?) {
         if (routeId.isNullOrBlank()) {
+            val defaultSchedule = defaultPatrolSchedule()
             _uiState.value = _uiState.value.copy(
-                schedules = listOf(defaultPatrolSchedule())
+                schedules = listOf(defaultSchedule),
+                selectedDays = defaultSchedule.days
             )
             return
         }
         getPatrolRoutesUseCase(complexId).fold(
             onSuccess = { routes ->
                 routes.firstOrNull { it.id == routeId }?.let { route ->
+                    val sharedDays = route.schedules.firstOrNull()?.days ?: defaultWorkDays()
                     _uiState.value = _uiState.value.copy(
                         name = route.name,
                         selectedIds = route.pointIds,
-                        schedules = route.schedules,
+                        schedules = route.schedules.withSharedDays(sharedDays),
+                        selectedDays = sharedDays,
                         isActive = route.isActive
                     )
                 }

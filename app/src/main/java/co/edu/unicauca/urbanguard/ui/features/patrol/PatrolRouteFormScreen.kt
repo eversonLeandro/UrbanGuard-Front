@@ -130,6 +130,7 @@ fun PatrolRouteFormScreen(
 
             RouteSchedulesSection(
                 schedules = uiState.schedules,
+                selectedDays = uiState.selectedDays,
                 formError = uiState.formError,
                 onEvent = viewModel::onScheduleEvent,
                 onPreset = viewModel::onAddPreset
@@ -148,6 +149,13 @@ fun PatrolRouteFormScreen(
     }
 
     val editingIndex = uiState.editingTimeIndex
+    uiState.routeChangeBlockedMessage?.let { message ->
+        PatrolRouteChangeBlockedDialog(
+            message = message,
+            onDismiss = viewModel::onDismissRouteChangeBlocked
+        )
+    }
+
     if (editingIndex != null) {
         val current = uiState.schedules.getOrNull(editingIndex)
         if (current != null) {
@@ -229,16 +237,17 @@ private fun RoutePointsSection(
 @Composable
 private fun RouteSchedulesSection(
     schedules: List<PatrolSchedule>,
+    selectedDays: Set<DayOfWeek>,
     formError: String?,
     onEvent: (RouteScheduleEvent) -> Unit,
-    onPreset: (Int, Int, Boolean) -> Unit
+    onPreset: (Int, Int) -> Unit
 ) {
     RouteSectionTitle("Horarios")
 
     Spacer(Modifier.height(8.dp))
 
     Text(
-        text = "Para probar hoy, deja seleccionado el día actual y elige una hora próxima. " +
+        text = "Los días seleccionados aplican a todos los horarios de esta ronda. " +
             "La ronda se habilita 10 minutos antes.",
         fontSize = 12.sp,
         color = UgTextSecondary
@@ -250,13 +259,25 @@ private fun RouteSchedulesSection(
 
     Spacer(Modifier.height(4.dp))
 
+    Text(
+        text = "Días de la ronda",
+        fontSize = 12.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = UgTextSecondary
+    )
+    Spacer(Modifier.height(6.dp))
+    DayChipsRow(
+        selected = selectedDays,
+        onToggleDay = { day, selected ->
+            onEvent(RouteScheduleEvent.ToggleDay(day, selected))
+        }
+    )
+    Spacer(Modifier.height(10.dp))
+
     schedules.forEachIndexed { index, schedule ->
         ScheduleEditorRow(
             schedule = schedule,
             onTimeClick = { onEvent(RouteScheduleEvent.OpenPicker(index)) },
-            onToggleDay = { day, selected ->
-                onEvent(RouteScheduleEvent.ToggleDay(index, day, selected))
-            },
             onRemove = { onEvent(RouteScheduleEvent.Remove(index)) }
         )
         Spacer(Modifier.height(10.dp))
@@ -367,7 +388,6 @@ private fun PointCheckRow(
 private fun ScheduleEditorRow(
     schedule: PatrolSchedule,
     onTimeClick: () -> Unit,
-    onToggleDay: (DayOfWeek, Boolean) -> Unit,
     onRemove: () -> Unit
 ) {
     Column(
@@ -401,13 +421,6 @@ private fun ScheduleEditorRow(
                 )
             }
         }
-
-        Spacer(Modifier.height(6.dp))
-
-        DayChipsRow(
-            selected = schedule.days,
-            onToggleDay = onToggleDay
-        )
     }
 }
 
