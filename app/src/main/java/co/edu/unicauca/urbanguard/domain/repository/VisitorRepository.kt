@@ -1,6 +1,7 @@
 package co.edu.unicauca.urbanguard.domain.repository
 
 import co.edu.unicauca.urbanguard.domain.model.VisitorAuthorization
+import co.edu.unicauca.urbanguard.domain.model.VisitorHistoryPage
 import co.edu.unicauca.urbanguard.domain.model.VisitorInvitation
 import co.edu.unicauca.urbanguard.domain.model.VisitorValidationFailure
 import co.edu.unicauca.urbanguard.domain.model.VisitorValidationResult
@@ -40,6 +41,15 @@ interface VisitorRepository {
      * en la ruta y se toma de la sesión activa.
      */
     suspend fun getVisitorInvitations(complexId: String): Result<List<VisitorInvitation>>
+
+    /** Historial de ingresos del conjunto activo, con fechas civiles y páginas desde cero. */
+    suspend fun getVisitorHistory(
+        complexId: String,
+        from: LocalDate?,
+        to: LocalDate?,
+        page: Int,
+        size: Int
+    ): Result<VisitorHistoryPage>
 
     /**
      * Recupera el código QR de una invitación activa o programada para

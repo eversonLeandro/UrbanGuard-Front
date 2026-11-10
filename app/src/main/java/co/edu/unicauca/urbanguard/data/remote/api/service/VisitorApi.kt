@@ -1,5 +1,6 @@
 package co.edu.unicauca.urbanguard.data.remote.api.service
 
+import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorHistoryPageDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorInvitationCodeDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorInvitationListItemDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.VisitorQrRequestDto
@@ -11,6 +12,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface VisitorApi {
 
@@ -40,6 +42,15 @@ interface VisitorApi {
     suspend fun getInvitations(
         @Path("complexId") complexId: String
     ): List<VisitorInvitationListItemDto>
+
+    @GET("api/complexes/{complexId}/visitor-invitations/history")
+    suspend fun getVisitorHistory(
+        @Path("complexId") complexId: String,
+        @Query("from") from: String?,
+        @Query("to") to: String?,
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): VisitorHistoryPageDto
 
     // =========================================================================
     // Recuperar el código de una invitación activa o programada (recompartir)

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,7 +81,6 @@ import co.edu.unicauca.urbanguard.ui.features.packages.PackageListScreen
 import co.edu.unicauca.urbanguard.ui.features.packages.RegisterPackageScreen
 import co.edu.unicauca.urbanguard.ui.features.packages.PackageDetailScreen
 import co.edu.unicauca.urbanguard.ui.features.packages.PackageMetricsScreen
-import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.GenerateQrScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.GeneratedPassScreen
 import co.edu.unicauca.urbanguard.ui.features.visitors.InvitationPassScreen
@@ -122,6 +122,7 @@ fun roleToDestination(role: UserRole?): String = when (role) {
 @Suppress("LongMethod")
 @Composable
 fun AppNavGraph(
+    activeRole: State<UserRole?>,
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
     sessionViewModel: SessionViewModel = hiltViewModel()
@@ -414,9 +415,11 @@ fun AppNavGraph(
             )
         }
 
-        composable(Routes.CENSUS) {
-            CensusScreen()
-        }
+        adminResidentsDestinations(
+            navController = navController,
+            activeRole = activeRole,
+            onSessionExpired = { sessionViewModel.logout { navController.navigateToLogin() } }
+        )
 
         composable(Routes.SECURITY) {
             AdminSecurityMenuScreen(

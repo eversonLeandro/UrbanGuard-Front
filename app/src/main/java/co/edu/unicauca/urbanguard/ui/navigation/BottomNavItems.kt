@@ -10,7 +10,7 @@ import androidx.compose.material.icons.filled.SupportAgent
 
 val adminNavItems: List<NavItem> = listOf(
     NavItem(route = Routes.HOME, label = "Inicio", icon = Icons.Default.Home),
-    NavItem(route = Routes.CENSUS, label = "Residentes", icon = Icons.Default.Person),
+    NavItem(route = Routes.ADMIN_RESIDENTS_MENU, label = "Residentes", icon = Icons.Default.Person),
     NavItem(route = Routes.SECURITY, label = "Seguridad", icon = Icons.Default.Lock),
     NavItem(route = Routes.NEWS, label = "Noticias", icon = Icons.Default.Newspaper),
     NavItem(route = Routes.PROFILE, label = "Perfil", icon = Icons.Default.Person)

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="visitor_history_title">Historial de visitantes</string>
+    <string name="visitor_history_creator">Creada por %1$s</string>
+    <string name="visitor_history_entry">Ingreso · %1$s</string>
+    <plurals name="visitor_history_guests">
+        <item quantity="one">%d persona indicada en el pase</item>
+        <item quantity="other">%d personas indicadas en el pase</item>
+    </plurals>
+    <string name="visitor_history_from">Desde</string>
+    <string name="visitor_history_to">Hasta</string>
+    <string name="visitor_history_choose_date">Elegir fecha</string>
+    <string name="visitor_history_remove_from">Borrar fecha Desde</string>
+    <string name="visitor_history_remove_to">Borrar fecha Hasta</string>
+    <string name="visitor_history_invalid_range">La fecha Desde debe ser igual o anterior a Hasta</string>
+    <string name="visitor_history_apply">Aplicar</string>
+    <string name="visitor_history_clear">Limpiar fechas</string>
+    <string name="visitor_history_applied_from">Desde el %1$s</string>
+    <string name="visitor_history_applied_to">Hasta el %1$s</string>
+    <string name="visitor_history_empty">Todavía no hay ingresos de visitantes</string>
+    <string name="visitor_history_filtered_empty">No se encontraron ingresos con las fechas aplicadas</string>
+    <string name="visitor_history_refresh">Actualizar</string>
+    <string name="visitor_history_next">Cargar más</string>
+    <string name="visitor_history_restart_page">Volver a la primera página</string>
+    <string name="visitor_history_select_prompt">Selecciona un conjunto para ver el historial</string>
+    <string name="visitor_history_select_complex">Seleccionar conjunto</string>
+    <string name="visitor_history_sign_in">Iniciar sesión</string>
+    <string name="visitor_history_loading">Cargando historial de visitantes</string>
+    <string name="visitor_history_refreshing">Actualizando historial de visitantes</string>
+    <string name="visitor_history_loading_next">Cargando más ingresos</string>
+    <string name="visitor_history_timeout">La consulta está tardando más de lo normal. Intenta de nuevo.</string>
+</resources>
