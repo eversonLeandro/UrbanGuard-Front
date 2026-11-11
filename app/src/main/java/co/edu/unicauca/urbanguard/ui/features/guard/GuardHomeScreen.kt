@@ -250,7 +250,7 @@ private fun GuardLockedView(
  * Row que se emite aqui dentro, asi que la fila se reparte igual que antes.
  */
 @Composable
-private fun GuardWelcomeCard(userName: String, photoUrl: String?, onImageError: (String) -> Unit) {
+internal fun GuardWelcomeCard(userName: String, photoUrl: String?, onImageError: (String) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -327,7 +327,7 @@ private fun GuardWelcomeCard(userName: String, photoUrl: String?, onImageError: 
  * Acciones rapidas del guardia: escaneo QR y reporte de novedades.
  */
 @Composable
-private fun GuardQuickActions(
+internal fun GuardQuickActions(
     onScanQr: () -> Unit,
     onReportIncident: () -> Unit,
     onPackages: () -> Unit
@@ -385,7 +385,7 @@ private fun GuardQuickActions(
 }
 
 @Composable
-private fun GuardSecondaryAction(
+internal fun GuardSecondaryAction(
     modifier: Modifier = Modifier,
     title: String,
     subtitle: String,
@@ -422,7 +422,7 @@ private fun GuardSecondaryAction(
 
 /** Bitacora reciente de la porteria. */
 @Composable
-private fun GuardRecentActivityCard() {
+internal fun GuardRecentActivityCard() {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -453,7 +453,7 @@ private fun GuardRecentActivityCard() {
 }
 
 @Composable
-private fun GuardMetricCard(
+internal fun GuardMetricCard(
     count: String,
     label: String,
     icon: ImageVector,
@@ -497,7 +497,7 @@ private fun GuardMetricCard(
 }
 
 @Composable
-private fun GuardLogItem(
+internal fun GuardLogItem(
     time: String,
     title: String,
     subtitle: String,
