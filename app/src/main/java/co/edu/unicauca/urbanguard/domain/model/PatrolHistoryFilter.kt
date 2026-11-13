@@ -17,7 +17,8 @@ data class PatrolHistoryFilter(
     val from: LocalDate,
     val to: LocalDate,
     val onlyIncomplete: Boolean = false,
-    val guardId: String? = null
+    val guardId: String? = null,
+    val status: PatrolShiftStatus? = null
 ) {
 
     /**

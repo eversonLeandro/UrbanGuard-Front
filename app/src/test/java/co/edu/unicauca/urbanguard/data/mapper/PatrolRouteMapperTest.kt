@@ -2,6 +2,7 @@ package co.edu.unicauca.urbanguard.data.mapper
 
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolRouteDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolScheduleDto
+import co.edu.unicauca.urbanguard.domain.model.MAX_ROUTE_SCHEDULES
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoute
 import co.edu.unicauca.urbanguard.domain.model.PatrolRouteValidation
 import co.edu.unicauca.urbanguard.domain.model.PatrolSchedule
@@ -58,6 +59,15 @@ class PatrolRouteMapperTest {
             listOf(schedule(), schedule(LocalTime.of(10, 0)))
         )
         assertEquals(PatrolRouteValidation.VALID, result)
+    }
+
+    @Test
+    fun validate_tooManySchedules_isRejected() {
+        val schedules = (1..MAX_ROUTE_SCHEDULES + 1).map { hour ->
+            schedule(time = LocalTime.of(hour % 24, 0))
+        }
+        val result = validatePatrolRoute("Nocturna", listOf("p1"), schedules)
+        assertEquals(PatrolRouteValidation.TOO_MANY_SCHEDULES, result)
     }
 
     @Test

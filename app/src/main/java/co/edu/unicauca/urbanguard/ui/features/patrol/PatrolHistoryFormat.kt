@@ -14,16 +14,33 @@ import java.util.Locale
  * Vive aparte de las pantallas para no superar el máximo de funciones por
  * archivo de detekt y para poder testear la traducción sin Android. Los textos
  * de las rondas dentro del turno están en [PatrolRoundFormat].
+ *
+ * Jerarquía visual (día → turno): el listado identifica cada día con fecha
+ * completa y cada tarjeta con el tipo de turno y su ventana horaria.
  */
 object PatrolHistoryFormat {
 
-    /** Día de la semana y día del mes ("domingo 11"). */
-    private val titleFormat: DateTimeFormatter =
-        DateTimeFormatter.ofPattern("EEEE d", Locale("es", "CO"))
+    private val locale: Locale = Locale.forLanguageTag("es-CO")
 
-    /** Título del turno: "Noche del domingo 11". */
+    /** Fecha completa en español de Colombia ("13 de enero de 2026"). */
+    private val fullDateFormat: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", locale)
+
+    /** Encabezado de sección por día civil en el listado. */
+    fun dayHeader(date: LocalDate): String = fullDateFormat.format(date)
+
+    /** Título del turno para el detalle ("Turno del 13 de enero de 2026"). */
     fun shiftTitle(type: PatrolShiftType, date: LocalDate): String =
-        "${shiftWord(type)} del ${titleFormat.format(date)}"
+        "Turno del ${fullDateFormat.format(date)}"
+
+    /** Título de la tarjeta en el listado: franja horaria ("6:00 a. m. – 6:00 p. m."). */
+    fun shiftCardTitle(type: PatrolShiftType): String = shiftWindow(type)
+
+    /** Ventana horaria del turno, fija por tipo de negocio ("18:00 – 6:00 a. m."). */
+    fun shiftWindow(type: PatrolShiftType): String = when (type) {
+        PatrolShiftType.DAY -> "6:00 a. m. – 6:00 p. m."
+        PatrolShiftType.NIGHT -> "18:00 – 6:00 a. m."
+    }
 
     private fun shiftWord(type: PatrolShiftType): String = when (type) {
         PatrolShiftType.DAY -> "Día"

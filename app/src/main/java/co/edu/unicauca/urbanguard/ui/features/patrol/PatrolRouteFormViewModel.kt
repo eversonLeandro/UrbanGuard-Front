@@ -123,14 +123,19 @@ class PatrolRouteFormViewModel @Inject constructor(
         val state = _uiState.value
         val schedules = state.schedules
         when (event) {
-            RouteScheduleEvent.Add ->
-                _uiState.value = state.copy(
-                    schedules = schedules + PatrolSchedule(
-                        time = LocalTime.of(8, 0),
-                        days = state.selectedDays
-                    ),
-                    formError = null
-                )
+            RouteScheduleEvent.Add -> {
+                if (schedules.size >= PatrolConstants.MAX_SCHEDULES) {
+                    _uiState.value = state.copy(formError = PatrolConstants.MSG_MAX_SCHEDULES)
+                } else {
+                    _uiState.value = state.copy(
+                        schedules = schedules + PatrolSchedule(
+                            time = LocalTime.of(8, 0),
+                            days = state.selectedDays
+                        ),
+                        formError = null
+                    )
+                }
+            }
             is RouteScheduleEvent.Remove ->
                 _uiState.value = _uiState.value.copy(
                     schedules = schedules.withoutSchedule(event.index)
@@ -163,15 +168,6 @@ class PatrolRouteFormViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isActive = isActive)
     }
 
-    /** Agrega un horario preset (p. ej. mañana 08:00 o noche 22:00). */
-    fun onAddPreset(hour: Int, minute: Int) {
-        val current = _uiState.value.schedules.toMutableList()
-        current.add(
-            PatrolSchedule(time = LocalTime.of(hour, minute), days = _uiState.value.selectedDays)
-        )
-        _uiState.value = _uiState.value.copy(schedules = current, formError = null)
-    }
-
     fun onSaveClick() {
         val state = _uiState.value
         val complexId = sessionManager.getActiveConjunto()?.conjuntoId
@@ -192,6 +188,8 @@ class PatrolRouteFormViewModel @Inject constructor(
                 _uiState.value = state.copy(
                     formError = "Cada horario necesita al menos un día."
                 )
+            PatrolRouteValidation.TOO_MANY_SCHEDULES ->
+                _uiState.value = state.copy(formError = PatrolConstants.MSG_MAX_SCHEDULES)
             PatrolRouteValidation.VALID -> saveRoute(state, complexId)
         }
     }

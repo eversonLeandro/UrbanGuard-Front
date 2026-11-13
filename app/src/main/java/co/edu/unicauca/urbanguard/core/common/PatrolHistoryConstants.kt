@@ -27,6 +27,8 @@ object PatrolHistoryConstants {
     // ── Mensajes ─────────────────────────────────────────────────────────
     const val MSG_NO_ACTIVE_COMPLEX = "No tienes un conjunto activo seleccionado."
     const val MSG_LIST_ERROR = "No se pudo cargar el historial de turnos."
+    const val MSG_GUARDS_FILTER_ERROR =
+        "No se pudieron cargar los vigilantes; el filtro no está disponible."
     const val MSG_DETAIL_ERROR = "No se pudo cargar el detalle del turno."
     const val MSG_GUARD_SUMMARY_ERROR = "No se pudo cargar el resumen del vigilante."
     const val MSG_INVALID_SERVER_RESPONSE = "Respuesta inválida del servidor."
@@ -38,6 +40,13 @@ object PatrolHistoryConstants {
     /** 404 con mensaje propio según el endpoint consultado. */
     const val MSG_SHIFT_NOT_FOUND = "Turno no encontrado."
     const val MSG_GUARD_NOT_FOUND = "Vigilante no encontrado."
+    const val MSG_ROUND_NOT_FOUND = "Ronda no encontrada."
+
+    /** Fallo genérico del detalle de ronda (sin mensaje del backend). */
+    const val MSG_ROUND_DETAIL_ERROR = "No se pudo cargar el detalle de la ronda."
+
+    /** Argumentos de navegación incompletos (no se puede consultar la ronda). */
+    const val MSG_ROUND_ARGS = "No se pudo determinar la ronda a consultar."
 
     /** Argumentos de navegación incompletos (no se puede consultar el resumen). */
     const val MSG_GUARD_SUMMARY_ARGS = "No se pudo determinar el vigilante o el rango a consultar."

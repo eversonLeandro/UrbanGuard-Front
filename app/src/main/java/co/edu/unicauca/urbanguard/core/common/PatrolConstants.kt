@@ -12,6 +12,9 @@ object PatrolConstants {
     /** Máximo de caracteres del nombre del punto. */
     const val MAX_NAME_LENGTH = 100
 
+    /** Máximo de horarios por ruta de patrullaje. */
+    const val MAX_SCHEDULES = 10
+
     /**
      * El backend ya expone los puntos de control como checkpoints
      * (`/api/complexes/{complexId}/checkpoints`).
@@ -34,6 +37,7 @@ object PatrolConstants {
     // ── Mensajes de validación ───────────────────────────────────────────
     const val MSG_NAME_REQUIRED = "Ponle un nombre al punto (p. ej. Portería norte)."
     const val MSG_NAME_TOO_LONG = "El nombre no puede pasar de 100 caracteres."
+    const val MSG_MAX_SCHEDULES = "Una ruta puede tener hasta 10 horarios."
     const val MSG_TAG_REQUIRED = "Acerca el tag NFC para vincularlo al punto."
     const val MSG_TAG_INVALID =
         "El UID debe tener 8, 14 o 20 caracteres hexadecimales."

@@ -1,6 +1,7 @@
 package co.edu.unicauca.urbanguard.domain.usecase.patrol
 
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftSummary
+import co.edu.unicauca.urbanguard.domain.model.PatrolShiftStatus
 import co.edu.unicauca.urbanguard.domain.repository.PatrolShiftRepository
 import java.time.LocalDate
 import javax.inject.Inject
@@ -19,7 +20,8 @@ class GetPatrolHistoryUseCase @Inject constructor(
         from: LocalDate,
         to: LocalDate,
         guardId: String?,
-        onlyIncomplete: Boolean
+        onlyIncomplete: Boolean,
+        status: PatrolShiftStatus?
     ): Result<List<PatrolShiftSummary>> =
-        repository.getShiftSummaries(complexId, from, to, guardId, onlyIncomplete)
+        repository.getShiftSummaries(complexId, from, to, guardId, onlyIncomplete, status)
 }

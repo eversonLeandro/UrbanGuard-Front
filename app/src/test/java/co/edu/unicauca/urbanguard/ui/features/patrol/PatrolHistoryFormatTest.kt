@@ -14,18 +14,28 @@ import java.time.LocalDate
 class PatrolHistoryFormatTest {
 
     @Test
-    fun `titulo de turno de noche`() {
+    fun `titulo de la tarjeta de turno solo muestra la ventana horaria sin dia ni noche`() {
+        assertEquals("6:00 a. m. – 6:00 p. m.", PatrolHistoryFormat.shiftCardTitle(PatrolShiftType.DAY))
+        assertEquals("18:00 – 6:00 a. m.", PatrolHistoryFormat.shiftCardTitle(PatrolShiftType.NIGHT))
+    }
+
+    @Test
+    fun `titulo de turno en detalle muestra fecha sin palabra dia o noche`() {
         assertEquals(
-            "Noche del domingo 11",
+            "Turno del 11 de octubre de 2026",
             PatrolHistoryFormat.shiftTitle(PatrolShiftType.NIGHT, LocalDate.of(2026, 10, 11))
+        )
+        assertEquals(
+            "Turno del 12 de octubre de 2026",
+            PatrolHistoryFormat.shiftTitle(PatrolShiftType.DAY, LocalDate.of(2026, 10, 12))
         )
     }
 
     @Test
-    fun `titulo de turno de dia`() {
+    fun `encabezado muestra fecha larga en espanol de Colombia`() {
         assertEquals(
-            "Día del lunes 12",
-            PatrolHistoryFormat.shiftTitle(PatrolShiftType.DAY, LocalDate.of(2026, 10, 12))
+            "13 de enero de 2026",
+            PatrolHistoryFormat.dayHeader(LocalDate.of(2026, 1, 13))
         )
     }
 

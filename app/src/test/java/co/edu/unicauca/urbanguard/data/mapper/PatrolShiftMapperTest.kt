@@ -4,6 +4,7 @@ import co.edu.unicauca.urbanguard.core.common.PatrolHistoryConstants
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolGuardRefDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolGuardSummaryDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolShiftDetailDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolShiftIncidentDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolShiftRoundDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolShiftSummaryDto
 import co.edu.unicauca.urbanguard.domain.model.AppException
@@ -118,6 +119,43 @@ class PatrolShiftMapperTest {
             OffsetDateTime.parse("2026-10-11T20:05:00-05:00").toInstant(),
             domain.scheduledAt
         )
+    }
+
+    @Test
+    fun roundDto_mapeaNovedadConFechaUTC() {
+        val domain = roundDto().copy(
+            incidents = listOf(
+                PatrolShiftIncidentDto(
+                    reportId = "report-1",
+                    category = "SECURITY",
+                    description = "Puerta abierta",
+                    reportedAt = "2026-10-12T03:45:00Z",
+                    guardName = "Ana"
+                )
+            )
+        ).toDomain()
+
+        assertEquals(1, domain.incidents.size)
+        assertEquals("report-1", domain.incidents.single().reportId)
+        assertEquals(OffsetDateTime.parse("2026-10-12T03:45:00Z").toInstant(),
+            domain.incidents.single().reportedAt)
+        assertEquals("Ana", domain.incidents.single().guardName)
+    }
+
+    @Test
+    fun roundDto_conNovedadInvalida_fallaTodaLaRespuesta() {
+        val dto = roundDto().copy(
+            incidents = listOf(
+                PatrolShiftIncidentDto(
+                    reportId = null,
+                    category = "SECURITY",
+                    description = "Puerta abierta",
+                    reportedAt = "2026-10-12T03:45:00Z"
+                )
+            )
+        )
+
+        assertInvalidResponse { dto.toDomain() }
     }
 
     @Test

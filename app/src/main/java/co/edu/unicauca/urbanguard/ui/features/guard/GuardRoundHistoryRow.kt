@@ -1,6 +1,7 @@
 package co.edu.unicauca.urbanguard.ui.features.guard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -40,11 +42,18 @@ private val historyDateFormat: DateTimeFormatter =
 /**
  * Fila del historial de rondas con semáforo de estado.
  *
+ * Las rondas terminadas (completada o incompleta) son clicables para volver
+ * a consultar su resumen; las en curso no lo son (se continúan desde el
+ * banner de ronda activa).
+ *
  * Archivo propio para no superar el máximo de funciones de detekt en la
  * pantalla de entrada (y reutilizable en el futuro historial del admin).
  */
 @Composable
-fun RecentRoundRow(round: PatrolRound) {
+fun RecentRoundRow(
+    round: PatrolRound,
+    onClick: (() -> Unit)? = null
+) {
     val status = round.status()
     val badgeColor = when (status) {
         RoundStatus.IN_PROGRESS -> UgNavy
@@ -56,11 +65,14 @@ fun RecentRoundRow(round: PatrolRound) {
         RoundStatus.COMPLETED -> "COMPLETADA"
         RoundStatus.INCOMPLETE -> "INCOMPLETA"
     }
+    val clickable = onClick != null && status != RoundStatus.IN_PROGRESS
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (clickable) Modifier.clickable { onClick?.invoke() } else Modifier)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -86,16 +98,29 @@ fun RecentRoundRow(round: PatrolRound) {
                     color = UgTextSecondary
                 )
             }
-            Text(
-                text = badgeText,
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.Bold,
-                color = badgeColor,
+            Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(badgeColor.copy(alpha = 0.12f))
-                    .padding(horizontal = 9.dp, vertical = 4.dp)
-            )
+                    .padding(horizontal = 9.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (status == RoundStatus.COMPLETED) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = badgeColor,
+                        modifier = Modifier.size(11.dp)
+                    )
+                    Spacer(Modifier.width(3.dp))
+                }
+                Text(
+                    text = badgeText,
+                    fontSize = 10.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = badgeColor
+                )
+            }
         }
     }
 }

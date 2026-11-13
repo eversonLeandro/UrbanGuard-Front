@@ -7,6 +7,7 @@ import org.junit.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZoneOffset
 
 /**
@@ -26,6 +27,19 @@ class PatrolHistoryFilterTest {
         assertEquals(LocalDate.of(2026, 10, 14), filter.to)
         assertEquals(LocalDate.of(2026, 10, 8), filter.from)
         assertNull(filter.validate())
+    }
+
+    @Test
+    fun `default calcula el dia civil usando zona del condominio`() {
+        val bogotaClock = Clock.fixed(
+            Instant.parse("2026-01-14T04:30:00Z"),
+            ZoneId.of("America/Bogota")
+        )
+
+        val filter = PatrolHistoryFilter.default(bogotaClock)
+
+        assertEquals(LocalDate.of(2026, 1, 13), filter.to)
+        assertEquals(LocalDate.of(2026, 1, 7), filter.from)
     }
 
     @Test
