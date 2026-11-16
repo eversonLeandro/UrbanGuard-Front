@@ -3,6 +3,8 @@ package co.edu.unicauca.urbanguard.ui.features.guard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.model.AppError
+import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.normalizeNfcUid
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.RoundActions
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 /** Eventos de una sola entrega de la ronda activa. */
@@ -38,6 +41,7 @@ class RoundActiveViewModel @Inject constructor(
 
     private var lastTag: String = ""
     private var lastTagAt: Long = 0L
+    private val scanInProgress = AtomicBoolean(false)
 
     /**
      * La pantalla lo llama en cada ON_RESUME (entrada y vuelta), así la
@@ -48,27 +52,44 @@ class RoundActiveViewModel @Inject constructor(
     }
 
     fun onTagScanned(tagId: String) {
+        if (_uiState.value.showUnexpectedPointDialog) return
         val complexId = sessionManager.getActiveConjunto()?.conjuntoId ?: return
+        if (!scanInProgress.compareAndSet(false, true)) return
         val normalized = normalizeNfcUid(tagId)
-        if (normalized.isEmpty() || isDuplicateRead(normalized)) return
-        viewModelScope.launch {
-            roundActions.registerScan(complexId, normalized).fold(
-                onSuccess = { (round, match) ->
-                    _uiState.value = _uiState.value.copy(
-                        round = round,
-                        lastScanName = match?.name,
-                        lastScanKnown = match != null,
-                        lastScanAt = System.currentTimeMillis(),
-                        errorMessage = null
-                    )
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: "No se pudo registrar la lectura."
-                    )
-                }
-            )
+        if (normalized.isEmpty() || isDuplicateRead(normalized)) {
+            scanInProgress.set(false)
+            return
         }
+        viewModelScope.launch {
+            try {
+                roundActions.registerScan(complexId, normalized).fold(
+                    onSuccess = { (round, match) ->
+                        _uiState.value = _uiState.value.copy(
+                            round = round,
+                            lastScanName = match?.name,
+                            lastScanKnown = match != null,
+                            lastScanAt = System.currentTimeMillis(),
+                            showUnexpectedPointDialog = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { error ->
+                        val appError = (error as? AppException)?.error
+                        _uiState.value = _uiState.value.copy(
+                            showUnexpectedPointDialog = appError is AppError.UnexpectedPatrolPoint,
+                            errorMessage = if (appError is AppError.UnexpectedPatrolPoint) null
+                                else appError?.message ?: "No se pudo registrar la lectura."
+                        )
+                    }
+                )
+            } finally {
+                scanInProgress.set(false)
+            }
+        }
+    }
+
+    fun onDismissUnexpectedPointDialog() {
+        _uiState.value = _uiState.value.copy(showUnexpectedPointDialog = false)
     }
 
     fun onRequestFinish() {

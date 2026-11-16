@@ -59,6 +59,28 @@ class NetworkErrorMapperTest {
     }
 
     @Test
+    fun `unknown NFC tag and out of order checkpoint share one actionable error`() {
+        listOf(
+            httpException(404, "Tag NFC no encontrado", businessCode = "UNKNOWN_NFC_TAG"),
+            httpException(409, "Fuera de orden", businessCode = "CHECKPOINT_OUT_OF_ORDER")
+        ).forEach { exception ->
+            val error = NetworkErrorMapper.toAppError(exception)
+            assertTrue(error is AppError.UnexpectedPatrolPoint)
+            assertEquals(AppError.UnexpectedPatrolPoint.MESSAGE, error.message)
+        }
+    }
+
+    @Test
+    fun `other NFC rejection does not show the next point guidance`() {
+        val error = NetworkErrorMapper.toAppError(
+            httpException(409, "La ronda ya terminó", businessCode = "ROUND_FINISHED")
+        )
+
+        assertTrue(error is AppError.Conflict)
+        assertEquals("La ronda ya terminó", error.message)
+    }
+
+    @Test
     fun `open patrol occurrence is reported as a typed route change block`() {
         val message = "No se puede editar esta ronda mientras siga activa."
         val error = NetworkErrorMapper.toAppError(

@@ -116,7 +116,7 @@ fun RoundActiveScreen(
         }
     }
     NfcReaderEffect(
-        enabled = uiState.round != null,
+        enabled = uiState.round != null && !uiState.showUnexpectedPointDialog,
         onTagRead = viewModel::onTagScanned
     )
     LaunchedEffect(uiState.lastScanAt) {
@@ -159,6 +159,10 @@ fun RoundActiveScreen(
                     onDismiss = viewModel::onDismissFinish
                 )
             }
+        }
+
+        if (uiState.showUnexpectedPointDialog) {
+            UnexpectedPointDialog(onDismiss = viewModel::onDismissUnexpectedPointDialog)
         }
     }
 }
@@ -541,6 +545,21 @@ private fun RoundPointRow(
             }
         }
     }
+}
+
+@Composable
+private fun UnexpectedPointDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Default.Nfc, contentDescription = null, tint = UgNavy) },
+        title = { Text("Este no es el siguiente punto", fontWeight = FontWeight.Bold, color = UgNavy) },
+        text = { Text("Escanea el tag del punto marcado como SIGUIENTE en la ruta.") },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Entendido", color = UgNavy, fontWeight = FontWeight.Bold)
+            }
+        }
+    )
 }
 
 @Composable
