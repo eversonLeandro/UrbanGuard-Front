@@ -111,9 +111,11 @@ class CensusViewModelTest {
         val repository = FakeResidentialRepository(Result.success(emptyList()))
         val viewModel = CensusViewModel(
             GetCensusUseCase(repository),
-            RegisterUnitUseCase(repository),
-            UpdateUnitUseCase(repository),
-            SetOwnerTenantActiveUseCase(repository),
+            CensusUnitUseCases(
+                RegisterUnitUseCase(repository),
+                UpdateUnitUseCase(repository),
+                SetOwnerTenantActiveUseCase(repository)
+            ),
             SessionManager(NoOpRolePersistence)
         )
 
@@ -141,13 +143,13 @@ class CensusViewModelTest {
 
         viewModel.onSearchQueryChange("Ana")
         viewModel.onFilterChange(CensusUnitFilter.OCCUPIED)
-        viewModel.onUnitSelected("unit-1")
+        viewModel.onUnitSelectionChange("unit-1")
 
         assertEquals("Ana", viewModel.uiState.value.searchQuery)
         assertEquals(CensusUnitFilter.OCCUPIED, viewModel.uiState.value.filter)
         assertEquals("unit-1", viewModel.uiState.value.selectedUnit?.id)
 
-        viewModel.onDismissUnitDetail()
+        viewModel.onUnitSelectionChange(null)
         assertTrue(viewModel.uiState.value.selectedUnit == null)
         assertEquals("Ana", viewModel.uiState.value.searchQuery)
         assertEquals(CensusUnitFilter.OCCUPIED, viewModel.uiState.value.filter)
@@ -166,7 +168,7 @@ class CensusViewModelTest {
 
         viewModel.onSearchQueryChange("Ana")
         viewModel.onFilterChange(CensusUnitFilter.OCCUPIED)
-        viewModel.onUnitSelected(unit.id)
+        viewModel.onUnitSelectionChange(unit.id)
         viewModel.onScreenResumed()
         advanceUntilIdle()
         assertEquals(1, repository.calls)
@@ -257,7 +259,7 @@ class CensusViewModelTest {
         val repository = FakeResidentialRepository(Result.success(listOf(original)))
         val viewModel = createViewModel(repository)
         advanceUntilIdle()
-        viewModel.onUnitSelected(original.id)
+        viewModel.onUnitSelectionChange(original.id)
         viewModel.onEditUnitDialogChange(true)
         val renamed = original.copy(identifier = "A-101")
         repository.result = Result.success(listOf(renamed))
@@ -284,7 +286,7 @@ class CensusViewModelTest {
         val repository = FakeResidentialRepository(Result.success(listOf(unit)))
         val viewModel = createViewModel(repository)
         advanceUntilIdle()
-        viewModel.onUnitSelected(unit.id)
+        viewModel.onUnitSelectionChange(unit.id)
         viewModel.onEditUnitDialogChange(true)
 
         viewModel.onUpdateUnit("  101  ")
@@ -303,7 +305,7 @@ class CensusViewModelTest {
         val repository = FakeResidentialRepository(Result.success(listOf(unit)))
         val viewModel = createViewModel(repository)
         advanceUntilIdle()
-        viewModel.onUnitSelected(unit.id)
+        viewModel.onUnitSelectionChange(unit.id)
         viewModel.onEditUnitDialogChange(true)
         repository.updateResult = Result.failure(
             AppException(AppError.Forbidden("Acceso denegado"))
@@ -328,7 +330,7 @@ class CensusViewModelTest {
         val repository = FakeResidentialRepository(Result.success(listOf(unit)))
         val viewModel = createViewModel(repository)
         advanceUntilIdle()
-        viewModel.onUnitSelected(unit.id)
+        viewModel.onUnitSelectionChange(unit.id)
         viewModel.onEditUnitDialogChange(true)
         val gate = CompletableDeferred<Unit>()
         repository.updateGate = gate
@@ -356,9 +358,11 @@ class CensusViewModelTest {
         }
         return CensusViewModel(
             GetCensusUseCase(repository),
-            RegisterUnitUseCase(repository),
-            UpdateUnitUseCase(repository),
-            SetOwnerTenantActiveUseCase(repository),
+            CensusUnitUseCases(
+                RegisterUnitUseCase(repository),
+                UpdateUnitUseCase(repository),
+                SetOwnerTenantActiveUseCase(repository)
+            ),
             sessionManager
         )
     }

@@ -2,25 +2,19 @@ package co.edu.unicauca.urbanguard.ui.features.admin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -251,109 +245,6 @@ private fun GuardResults(
     }
 }
 
-/**
- * Fila de vigilante con avatar de iniciales sobre el color del estado, igual
- * que las filas de la gestión de usuarios. Desactivar = Block (rojo), reactivar
- * = LockOpen (esmeralda); ambos por icono en vez del botón ancho anterior.
- */
-@Composable
-private fun GuardRow(
-    guard: GuardMembership,
-    isBusy: Boolean,
-    onChangeStatus: () -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Avatar de iniciales sobre el color del estado.
-            val badgeColor = if (guard.active) UgEmerald else UgAmber
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(badgeColor.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    initials(guard.fullName),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = badgeColor
-                )
-            }
-            Spacer(Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    guard.fullName,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = UgNavy,
-                    maxLines = 1
-                )
-                Text(
-                    guard.email ?: guard.membershipId,
-                    fontSize = 11.5.sp,
-                    color = UgTextSecondary,
-                    maxLines = 1
-                )
-                Text(
-                    if (guard.active) "Activo en este conjunto" else "Inactivo en este conjunto",
-                    fontSize = 10.5.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (guard.active) UgEmerald else UgAmber
-                )
-            }
-
-            Spacer(Modifier.width(8.dp))
-
-            if (isBusy) {
-                CircularProgressIndicator(
-                    color = UgEmerald,
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp
-                )
-            } else if (guard.active) {
-                IconButton(
-                    onClick = onChangeStatus,
-                    modifier = Modifier.size(38.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Block,
-                        contentDescription = "Inactivar vigilante",
-                        tint = UgErrorText,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            } else {
-                IconButton(
-                    onClick = onChangeStatus,
-                    modifier = Modifier.size(38.dp)
-                ) {
-                    Icon(
-                        Icons.Default.LockOpen,
-                        contentDescription = "Reactivar vigilante",
-                        tint = UgEmerald,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
 @Composable
 private fun ConfirmGuardStatusDialog(
     guard: GuardMembership,
@@ -382,10 +273,4 @@ private fun ConfirmGuardStatusDialog(
             TextButton(onClick = onDismiss) { Text("Cancelar") }
         }
     )
-}
-
-/** Iniciales del avatar: primera letra del nombre y del apellido, "UG" por defecto. */
-private fun initials(fullName: String): String {
-    val source = fullName.split(" ").mapNotNull { it.trim().firstOrNull() }.take(2)
-    return source.joinToString("").uppercase().ifEmpty { "UG" }
 }

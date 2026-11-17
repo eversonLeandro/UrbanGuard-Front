@@ -3,10 +3,9 @@ package co.edu.unicauca.urbanguard.ui.features.auth
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.core.push.PushRegistrar
 import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.usecase.auth.LoginUseCase
-import co.edu.unicauca.urbanguard.core.push.PushRegistrar
 import co.edu.unicauca.urbanguard.domain.validation.InputValidators
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +17,6 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
-    private val sessionManager: SessionManager,
     private val pushRegistrar: PushRegistrar
 ) : ViewModel() {
 
@@ -46,10 +44,6 @@ class LoginViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             isPasswordVisible = !_uiState.value.isPasswordVisible
         )
-    }
-
-    fun onLogout() {
-        sessionManager.clearSession()
     }
 
     fun onLoginClick() {

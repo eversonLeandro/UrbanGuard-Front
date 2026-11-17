@@ -94,72 +94,89 @@ fun GuardHomeScreen(
             return@Column
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp)
-                .verticalScroll(rememberScrollState())
-                .padding(top = 18.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+        GuardHomeContent(
+            uiState = uiState,
+            viewModel = viewModel,
+            onScanQr = onScanQr,
+            onReportIncident = onReportIncident,
+            onPackages = onPackages
+        )
+    }
+}
+
+@Composable
+private fun GuardHomeContent(
+    uiState: GuardHomeUiState,
+    viewModel: GuardHomeViewModel,
+    onScanQr: () -> Unit,
+    onReportIncident: () -> Unit,
+    onPackages: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(top = 18.dp, bottom = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        // ── Tarjeta de Bienvenida del Guardia ──────────────────
+        GuardWelcomeCard(userName = uiState.userName, photoUrl = uiState.profilePhotoUrl,
+            onImageError = viewModel::onImageError)
+
+        // ── Métricas del Día (Tarjetas Idénticas) ────────────────
+        Text(
+            "Resumen del Turno",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            color = UgNavy
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // ── Tarjeta de Bienvenida del Guardia ──────────────────
-            GuardWelcomeCard(userName = uiState.userName, photoUrl = uiState.profilePhotoUrl,
-                onImageError = viewModel::onImageError)
-
-            // ── Métricas del Día (Tarjetas Idénticas) ────────────────
-            Text(
-                "Resumen del Turno",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = UgNavy
+            GuardMetricCard(
+                count = "14",
+                label = "Visitantes",
+                icon = Icons.Default.People,
+                color = UgEmerald,
+                modifier = Modifier.weight(1f)
             )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                GuardMetricCard(
-                    count = "14",
-                    label = "Visitantes",
-                    icon = Icons.Default.People,
-                    color = UgEmerald,
-                    modifier = Modifier.weight(1f)
-                )
-                GuardMetricCard(
-                    count = "3",
-                    label = "Paquetes",
-                    icon = Icons.Default.Inventory2,
-                    color = UgInfoIcon,
-                    modifier = Modifier.weight(1f)
-                )
-                GuardMetricCard(
-                    count = "4",
-                    label = "Rondas",
-                    icon = Icons.Default.Shield,
-                    color = UgAmber,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            // ── Accesos Rápidos de Guardia ──────────────────────────
-            Text("Acciones Rápidas", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = UgNavy)
-
-            GuardQuickActions(
-                onScanQr = onScanQr,
-                onReportIncident = onReportIncident,
-                onPackages = onPackages
+            GuardMetricCard(
+                count = "3",
+                label = "Paquetes",
+                icon = Icons.Default.Inventory2,
+                color = UgInfoIcon,
+                modifier = Modifier.weight(1f)
             )
-
-            // ── Bitácora Reciente ───────────────────────────────────
-            Text(
-                "Actividad Reciente en Portería",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = UgNavy
+            GuardMetricCard(
+                count = "4",
+                label = "Rondas",
+                icon = Icons.Default.Shield,
+                color = UgAmber,
+                modifier = Modifier.weight(1f)
             )
-
-            GuardRecentActivityCard()
         }
+
+        // ── Accesos Rápidos de Guardia ──────────────────────────
+        Text("Acciones Rápidas", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = UgNavy)
+
+        GuardQuickActions(
+            onScanQr = onScanQr,
+            onReportIncident = onReportIncident,
+            onPackages = onPackages
+        )
+
+        // ── Bitácora Reciente ───────────────────────────────────
+        Text(
+            "Actividad Reciente en Portería",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            color = UgNavy
+        )
+
+        GuardRecentActivityCard()
     }
 }
 

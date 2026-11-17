@@ -7,9 +7,6 @@ import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.ResidentialResident
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.usecase.residential.GetCensusUseCase
-import co.edu.unicauca.urbanguard.domain.usecase.residential.RegisterUnitUseCase
-import co.edu.unicauca.urbanguard.domain.usecase.residential.SetOwnerTenantActiveUseCase
-import co.edu.unicauca.urbanguard.domain.usecase.residential.UpdateUnitUseCase
 import co.edu.unicauca.urbanguard.domain.validation.UnitIdentifierValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -22,9 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CensusViewModel @Inject constructor(
     private val getCensusUseCase: GetCensusUseCase,
-    private val registerUnitUseCase: RegisterUnitUseCase,
-    private val updateUnitUseCase: UpdateUnitUseCase,
-    private val setOwnerTenantActiveUseCase: SetOwnerTenantActiveUseCase,
+    private val unitUseCases: CensusUnitUseCases,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -120,7 +115,7 @@ class CensusViewModel @Inject constructor(
             residentStatusError = null
         )
         viewModelScope.launch {
-            setOwnerTenantActiveUseCase(complexId, unitId, residentId, !resident.active).fold(
+            unitUseCases.setOwnerTenantActive(complexId, unitId, residentId, !resident.active).fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         isChangingResidentStatus = false,
@@ -144,14 +139,12 @@ class CensusViewModel @Inject constructor(
         }
     }
 
-    fun onUnitSelected(unitId: String) {
-        if (_uiState.value.units.any { it.id == unitId }) {
+    fun onUnitSelectionChange(unitId: String?) {
+        if (unitId == null) {
+            _uiState.value = _uiState.value.copy(selectedUnitId = null)
+        } else if (_uiState.value.units.any { it.id == unitId }) {
             _uiState.value = _uiState.value.copy(selectedUnitId = unitId)
         }
-    }
-
-    fun onDismissUnitDetail() {
-        _uiState.value = _uiState.value.copy(selectedUnitId = null)
     }
 
     fun onRegisterUnit() {
@@ -175,7 +168,7 @@ class CensusViewModel @Inject constructor(
             registrationError = null
         )
         viewModelScope.launch {
-            registerUnitUseCase(complexId).fold(
+            unitUseCases.registerUnit(complexId).fold(
                 onSuccess = { unit ->
                     _uiState.value = _uiState.value.copy(
                         isRegistering = false,
@@ -257,7 +250,7 @@ class CensusViewModel @Inject constructor(
             updateUnitSuccess = null
         )
         viewModelScope.launch {
-            updateUnitUseCase(complexId, unit.id, trimmedIdentifier).fold(
+            unitUseCases.updateUnit(complexId, unit.id, trimmedIdentifier).fold(
                 onSuccess = { updatedIdentifier ->
                     _uiState.value = _uiState.value.copy(
                         isUpdatingUnit = false,

@@ -57,22 +57,7 @@ fun PasswordResetScreen(
             Text("Volver al inicio de sesión", color = UgEmerald)
         }
         Spacer(Modifier.height(20.dp))
-        Text(
-            text = if (uiState.requestAccepted) "Revisa tu correo" else "Recuperar contraseña",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = if (uiState.requestAccepted) {
-                "Si el correo está asociado a una cuenta, recibirás instrucciones para restablecer tu contraseña. Revisa tu bandeja de entrada y la carpeta de correo no deseado."
-            } else {
-                "Ingresa el correo electrónico asociado a tu cuenta y te enviaremos instrucciones para restablecer tu contraseña."
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        PasswordResetHeader(requestAccepted = uiState.requestAccepted)
 
         if (uiState.requestAccepted) {
             Spacer(Modifier.height(24.dp))
@@ -118,4 +103,27 @@ fun PasswordResetScreen(
             }
         }
     }
+}
+
+@Composable
+private fun PasswordResetHeader(requestAccepted: Boolean) {
+    Text(
+        text = if (requestAccepted) "Revisa tu correo" else "Recuperar contraseña",
+        style = MaterialTheme.typography.headlineSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onBackground
+    )
+    Spacer(Modifier.height(8.dp))
+    Text(
+        text = if (requestAccepted) {
+            "Si el correo está asociado a una cuenta, recibirás instrucciones para " +
+                "restablecer tu contraseña. Revisa tu bandeja de entrada y la carpeta " +
+                "de correo no deseado."
+        } else {
+            "Ingresa el correo electrónico asociado a tu cuenta y te enviaremos " +
+                "instrucciones para restablecer tu contraseña."
+        },
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }

@@ -132,8 +132,7 @@ fun PatrolRouteFormScreen(
                 schedules = uiState.schedules,
                 selectedDays = uiState.selectedDays,
                 formError = uiState.formError,
-                onEvent = viewModel::onScheduleEvent,
-                onPreset = viewModel::onAddPreset
+                onEvent = viewModel::onScheduleEvent
             )
 
             Spacer(Modifier.height(12.dp))
@@ -148,29 +147,7 @@ fun PatrolRouteFormScreen(
         }
     }
 
-    val editingIndex = uiState.editingTimeIndex
-    uiState.routeChangeBlockedMessage?.let { message ->
-        PatrolRouteChangeBlockedDialog(
-            message = message,
-            onDismiss = viewModel::onDismissRouteChangeBlocked
-        )
-    }
-
-    if (editingIndex != null) {
-        val current = uiState.schedules.getOrNull(editingIndex)
-        if (current != null) {
-            RouteTimeDialog(
-                hour = current.time.hour,
-                minute = current.time.minute,
-                onConfirm = { hour, minute ->
-                    viewModel.onScheduleEvent(RouteScheduleEvent.PickTime(hour, minute))
-                },
-                onDismiss = {
-                    viewModel.onScheduleEvent(RouteScheduleEvent.ClosePicker)
-                }
-            )
-        }
-    }
+    PatrolRouteFormOverlays(uiState = uiState, viewModel = viewModel)
 }
 
 @Composable
@@ -239,8 +216,7 @@ private fun RouteSchedulesSection(
     schedules: List<PatrolSchedule>,
     selectedDays: Set<DayOfWeek>,
     formError: String?,
-    onEvent: (RouteScheduleEvent) -> Unit,
-    onPreset: (Int, Int) -> Unit
+    onEvent: (RouteScheduleEvent) -> Unit
 ) {
     RouteSectionTitle("Horarios")
 
@@ -255,7 +231,11 @@ private fun RouteSchedulesSection(
 
     Spacer(Modifier.height(8.dp))
 
-    SchedulePresetRow(onPreset = onPreset)
+    SchedulePresetRow(
+        onPreset = { hour, minute ->
+            onEvent(RouteScheduleEvent.AddPreset(hour, minute))
+        }
+    )
 
     Spacer(Modifier.height(4.dp))
 
@@ -457,7 +437,7 @@ private fun DayChipsRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RouteTimeDialog(
+internal fun RouteTimeDialog(
     hour: Int,
     minute: Int,
     onConfirm: (Int, Int) -> Unit,

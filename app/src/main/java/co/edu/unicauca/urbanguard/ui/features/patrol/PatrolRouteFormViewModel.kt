@@ -38,6 +38,9 @@ sealed interface RouteScheduleEvent {
     /** Agrega una repetición vacía. */
     data object Add : RouteScheduleEvent
 
+    /** Agrega un horario preset (p. ej. mañana 08:00 o noche 22:00). */
+    data class AddPreset(val hour: Int, val minute: Int) : RouteScheduleEvent
+
     /** Quita la repetición indicada. */
     data class Remove(val index: Int) : RouteScheduleEvent
 
@@ -131,6 +134,16 @@ class PatrolRouteFormViewModel @Inject constructor(
                     ),
                     formError = null
                 )
+            is RouteScheduleEvent.AddPreset -> {
+                val current = schedules.toMutableList()
+                current.add(
+                    PatrolSchedule(
+                        time = LocalTime.of(event.hour, event.minute),
+                        days = state.selectedDays
+                    )
+                )
+                _uiState.value = state.copy(schedules = current, formError = null)
+            }
             is RouteScheduleEvent.Remove ->
                 _uiState.value = _uiState.value.copy(
                     schedules = schedules.withoutSchedule(event.index)
@@ -161,15 +174,6 @@ class PatrolRouteFormViewModel @Inject constructor(
 
     fun onActiveChange(isActive: Boolean) {
         _uiState.value = _uiState.value.copy(isActive = isActive)
-    }
-
-    /** Agrega un horario preset (p. ej. mañana 08:00 o noche 22:00). */
-    fun onAddPreset(hour: Int, minute: Int) {
-        val current = _uiState.value.schedules.toMutableList()
-        current.add(
-            PatrolSchedule(time = LocalTime.of(hour, minute), days = _uiState.value.selectedDays)
-        )
-        _uiState.value = _uiState.value.copy(schedules = current, formError = null)
     }
 
     fun onSaveClick() {

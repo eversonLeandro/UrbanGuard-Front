@@ -17,10 +17,17 @@ class LinkByCodeRepositoryImpl @Inject constructor(
         api.searchConjunto(code.trim()).toDomain()
     }
 
-    override suspend fun requestLink(conjuntoId: String, unitId: String): Result<LinkRequest> =
-        apiCall {
-            api.requestLink(
-                CreateLinkRequestRequestDto(complexId = conjuntoId, unitId = unitId)
-            ).toDomain()
-        }
+    override suspend fun requestLink(
+        conjuntoId: String,
+        unitId: String,
+        codigo: String
+    ): Result<LinkRequest> = apiCall {
+        api.requestLink(
+            CreateLinkRequestRequestDto(
+                complexId = conjuntoId,
+                unitId = unitId,
+                codigo = codigo
+            )
+        ).toDomain()
+    }
 }

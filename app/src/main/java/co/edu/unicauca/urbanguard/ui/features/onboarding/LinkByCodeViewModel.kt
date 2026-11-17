@@ -78,8 +78,16 @@ class LinkByCodeViewModel @Inject constructor(
     }
 
     fun onRequestLinkClick() {
-        val conjuntoId = _uiState.value.conjuntoFound?.id ?: return
         if (_uiState.value.isRequesting) return
+
+        val codigo = _uiState.value.code.trim()
+        if (codigo.isEmpty()) {
+            _uiState.value = _uiState.value.copy(
+                codeError = "Ingresa el código del conjunto"
+            )
+            return
+        }
+        val conjuntoId = _uiState.value.conjuntoFound?.id ?: return
 
         val apartamentoError = validateApartamento()
         if (apartamentoError != null) {
@@ -101,7 +109,7 @@ class LinkByCodeViewModel @Inject constructor(
                 isRequesting = true,
                 requestError = null
             )
-            requestLinkUseCase(conjuntoId, unidad.id).fold(
+            requestLinkUseCase(conjuntoId, unidad.id, codigo).fold(
                 onSuccess = { request ->
                     // El solicitante todavía no es miembro de este conjunto. El
                     // backend guarda el token como provisional para poder
