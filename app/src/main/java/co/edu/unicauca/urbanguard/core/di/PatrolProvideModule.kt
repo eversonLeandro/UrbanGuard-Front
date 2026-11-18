@@ -38,6 +38,11 @@ object PatrolProvideModule {
     fun providePatrolShiftApi(retrofit: Retrofit): PatrolShiftApi =
         retrofit.create(PatrolShiftApi::class.java)
 
+    @Provides
+    @Singleton
+    fun providePatrolComplianceApi(retrofit: Retrofit): co.edu.unicauca.urbanguard.data.remote.api.service.PatrolComplianceApi =
+        retrofit.create(co.edu.unicauca.urbanguard.data.remote.api.service.PatrolComplianceApi::class.java)
+
     /**
      * Reloj de la zona del condominio. Se inyecta para poder fijar la fecha en
      * los tests y para que el rango por defecto del historial (7 días) no lea el

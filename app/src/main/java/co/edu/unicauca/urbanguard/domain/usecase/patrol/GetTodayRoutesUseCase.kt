@@ -12,8 +12,7 @@ import java.time.ZoneId
 import javax.inject.Inject
 
 /**
- * Ocurrencias vigentes desde hoy hasta los próximos siete días, incluyendo
- * la ventana de ayer que cruza medianoche.
+ * Ocurrencias programadas para el día actual.
  *
  * Alimenta las rondas programadas de la entrada de seguridad. En modo remoto,
  * consulta las ocurrencias del backend en su zona horaria y conserva el
@@ -37,8 +36,8 @@ class GetTodayRoutesUseCase @Inject constructor(
                 val today = LocalDate.now(BACKEND_ZONE)
                 val occurrences = executionApi.getAvailableOccurrences(
                     complexId = complexId,
-                    from = today.minusDays(1).toString(),
-                    to = today.plusDays(7).toString()
+                    from = today.toString(),
+                    to = today.toString()
                 )
                 occurrences.asSequence()
                     .filter { it.status == "SCHEDULED" || it.status == "IN_PROGRESS" }

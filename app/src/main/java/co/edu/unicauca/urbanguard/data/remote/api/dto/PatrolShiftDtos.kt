@@ -50,7 +50,8 @@ data class PatrolShiftDetailDto(
  * `scheduledAt == null` marca una ronda realizada NO programada: en ese caso
  * `status` y `reason` también vienen null y no cuenta en "X de Y" ni en la meta.
  * `reason` solo acompaña a `status == "INCOMPLETE"`; `startedAt == null` indica
- * que la ronda no se realizó.
+ * que la ronda no se realizó. [occurrenceId] enlaza con el detalle de puntos
+ * (`patrol-compliance/{occurrenceId}`); puede venir null y la UI lo tolera.
  */
 data class PatrolShiftRoundDto(
     val routeName: String? = null,
@@ -60,7 +61,18 @@ data class PatrolShiftRoundDto(
     val status: String? = null,
     val reason: String? = null,
     val pointsScanned: Int,
-    val pointsExpected: Int
+    val pointsExpected: Int,
+    val occurrenceId: String? = null,
+    val incidents: List<PatrolShiftIncidentDto>? = null
+)
+
+/** Novedad asociada explícitamente a una ocurrencia del turno. */
+data class PatrolShiftIncidentDto(
+    val reportId: String? = null,
+    val category: String? = null,
+    val description: String? = null,
+    val reportedAt: String? = null,
+    val guardName: String? = null
 )
 
 /** Vigilante asociado a una ronda del detalle. */

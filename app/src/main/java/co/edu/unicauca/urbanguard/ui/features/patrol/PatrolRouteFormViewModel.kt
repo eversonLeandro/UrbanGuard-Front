@@ -126,23 +126,31 @@ class PatrolRouteFormViewModel @Inject constructor(
         val state = _uiState.value
         val schedules = state.schedules
         when (event) {
-            RouteScheduleEvent.Add ->
-                _uiState.value = state.copy(
-                    schedules = schedules + PatrolSchedule(
-                        time = LocalTime.of(8, 0),
-                        days = state.selectedDays
-                    ),
-                    formError = null
-                )
-            is RouteScheduleEvent.AddPreset -> {
-                val current = schedules.toMutableList()
-                current.add(
-                    PatrolSchedule(
-                        time = LocalTime.of(event.hour, event.minute),
-                        days = state.selectedDays
+            RouteScheduleEvent.Add -> {
+                if (schedules.size >= PatrolConstants.MAX_SCHEDULES) {
+                    _uiState.value = state.copy(formError = PatrolConstants.MSG_MAX_SCHEDULES)
+                } else {
+                    _uiState.value = state.copy(
+                        schedules = schedules + PatrolSchedule(
+                            time = LocalTime.of(8, 0),
+                            days = state.selectedDays
+                        ),
+                        formError = null
                     )
-                )
-                _uiState.value = state.copy(schedules = current, formError = null)
+                }
+            }
+            is RouteScheduleEvent.AddPreset -> {
+                if (schedules.size >= PatrolConstants.MAX_SCHEDULES) {
+                    _uiState.value = state.copy(formError = PatrolConstants.MSG_MAX_SCHEDULES)
+                } else {
+                    _uiState.value = state.copy(
+                        schedules = schedules + PatrolSchedule(
+                            time = LocalTime.of(event.hour, event.minute),
+                            days = state.selectedDays
+                        ),
+                        formError = null
+                    )
+                }
             }
             is RouteScheduleEvent.Remove ->
                 _uiState.value = _uiState.value.copy(
@@ -196,6 +204,8 @@ class PatrolRouteFormViewModel @Inject constructor(
                 _uiState.value = state.copy(
                     formError = "Cada horario necesita al menos un día."
                 )
+            PatrolRouteValidation.TOO_MANY_SCHEDULES ->
+                _uiState.value = state.copy(formError = PatrolConstants.MSG_MAX_SCHEDULES)
             PatrolRouteValidation.VALID -> saveRoute(state, complexId)
         }
     }

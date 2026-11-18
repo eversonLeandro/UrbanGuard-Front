@@ -32,4 +32,7 @@ object PatrolApiPaths {
     const val SHIFTS = "$SECURITY_COMPLEXES/patrol-shifts"
     const val SHIFT_DETAIL = "$SHIFTS/detail"
     const val GUARD_SUMMARY = "$SECURITY_COMPLEXES/patrol-guards/{guardId}/summary"
+
+    const val COMPLIANCE = "$CHECKPOINT_COMPLEXES/patrol-compliance"
+    const val COMPLIANCE_DETAIL = "$COMPLIANCE/{occurrenceId}"
 }

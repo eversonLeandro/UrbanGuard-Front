@@ -4,6 +4,7 @@ import co.edu.unicauca.urbanguard.core.common.PatrolHistoryConstants
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolGuardRefDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolGuardSummaryDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolShiftDetailDto
+import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolShiftIncidentDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolShiftRoundDto
 import co.edu.unicauca.urbanguard.data.remote.api.dto.PatrolShiftSummaryDto
 import co.edu.unicauca.urbanguard.domain.model.AppError
@@ -13,6 +14,7 @@ import co.edu.unicauca.urbanguard.domain.model.PatrolGuardSummary
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoundReason
 import co.edu.unicauca.urbanguard.domain.model.PatrolRoundStatus
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftDetail
+import co.edu.unicauca.urbanguard.domain.model.PatrolShiftIncident
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftRound
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftStatus
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftSummary
@@ -71,7 +73,17 @@ fun PatrolShiftRoundDto.toDomain(): PatrolShiftRound = PatrolShiftRound(
     status = status?.let { PatrolRoundStatus.fromWire(it) ?: invalidResponse() },
     reason = reason?.let { PatrolRoundReason.fromWire(it) ?: invalidResponse() },
     pointsScanned = pointsScanned,
-    pointsExpected = pointsExpected
+    pointsExpected = pointsExpected,
+    occurrenceId = occurrenceId?.takeIf(String::isNotBlank),
+    incidents = incidents.orEmpty().map { it.toDomain() }
+)
+
+private fun PatrolShiftIncidentDto.toDomain(): PatrolShiftIncident = PatrolShiftIncident(
+    reportId = required(reportId),
+    category = required(category),
+    description = required(description),
+    reportedAt = parseInstant(required(reportedAt)) ?: invalidResponse(),
+    guardName = guardName?.takeIf(String::isNotBlank)
 )
 
 fun PatrolGuardRefDto.toDomain(): PatrolGuardRef =

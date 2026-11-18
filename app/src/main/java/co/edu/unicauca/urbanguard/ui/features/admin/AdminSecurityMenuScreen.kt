@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Route
@@ -69,7 +70,7 @@ fun AdminSecurityMenuScreen(
             AdminMenuOptionCard(
                 title = "Gestionar vigilantes",
                 subtitle = "Consultar, inactivar o reactivar accesos de este conjunto",
-                icon = Icons.Default.Security,
+                icon = Icons.Default.ManageAccounts,
                 onClick = onNavigateToGuardManagement
             )
 

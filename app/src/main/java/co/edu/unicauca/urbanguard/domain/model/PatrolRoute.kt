@@ -41,14 +41,18 @@ enum class PatrolRouteValidation {
     NAME_TOO_LONG,
     NO_POINTS,
     NO_SCHEDULES,
-    SCHEDULE_WITHOUT_DAYS
+    SCHEDULE_WITHOUT_DAYS,
+    TOO_MANY_SCHEDULES
 }
 
 private const val MAX_ROUTE_NAME_LENGTH = 100
 
+/** Máximo de horarios que admite una ruta (igual que PatrolConstants). */
+const val MAX_ROUTE_SCHEDULES = 10
+
 /**
- * Valida el formulario: nombre, al menos un punto, al menos un horario y
- * cada horario con al menos un día.
+ * Valida el formulario: nombre, al menos un punto, horarios dentro del
+ * límite y cada horario con al menos un día.
  */
 fun validatePatrolRoute(
     name: String,
@@ -61,6 +65,9 @@ fun validatePatrolRoute(
     }
     if (pointIds.isEmpty()) return PatrolRouteValidation.NO_POINTS
     if (schedules.isEmpty()) return PatrolRouteValidation.NO_SCHEDULES
+    if (schedules.size > MAX_ROUTE_SCHEDULES) {
+        return PatrolRouteValidation.TOO_MANY_SCHEDULES
+    }
     if (schedules.any { it.days.isEmpty() }) {
         return PatrolRouteValidation.SCHEDULE_WITHOUT_DAYS
     }
@@ -88,9 +95,10 @@ fun weekDays(): List<DayOfWeek> =
  * para poder testearse sin Android.
  */
 
-/** Agrega una repetición vacía al final. */
+/** Agrega una repetición vacía al final (sin pasar el límite de horarios). */
 fun List<PatrolSchedule>.withAddedSchedule(): List<PatrolSchedule> =
-    this + PatrolSchedule(time = LocalTime.of(8, 0), days = emptySet())
+    if (size >= MAX_ROUTE_SCHEDULES) this
+    else this + PatrolSchedule(time = LocalTime.of(8, 0), days = emptySet())
 
 /** Quita la repetición indicada (sin cambios si el índice no existe). */
 fun List<PatrolSchedule>.withoutSchedule(index: Int): List<PatrolSchedule> =

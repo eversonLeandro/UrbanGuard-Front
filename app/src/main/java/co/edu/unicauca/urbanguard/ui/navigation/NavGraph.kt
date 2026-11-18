@@ -73,6 +73,7 @@ import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolGuardSummaryScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolHistoryScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolPointFormScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolPointsScreen
+import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolRoundDetailScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolRouteFormScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolRoutesScreen
 import co.edu.unicauca.urbanguard.ui.features.patrol.PatrolShiftDetailScreen
@@ -495,10 +496,35 @@ fun AppNavGraph(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
+                onRoundClick = { occurrenceId ->
+                    navController.navigate(
+                        "patrol_round_detail?occurrenceId=$occurrenceId"
+                    )
+                },
                 onGuardClick = { guardId ->
                     navController.navigate(
                         "patrol_guard_summary?guardId=$guardId&from=$from&to=$to"
                     )
+                },
+                onIncidentClick = { reportId ->
+                    navController.navigate("admin_incident_detail/$reportId")
+                }
+            )
+        }
+
+        composable(
+            route = Routes.PATROL_ROUND_DETAIL,
+            arguments = listOf(
+                navArgument("occurrenceId") { type = NavType.StringType },
+                navArgument("guardName") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) {
+            PatrolRoundDetailScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -815,6 +841,11 @@ fun AppNavGraph(
                 onNotificationsClick = { navController.navigate(Routes.NOTIFICATIONS) },
                 onActiveRound = {
                     navController.navigate(Routes.GUARD_ROUND_ACTIVE)
+                },
+                onOpenRound = { roundId ->
+                    navController.navigate(
+                        Routes.GUARD_ROUND_SUMMARY.replace("{roundId}", roundId)
+                    )
                 }
             )
         }
@@ -840,7 +871,9 @@ fun AppNavGraph(
         composable(Routes.GUARD_ROUND_ACTIVE) {
             RoundActiveScreen(
                 onFinished = {
-                    navController.navigate(Routes.GUARD_ROUND_SUMMARY) {
+                    navController.navigate(
+                        Routes.GUARD_ROUND_SUMMARY.substringBefore("?")
+                    ) {
                         popUpTo(Routes.GUARD_ROUND_ACTIVE) { inclusive = true }
                     }
                 },
@@ -856,9 +889,24 @@ fun AppNavGraph(
             )
         }
 
-        composable(Routes.GUARD_ROUND_SUMMARY) {
+        composable(
+            Routes.GUARD_ROUND_SUMMARY,
+            arguments = listOf(
+                navArgument("roundId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) {
             RoundSummaryScreen(
                 onBackClick = {
+                    navController.popBackStack(
+                        Routes.GUARD_SEGURIDAD,
+                        inclusive = false
+                    )
+                },
+                onBackToRounds = {
                     navController.popBackStack(
                         Routes.GUARD_SEGURIDAD,
                         inclusive = false

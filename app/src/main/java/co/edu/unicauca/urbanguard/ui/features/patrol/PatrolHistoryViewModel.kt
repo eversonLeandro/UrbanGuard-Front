@@ -4,7 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.common.PatrolHistoryConstants
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.domain.model.PatrolGuardRef
 import co.edu.unicauca.urbanguard.domain.model.PatrolHistoryFilter
+import co.edu.unicauca.urbanguard.domain.model.PatrolShiftStatus
+import co.edu.unicauca.urbanguard.domain.repository.UserRepository
+import co.edu.unicauca.urbanguard.domain.usecase.guards.GetGuardMembershipsUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolHistoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -24,10 +28,16 @@ import javax.inject.Inject
  * inyectado para poder fijarlo en los tests. Si el usuario elige un rango
  * inválido no se llama a la API: se muestra el mensaje de validación y se
  * conserva la elección (no se reordena ni se recorta sola).
+ *
+ * El filtro por vigilante usa el listado de vigilantes activos del complejo
+ * (community-service); el `guardId` que consume el backend es el `userId` de la
+ * membresía. Si ese listado falla, el filtro queda oculto y no bloquea la
+ * consulta.
  */
 @HiltViewModel
 class PatrolHistoryViewModel @Inject constructor(
     private val getPatrolHistoryUseCase: GetPatrolHistoryUseCase,
+    private val getGuardMembershipsUseCase: GetGuardMembershipsUseCase,
     private val sessionManager: SessionManager,
     private val clock: Clock
 ) : ViewModel() {
@@ -38,9 +48,11 @@ class PatrolHistoryViewModel @Inject constructor(
     val uiState: StateFlow<PatrolHistoryUiState> = _uiState.asStateFlow()
 
     private var loadJob: Job? = null
+    private var guardsJob: Job? = null
 
     init {
         onRefresh()
+        loadGuards()
     }
 
     fun onRefresh() = load(_uiState.value.filter)
@@ -53,6 +65,13 @@ class PatrolHistoryViewModel @Inject constructor(
 
     fun onOnlyIncompleteChange(value: Boolean) =
         load(_uiState.value.filter.copy(onlyIncomplete = value))
+
+    fun onStatusSelected(status: PatrolShiftStatus?) =
+        load(_uiState.value.filter.copy(status = status))
+
+    /** Selección del filtro de vigilante; null vuelve a "Todos". */
+    fun onGuardSelected(guard: PatrolGuardRef?) =
+        load(_uiState.value.filter.copy(guardId = guard?.id))
 
     private fun applyRange(filter: PatrolHistoryFilter) {
         val rangeError = filter.validate()
@@ -94,7 +113,8 @@ class PatrolHistoryViewModel @Inject constructor(
                 from = filter.from,
                 to = filter.to,
                 guardId = filter.guardId,
-                onlyIncomplete = filter.onlyIncomplete
+                onlyIncomplete = filter.onlyIncomplete,
+                status = filter.status
             ).fold(
                 onSuccess = { shifts ->
                     _uiState.value = _uiState.value.copy(isLoading = false, shifts = shifts)
@@ -103,6 +123,32 @@ class PatrolHistoryViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = error.message ?: PatrolHistoryConstants.MSG_LIST_ERROR
+                    )
+                }
+            )
+        }
+    }
+
+    /** Vigilantes activos del conjunto activo; un fallo deja el filtro vacío. */
+    private fun loadGuards() {
+        val complexId = sessionManager.getActiveConjunto()?.conjuntoId
+        if (complexId.isNullOrBlank()) return
+        guardsJob?.cancel()
+        guardsJob = viewModelScope.launch {
+            getGuardMembershipsUseCase(complexId, UserRepository.ESTADO_ACTIVOS).fold(
+                onSuccess = { memberships ->
+                    val guards = memberships
+                        .sortedBy { it.fullName.lowercase() }
+                        .map { PatrolGuardRef(id = it.userId, name = it.fullName) }
+                    _uiState.value = _uiState.value.copy(
+                        guards = guards,
+                        guardFilterError = null
+                    )
+                },
+                onFailure = {
+                    _uiState.value = _uiState.value.copy(
+                        guards = emptyList(),
+                        guardFilterError = PatrolHistoryConstants.MSG_GUARDS_FILTER_ERROR
                     )
                 }
             )

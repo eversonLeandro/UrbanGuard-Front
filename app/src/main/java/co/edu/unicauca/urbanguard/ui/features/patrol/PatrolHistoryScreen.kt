@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import co.edu.unicauca.urbanguard.domain.model.PatrolGuardRef
+import co.edu.unicauca.urbanguard.domain.model.PatrolShiftStatus
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftType
 import co.edu.unicauca.urbanguard.ui.components.FilterDatePickerDialog
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
@@ -39,8 +41,8 @@ private enum class DateField { FROM, TO }
  * Historial de patrullaje por turno (HU-034).
  *
  * Lista los turnos que el backend devuelve para el rango elegido (por defecto
- * los últimos 7 días) y permite filtrar por incumplimientos. Pulsar un turno
- * abre su detalle.
+ * los últimos 7 días), agrupados por día civil, y permite filtrar por vigilante
+ * y por turnos cerrados con meta incumplida. Pulsar un turno abre su detalle.
  */
 @Composable
 fun PatrolHistoryScreen(
@@ -63,10 +65,14 @@ fun PatrolHistoryScreen(
 
         HistoryContent(
             uiState = uiState,
+            actions = HistoryFilterActions(
+                onFromClick = { editingField = DateField.FROM },
+                onToClick = { editingField = DateField.TO },
+                onGuardSelected = viewModel::onGuardSelected,
+                onStatusSelected = viewModel::onStatusSelected,
+                onOnlyIncompleteChange = viewModel::onOnlyIncompleteChange
+            ),
             onRetry = viewModel::onRefresh,
-            onFromClick = { editingField = DateField.FROM },
-            onToClick = { editingField = DateField.TO },
-            onOnlyIncompleteChange = viewModel::onOnlyIncompleteChange,
             onShiftClick = { shiftType, date, from, to ->
                 onShiftClick(shiftType, date, from, to)
             }
@@ -91,19 +97,15 @@ fun PatrolHistoryScreen(
 @Composable
 private fun HistoryContent(
     uiState: PatrolHistoryUiState,
+    actions: HistoryFilterActions,
     onRetry: () -> Unit,
-    onFromClick: () -> Unit,
-    onToClick: () -> Unit,
-    onOnlyIncompleteChange: (Boolean) -> Unit,
     onShiftClick: (PatrolShiftType, LocalDate, LocalDate, LocalDate) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Spacer(Modifier.height(16.dp))
         HistoryFilterHeader(
             uiState = uiState,
-            onFromClick = onFromClick,
-            onToClick = onToClick,
-            onOnlyIncompleteChange = onOnlyIncompleteChange
+            actions = actions
         )
         Spacer(Modifier.height(16.dp))
         HistoryShiftList(
@@ -118,9 +120,7 @@ private fun HistoryContent(
 @Composable
 private fun HistoryFilterHeader(
     uiState: PatrolHistoryUiState,
-    onFromClick: () -> Unit,
-    onToClick: () -> Unit,
-    onOnlyIncompleteChange: (Boolean) -> Unit
+    actions: HistoryFilterActions
 ) {
     Column(modifier = Modifier.padding(horizontal = CONTENT_PADDING)) {
         Text(
@@ -130,17 +130,18 @@ private fun HistoryFilterHeader(
         )
         Spacer(Modifier.height(12.dp))
         HistoryFilters(
-            from = uiState.from,
-            to = uiState.to,
-            onlyIncomplete = uiState.onlyIncomplete,
-            onFromClick = onFromClick,
-            onToClick = onToClick,
-            onOnlyIncompleteChange = onOnlyIncompleteChange
+            uiState = uiState,
+            actions = actions
         )
         val rangeError = uiState.rangeError
         if (rangeError != null) {
             Spacer(Modifier.height(8.dp))
             Text(text = rangeError, fontSize = 12.sp, color = UgErrorText)
+        }
+        val guardFilterError = uiState.guardFilterError
+        if (guardFilterError != null) {
+            Spacer(Modifier.height(8.dp))
+            Text(text = guardFilterError, fontSize = 12.sp, color = UgErrorText)
         }
     }
 }
@@ -157,7 +158,11 @@ private fun HistoryShiftList(
         when {
             uiState.isLoading -> HistoryLoading()
             error != null -> HistoryError(message = error, onRetryClick = onRetry)
-            uiState.isEmpty -> HistoryEmpty()
+            uiState.isEmpty -> HistoryEmpty(
+                onlyIncomplete = uiState.onlyIncomplete,
+                guardName = uiState.selectedGuard?.name,
+                status = uiState.status
+            )
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
@@ -165,11 +170,16 @@ private fun HistoryShiftList(
                     end = CONTENT_PADDING,
                     bottom = CONTENT_PADDING
                 ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(uiState.shifts, key = { "${it.shiftType}-${it.date}" }) { shift ->
-                    ShiftSummaryCard(shift = shift) {
-                        onShiftClick(shift.shiftType, shift.date, uiState.from, uiState.to)
+                uiState.days.forEach { day ->
+                    item(key = "day-${day.date}") {
+                        DaySectionHeader(date = PatrolHistoryFormat.dayHeader(day.date))
+                    }
+                    items(day.shifts, key = { "${it.shiftType}-${it.date}" }) { shift ->
+                        ShiftSummaryCard(shift = shift) {
+                            onShiftClick(shift.shiftType, shift.date, uiState.from, uiState.to)
+                        }
                     }
                 }
             }

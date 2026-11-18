@@ -10,6 +10,7 @@ import co.edu.unicauca.urbanguard.data.remote.api.service.PatrolShiftApi
 import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftType
+import co.edu.unicauca.urbanguard.domain.model.PatrolShiftStatus
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -83,6 +84,24 @@ class PatrolShiftRepositoryImplTest {
 
         assertEquals(null, api.lastGuardId)
         assertEquals(null, api.lastOnlyIncomplete)
+        assertEquals(null, api.lastStatus)
+    }
+
+    @Test
+    fun getShiftSummaries_enviaEstadoSeleccionado() = runTest {
+        val api = FakePatrolShiftApi(summaries = listOf(validSummary()))
+        val repo = PatrolShiftRepositoryImpl(api)
+
+        repo.getShiftSummaries(
+            complexId = "c1",
+            from = LocalDate.of(2026, 10, 10),
+            to = LocalDate.of(2026, 10, 11),
+            guardId = null,
+            onlyIncomplete = false,
+            status = PatrolShiftStatus.PENDING
+        )
+
+        assertEquals("PENDING", api.lastStatus)
     }
 
     @Test
@@ -231,6 +250,7 @@ class PatrolShiftRepositoryImplTest {
         var lastTo: String? = null
         var lastGuardId: String? = null
         var lastOnlyIncomplete: Boolean? = null
+        var lastStatus: String? = null
 
         var lastShiftType: String? = null
         var lastDateDetail: String? = null
@@ -241,7 +261,8 @@ class PatrolShiftRepositoryImplTest {
             from: String,
             to: String,
             guardId: String?,
-            onlyIncomplete: Boolean?
+            onlyIncomplete: Boolean?,
+            status: String?
         ): List<PatrolShiftSummaryDto> {
             shiftsCalls++
             lastComplexId = complexId
@@ -249,6 +270,7 @@ class PatrolShiftRepositoryImplTest {
             lastTo = to
             lastGuardId = guardId
             lastOnlyIncomplete = onlyIncomplete
+            lastStatus = status
             return summaries
         }
 

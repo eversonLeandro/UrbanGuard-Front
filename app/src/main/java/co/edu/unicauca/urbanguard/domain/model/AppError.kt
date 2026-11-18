@@ -134,6 +134,11 @@ sealed class AppError {
         }
     }
 
+    /** El tag leído no corresponde al siguiente punto esperado de la ronda. */
+    data class UnexpectedPatrolPoint(override val message: String = MESSAGE) : AppError() {
+        companion object { const val MESSAGE = "Este no es el siguiente punto esperado." }
+    }
+
     /** Demasiadas solicitudes en poco tiempo. */
     data class RateLimited(override val message: String) : AppError() {
         companion object {

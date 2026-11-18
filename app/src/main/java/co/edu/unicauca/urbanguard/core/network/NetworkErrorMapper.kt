@@ -24,6 +24,8 @@ object NetworkErrorMapper {
     private const val TAG = "NetworkErrorMapper"
     private const val ACCOUNT_DISABLED_CODE = "ACCOUNT_DISABLED"
     private const val ROUTE_HAS_OPEN_OCCURRENCE_CODE = "ROUTE_HAS_OPEN_OCCURRENCE"
+    private const val UNKNOWN_NFC_TAG_CODE = "UNKNOWN_NFC_TAG"
+    private const val CHECKPOINT_OUT_OF_ORDER_CODE = "CHECKPOINT_OUT_OF_ORDER"
 
     /**
      * Fases de error de Spring en inglés. El backend las mete en `message`
@@ -100,6 +102,10 @@ object NetworkErrorMapper {
             return AppError.RouteChangeBlocked(
                 bodyMessage.takeIf(::isUsable) ?: AppError.RouteChangeBlocked.MESSAGE
             )
+        }
+
+        if (body?.code == UNKNOWN_NFC_TAG_CODE || body?.code == CHECKPOINT_OUT_OF_ORDER_CODE) {
+            return AppError.UnexpectedPatrolPoint()
         }
 
         if (bodyMessage.isNotEmpty() && isUsable(bodyMessage)) {

@@ -24,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,16 +59,26 @@ private val summaryTimeFormat: DateTimeFormatter =
     DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault())
 
 /**
- * Resumen de la ronda cerrada: puntos marcados con su hora, duración y
- * botón para volver.
+ * Resumen de la ronda cerrada: puntos marcados con su hora, duración,
+ * diálogo de confirmación al llegar de finalizar y botón para volver.
+ * Es de solo lectura: no permite registrar ni continuar la ronda.
  */
 @Composable
 fun RoundSummaryScreen(
     onBackClick: () -> Unit,
+    onBackToRounds: () -> Unit = onBackClick,
     viewModel: RoundSummaryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val round = uiState.round
+
+    if (uiState.showFinishConfirmation && round != null) {
+        RoundFinishConfirmDialog(
+            round = round,
+            onViewDetail = viewModel::onDismissFinishConfirmation,
+            onBackToRounds = onBackToRounds
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -80,6 +91,7 @@ fun RoundSummaryScreen(
         )
 
         when {
+            uiState.isLoading -> SummaryLoading()
             round == null -> SummaryError(
                 message = uiState.errorMessage ?: "No hay resumen disponible.",
                 onBackClick = onBackClick
@@ -252,6 +264,18 @@ private fun SummaryScanRow(pointName: String, time: String, done: Boolean) {
                 color = if (done) UgNavy else UgErrorText
             )
         }
+    }
+}
+
+@Composable
+private fun SummaryLoading() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(color = UgNavy)
     }
 }
 

@@ -72,6 +72,7 @@ private val hourLabelFormat: DateTimeFormatter =
 fun GuardSeguridadScreen(
     onNotificationsClick: (() -> Unit)? = null,
     onActiveRound: () -> Unit = {},
+    onOpenRound: (String) -> Unit = {},
     viewModel: GuardSeguridadViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -111,7 +112,7 @@ fun GuardSeguridadScreen(
                     CircularProgressIndicator(color = UgEmerald)
                 }
             }
-            errorMessage != null && uiState.todayRoutes.isEmpty() -> {
+            uiState.hasBlockingError() -> {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -120,7 +121,7 @@ fun GuardSeguridadScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = errorMessage,
+                        text = errorMessage.orEmpty(),
                         fontSize = 14.sp,
                         color = UgErrorText
                     )
@@ -141,7 +142,8 @@ fun GuardSeguridadScreen(
                 uiState = uiState,
                 onDismissError = viewModel::onDismissError,
                 onContinueRound = viewModel::onContinueRound,
-                onStartRoute = viewModel::onStartRoute
+                onStartRoute = viewModel::onStartRoute,
+                onOpenRound = onOpenRound
             )
         }
     }
@@ -152,7 +154,8 @@ private fun GuardSeguridadContent(
     uiState: GuardSeguridadUiState,
     onDismissError: () -> Unit,
     onContinueRound: () -> Unit,
-    onStartRoute: (PatrolRoute) -> Unit
+    onStartRoute: (PatrolRoute) -> Unit,
+    onOpenRound: (String) -> Unit
 ) {
     val errorMessage = uiState.errorMessage
     LazyColumn(
@@ -216,7 +219,10 @@ private fun GuardSeguridadContent(
             }
         } else {
             items(uiState.recentRounds, key = { it.id }) { round ->
-                RecentRoundRow(round = round)
+                RecentRoundRow(
+                    round = round,
+                    onClick = { onOpenRound(round.id) }
+                )
             }
         }
     }
