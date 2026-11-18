@@ -149,29 +149,7 @@ fun PatrolRouteFormScreen(
         }
     }
 
-    val editingIndex = uiState.editingTimeIndex
-    uiState.routeChangeBlockedMessage?.let { message ->
-        PatrolRouteChangeBlockedDialog(
-            message = message,
-            onDismiss = viewModel::onDismissRouteChangeBlocked
-        )
-    }
-
-    if (editingIndex != null) {
-        val current = uiState.schedules.getOrNull(editingIndex)
-        if (current != null) {
-            RouteTimeDialog(
-                hour = current.time.hour,
-                minute = current.time.minute,
-                onConfirm = { hour, minute ->
-                    viewModel.onScheduleEvent(RouteScheduleEvent.PickTime(hour, minute))
-                },
-                onDismiss = {
-                    viewModel.onScheduleEvent(RouteScheduleEvent.ClosePicker)
-                }
-            )
-        }
-    }
+    PatrolRouteFormOverlays(uiState = uiState, viewModel = viewModel)
 }
 
 @Composable
@@ -255,6 +233,14 @@ private fun RouteSchedulesSection(
     )
 
     Spacer(Modifier.height(8.dp))
+
+    SchedulePresetRow(
+        onPreset = { hour, minute ->
+            onEvent(RouteScheduleEvent.AddPreset(hour, minute))
+        }
+    )
+
+    Spacer(Modifier.height(4.dp))
 
     Text(
         text = "Días de la ronda",
@@ -465,7 +451,7 @@ private fun DayChipsRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RouteTimeDialog(
+internal fun RouteTimeDialog(
     hour: Int,
     minute: Int,
     onConfirm: (Int, Int) -> Unit,

@@ -24,6 +24,7 @@ import co.edu.unicauca.urbanguard.domain.usecase.residential.SetOwnerTenantActiv
 import co.edu.unicauca.urbanguard.domain.usecase.residential.UpdateUnitUseCase
 import co.edu.unicauca.urbanguard.ui.components.navigateBottomTab
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusScreen
+import co.edu.unicauca.urbanguard.ui.features.residential.CensusUnitUseCases
 import co.edu.unicauca.urbanguard.ui.features.residential.CensusViewModel
 import co.edu.unicauca.urbanguard.ui.features.residential.FakeResidentialRepository
 import org.junit.Assert.assertEquals
@@ -186,9 +187,11 @@ class AdminResidentsNavigationTest {
         }
         return CensusViewModel(
             GetCensusUseCase(censusRepository),
-            RegisterUnitUseCase(censusRepository),
-            UpdateUnitUseCase(censusRepository),
-            SetOwnerTenantActiveUseCase(censusRepository),
+            CensusUnitUseCases(
+                RegisterUnitUseCase(censusRepository),
+                UpdateUnitUseCase(censusRepository),
+                SetOwnerTenantActiveUseCase(censusRepository)
+            ),
             session
         )
     }

@@ -157,10 +157,6 @@ class ProfileViewModel @Inject constructor(
                 "Inténtalo de nuevo manualmente."
     }
 
-    fun onLogout() {
-        sessionManager.clearSession()
-    }
-
     /**
      * Solicita al backend un ticket de cambio de contraseña.
      *

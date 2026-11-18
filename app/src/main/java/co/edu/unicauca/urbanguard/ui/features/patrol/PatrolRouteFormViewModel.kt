@@ -38,6 +38,9 @@ sealed interface RouteScheduleEvent {
     /** Agrega una repetición vacía. */
     data object Add : RouteScheduleEvent
 
+    /** Agrega un horario preset (p. ej. mañana 08:00 o noche 22:00). */
+    data class AddPreset(val hour: Int, val minute: Int) : RouteScheduleEvent
+
     /** Quita la repetición indicada. */
     data class Remove(val index: Int) : RouteScheduleEvent
 
@@ -130,6 +133,19 @@ class PatrolRouteFormViewModel @Inject constructor(
                     _uiState.value = state.copy(
                         schedules = schedules + PatrolSchedule(
                             time = LocalTime.of(8, 0),
+                            days = state.selectedDays
+                        ),
+                        formError = null
+                    )
+                }
+            }
+            is RouteScheduleEvent.AddPreset -> {
+                if (schedules.size >= PatrolConstants.MAX_SCHEDULES) {
+                    _uiState.value = state.copy(formError = PatrolConstants.MSG_MAX_SCHEDULES)
+                } else {
+                    _uiState.value = state.copy(
+                        schedules = schedules + PatrolSchedule(
+                            time = LocalTime.of(event.hour, event.minute),
                             days = state.selectedDays
                         ),
                         formError = null

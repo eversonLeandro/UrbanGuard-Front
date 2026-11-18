@@ -31,9 +31,10 @@ data class LinkRequestResponseDto(
     val roleSyncPending: Boolean
 )
 
-// Cuerpo para crear la solicitud de vinculación: incluye el número de
-// apartamento/unidad del residente que solicita.
+// Cuerpo para crear la solicitud de vinculación: incluye el código del
+// conjunto y el número de apartamento/unidad del residente que solicita.
 data class CreateLinkRequestRequestDto(
     val complexId: String,
-    val unitId: String
+    val unitId: String,
+    val codigo: String
 )

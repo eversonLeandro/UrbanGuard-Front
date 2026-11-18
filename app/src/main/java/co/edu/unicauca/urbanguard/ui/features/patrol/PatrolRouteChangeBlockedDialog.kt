@@ -42,21 +42,7 @@ fun PatrolRouteChangeBlockedDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = {
-            Box(
-                modifier = Modifier
-                    .size(58.dp)
-                    .background(UgAmberSoft, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Schedule,
-                    contentDescription = null,
-                    tint = UgAmber,
-                    modifier = Modifier.size(30.dp)
-                )
-            }
-        },
+        icon = { BlockedDialogIcon() },
         title = {
             Text(
                 text = "Ronda en curso",
@@ -66,46 +52,7 @@ fun PatrolRouteChangeBlockedDialog(
                 textAlign = TextAlign.Center
             )
         },
-        text = {
-            androidx.compose.foundation.layout.Column(
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Para no interrumpir al guardia, esta ruta no se puede editar ni eliminar " +
-                        "mientras su ronda esté disponible o en ejecución.",
-                    color = UgTextSecondary,
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
-                    textAlign = TextAlign.Center
-                )
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    color = UgBackground,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, UgBorder)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Schedule,
-                            contentDescription = null,
-                            tint = UgAmber,
-                            modifier = Modifier.size(19.dp)
-                        )
-                        Spacer(Modifier.width(10.dp))
-                        Text(
-                            text = message,
-                            color = UgTextPrimary,
-                            fontSize = 13.sp,
-                            lineHeight = 18.sp
-                        )
-                    }
-                }
-            }
-        },
+        text = { BlockedDialogBody(message) },
         confirmButton = {
             Button(
                 onClick = onDismiss,
@@ -118,4 +65,63 @@ fun PatrolRouteChangeBlockedDialog(
         shape = RoundedCornerShape(24.dp),
         containerColor = Color.White
     )
+}
+
+@Composable
+private fun BlockedDialogIcon() {
+    Box(
+        modifier = Modifier
+            .size(58.dp)
+            .background(UgAmberSoft, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Schedule,
+            contentDescription = null,
+            tint = UgAmber,
+            modifier = Modifier.size(30.dp)
+        )
+    }
+}
+
+@Composable
+private fun BlockedDialogBody(message: String) {
+    androidx.compose.foundation.layout.Column(
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Para no interrumpir al guardia, esta ruta no se puede editar ni eliminar " +
+                "mientras su ronda esté disponible o en ejecución.",
+            color = UgTextSecondary,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            textAlign = TextAlign.Center
+        )
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
+            color = UgBackground,
+            border = androidx.compose.foundation.BorderStroke(1.dp, UgBorder)
+        ) {
+            Row(
+                modifier = Modifier.padding(14.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = null,
+                    tint = UgAmber,
+                    modifier = Modifier.size(19.dp)
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    text = message,
+                    color = UgTextPrimary,
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp
+                )
+            }
+        }
+    }
 }

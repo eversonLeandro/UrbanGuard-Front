@@ -261,7 +261,7 @@ class UserListViewModelTest {
             deactivateCalls++
             if (deactivateError != null) return Result.failure(deactivateError)
             val target = active.firstOrNull { it.userId == userId }
-                ?: throw java.lang.IllegalStateException("La cuenta ya estaba inactiva")
+                ?: error("La cuenta ya estaba inactiva")
             active.removeAll { it.userId == userId }
             inactive.add(target.copy(activo = false))
             return Result.success(Unit)
@@ -271,7 +271,7 @@ class UserListViewModelTest {
             reactivateCalls++
             if (reactivateError != null) return Result.failure(reactivateError)
             val target = inactive.firstOrNull { it.userId == userId }
-                ?: throw java.lang.IllegalStateException("La cuenta ya está activa")
+                ?: error("La cuenta ya está activa")
             inactive.removeAll { it.userId == userId }
             active.add(target.copy(activo = true))
             return Result.success(target.copy(activo = true))

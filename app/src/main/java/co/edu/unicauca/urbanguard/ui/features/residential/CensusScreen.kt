@@ -28,18 +28,13 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -67,7 +62,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.edu.unicauca.urbanguard.domain.model.ResidentialUnit
-import co.edu.unicauca.urbanguard.domain.model.ResidentialResident
 import co.edu.unicauca.urbanguard.ui.components.ErrorView
 import co.edu.unicauca.urbanguard.ui.components.UrbanGuardTopBar
 import co.edu.unicauca.urbanguard.ui.theme.UgAmberSoft
@@ -92,7 +86,6 @@ fun CensusScreen(
     var showRegisterDialog by rememberSaveable { mutableStateOf(false) }
     var showResidentDialog by rememberSaveable { mutableStateOf(false) }
     var residentSuccess by rememberSaveable { mutableStateOf<String?>(null) }
-    var residentToChange by remember { mutableStateOf<ResidentialResident?>(null) }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -119,54 +112,18 @@ fun CensusScreen(
             onRefresh = viewModel::onRefresh,
             onSearchQueryChange = viewModel::onSearchQueryChange,
             onFilterChange = viewModel::onFilterChange,
-            onUnitSelected = viewModel::onUnitSelected,
+            onUnitSelected = { viewModel.onUnitSelectionChange(it) },
             onAddUnit = { showRegisterDialog = true }
         )
     }
 
-    state.selectedUnit?.let { selectedUnit ->
-        if (!state.isLoading && state.error == null) {
-            UnitDetailSheet(
-                unit = selectedUnit,
-                isAdmin = state.isAdmin,
-                onEditUnit = { viewModel.onEditUnitDialogChange(true) },
-                onAssignResident = { showResidentDialog = true },
-                isChangingResidentStatus = state.isChangingResidentStatus,
-                changingResidentId = state.changingResidentId,
-                onChangeResidentStatus = { resident -> residentToChange = resident },
-                onDismiss = viewModel::onDismissUnitDetail
-            )
-        }
-        residentToChange?.let { resident ->
-            val active = resident.active
-            AlertDialog(
-                onDismissRequest = { residentToChange = null },
-                title = { Text(if (active) "Inactivar registro" else "Reactivar registro") },
-                text = {
-                    Text(
-                        if (active) {
-                            "¿Deseas inactivar a ${resident.fullName}? El registro y su historial se conservarán."
-                        } else {
-                            "¿Deseas reactivar el registro de ${resident.fullName}?"
-                        }
-                    )
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            state.selectedUnit?.let { unit ->
-                                viewModel.onChangeResidentStatus(unit.id, resident)
-                            }
-                            residentToChange = null
-                        }
-                    ) { Text(if (active) "Inactivar" else "Reactivar") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { residentToChange = null }) { Text("Cancelar") }
-                }
-            )
-        }
-    }
+    CensusUnitDetailSection(
+        state = state,
+        onEditUnit = { viewModel.onEditUnitDialogChange(true) },
+        onAssignResident = { showResidentDialog = true },
+        onChangeResidentStatus = viewModel::onChangeResidentStatus,
+        onDismissUnitDetail = { viewModel.onUnitSelectionChange(null) }
+    )
 
     val editingUnit = state.selectedUnit
     if (state.isEditingUnit && editingUnit != null) {
@@ -260,55 +217,6 @@ private fun ColumnScope.CensusStateContent(
                 onFilterChange = onFilterChange,
                 onUnitSelected = onUnitSelected,
                 onAddUnit = onAddUnit
-            )
-        }
-    }
-}
-
-@Composable
-private fun CensusSearchAndFilters(
-    state: CensusUiState,
-    onSearchQueryChange: (String) -> Unit,
-    onFilterChange: (CensusUnitFilter) -> Unit
-) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-    OutlinedTextField(
-        value = state.searchQuery,
-        onValueChange = onSearchQueryChange,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        singleLine = true,
-        placeholder = { Text("Buscar apartamento o residente") },
-        leadingIcon = {
-            Icon(Icons.Default.Search, contentDescription = "Buscar")
-        },
-        trailingIcon = {
-            if (state.searchQuery.isNotEmpty()) {
-                IconButton(onClick = { onSearchQueryChange("") }) {
-                    Icon(Icons.Default.Close, contentDescription = "Limpiar búsqueda")
-                }
-            }
-        },
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide() }),
-        colors = TextFieldDefaults.colors(
-            focusedIndicatorColor = UgEmerald,
-            unfocusedIndicatorColor = UgBorder,
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White
-        )
-    )
-    Spacer(Modifier.height(8.dp))
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        CensusUnitFilter.entries.forEach { filter ->
-            FilterChip(
-                selected = state.filter == filter,
-                onClick = { onFilterChange(filter) },
-                label = { Text(filter.label, fontSize = 12.sp) }
             )
         }
     }
@@ -599,88 +507,3 @@ private fun EmptyCensus(modifier: Modifier = Modifier) {
         )
     }
 }
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun UnitDetailSheet(
-    unit: ResidentialUnit,
-    isAdmin: Boolean,
-    isChangingResidentStatus: Boolean,
-    changingResidentId: String?,
-    onEditUnit: () -> Unit,
-    onAssignResident: () -> Unit,
-    onChangeResidentStatus: (ResidentialResident) -> Unit,
-    onDismiss: () -> Unit
-) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 24.dp, end = 24.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "Apartamento ${unit.identifier}",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = UgNavy
-            )
-            if (unit.residents.isEmpty()) {
-                Text(
-                    text = "Sin residentes asociados",
-                    color = CensusVacantText,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            } else {
-                Text(
-                    text = if (unit.residents.size == 1) "Residente asociado" else "Residentes asociados",
-                    color = UgTextSecondary,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                unit.residents.forEach { resident ->
-                    val residentId = resident.ownerTenantId ?: resident.membershipId
-                    CensusResidentRow(
-                        resident = resident,
-                        canManage = isAdmin && residentId != null,
-                        isChanging = isChangingResidentStatus && changingResidentId == residentId,
-                        onChangeStatus = { onChangeResidentStatus(resident) }
-                    )
-                }
-            }
-            if (isAdmin && unit.residents.isEmpty()) {
-                Button(
-                    onClick = onAssignResident,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = UgEmerald)
-                ) {
-                    Text(
-                        text = "Asignar residente",
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-            if (isAdmin) {
-                Button(
-                    onClick = onEditUnit,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = UgNavy)
-                ) {
-                    Text(
-                        text = "Editar apartamento",
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-    }
-}
-
-private val CensusVacantText = Color(0xFF92400E)

@@ -5,5 +5,5 @@ import co.edu.unicauca.urbanguard.domain.model.LinkRequest
 
 interface LinkByCodeRepository {
     suspend fun searchConjunto(code: String): Result<ConjuntoSearch>
-    suspend fun requestLink(conjuntoId: String, unitId: String): Result<LinkRequest>
+    suspend fun requestLink(conjuntoId: String, unitId: String, codigo: String): Result<LinkRequest>
 }

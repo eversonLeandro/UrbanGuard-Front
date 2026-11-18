@@ -1,26 +1,19 @@
 package co.edu.unicauca.urbanguard.ui.features.users
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.AlertDialog
@@ -50,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -102,50 +94,7 @@ fun UserListScreen(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Descripción del flujo para dar contexto antes de la primera acción.
-            Text(
-                "Desactiva cuentas para revocar su acceso sin eliminar su historial. " +
-                    "Puedes reactivarlas en cualquier momento.",
-                fontSize = 12.5.sp,
-                color = UgTextSecondary
-            )
-
-            // Filtro de estado: cambia el parámetro ?estado= y recarga del servidor.
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                FilterChip(
-                    selected = state.filter == UserListFilter.ACTIVE,
-                    onClick = { viewModel.onSelectFilter(UserListFilter.ACTIVE) },
-                    label = { Text("Activos") },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = UgEmerald.copy(alpha = 0.15f)
-                    )
-                )
-                FilterChip(
-                    selected = state.filter == UserListFilter.INACTIVE,
-                    onClick = { viewModel.onSelectFilter(UserListFilter.INACTIVE) },
-                    label = { Text("Desactivados") },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = UgAmber.copy(alpha = 0.2f)
-                    )
-                )
-            }
-
-            // Búsqueda local sobre el catálogo cargado.
-            OutlinedTextField(
-                value = state.query,
-                onValueChange = viewModel::onQueryChange,
-                label = { Text("Buscar por nombre o correo") },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = UgTextSecondary)
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = UgEmerald,
-                    cursorColor = UgEmerald
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
+            UserListFilters(state = state, viewModel = viewModel)
 
             when {
                 state.isLoading -> FullLoading()
@@ -168,6 +117,54 @@ fun UserListScreen(
             onDismiss = { viewModel.onDeactivateDialogChange(null) }
         )
     }
+}
+
+@Composable
+private fun UserListFilters(state: UserListUiState, viewModel: UserListViewModel) {
+    // Descripción del flujo para dar contexto antes de la primera acción.
+    Text(
+        "Desactiva cuentas para revocar su acceso sin eliminar su historial. " +
+            "Puedes reactivarlas en cualquier momento.",
+        fontSize = 12.5.sp,
+        color = UgTextSecondary
+    )
+
+    // Filtro de estado: cambia el parámetro ?estado= y recarga del servidor.
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        FilterChip(
+            selected = state.filter == UserListFilter.ACTIVE,
+            onClick = { viewModel.onSelectFilter(UserListFilter.ACTIVE) },
+            label = { Text("Activos") },
+            colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = UgEmerald.copy(alpha = 0.15f)
+            )
+        )
+        FilterChip(
+            selected = state.filter == UserListFilter.INACTIVE,
+            onClick = { viewModel.onSelectFilter(UserListFilter.INACTIVE) },
+            label = { Text("Desactivados") },
+            colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = UgAmber.copy(alpha = 0.2f)
+            )
+        )
+    }
+
+    // Búsqueda local sobre el catálogo cargado.
+    OutlinedTextField(
+        value = state.query,
+        onValueChange = viewModel::onQueryChange,
+        label = { Text("Buscar por nombre o correo") },
+        leadingIcon = {
+            Icon(Icons.Default.Search, contentDescription = null, tint = UgTextSecondary)
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(14.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = UgEmerald,
+            cursorColor = UgEmerald
+        ),
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -276,131 +273,6 @@ private fun EmptyResults(filter: UserListFilter, hasQuery: Boolean) {
     }
 }
 
-@Composable
-private fun UserRow(state: UserListUiState, user: User, viewModel: UserListViewModel) {
-    val isSelf = user.userId == state.myUserId
-    val isBusy = state.actionInProgressUserId == user.userId
-
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Avatar de iniciales sobre el color del estado.
-            val badgeColor = if (user.activo) UgEmerald else UgAmber
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(if (isSelf) badgeColor.copy(alpha = 0.25f) else badgeColor.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    initials(user),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isSelf) UgNavy else badgeColor
-                )
-            }
-            Spacer(Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    user.displayName,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = UgNavy,
-                    maxLines = 1
-                )
-                Text(
-                    user.email ?: user.userId,
-                    fontSize = 11.5.sp,
-                    color = UgTextSecondary,
-                    maxLines = 1
-                )
-                Text(
-                    when {
-                        isSelf -> "Tu cuenta · sin desactivación"
-                        user.activo -> "Activa"
-                        else -> "Desactivada"
-                    },
-                    fontSize = 10.5.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = when {
-                        isSelf -> UgNavy
-                        user.activo -> UgEmerald
-                        else -> UgAmber
-                    }
-                )
-            }
-
-            Spacer(Modifier.width(8.dp))
-
-            // La fila propia no ofrece desactivación (409 del servidor detrás).
-            if (isBusy) {
-                CircularProgressIndicator(
-                    color = UgEmerald,
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp
-                )
-            } else if (user.activo) {
-                if (isSelf) {
-                    Icon(
-                        Icons.Default.Lock,
-                        contentDescription = "Cuenta propia protegida",
-                        tint = UgNavy,
-                        modifier = Modifier.size(22.dp)
-                    )
-                } else {
-                    IconButton(
-                        onClick = { viewModel.onDeactivateDialogChange(user) },
-                        modifier = Modifier.size(38.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Block,
-                            contentDescription = "Desactivar cuenta",
-                            tint = UgErrorText,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                }
-            } else {
-                IconButton(
-                    onClick = { viewModel.onReactivate(user) },
-                    modifier = Modifier.size(38.dp)
-                ) {
-                    Icon(
-                        Icons.Default.LockOpen,
-                        contentDescription = "Reactivar cuenta",
-                        tint = UgEmerald,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-/** Iniciales del avatar: primera letra del nombre y del apellido, A/B por defecto. */
-private fun initials(user: User): String {
-    val source = listOfNotNull(
-        user.nombres?.trim()?.firstOrNull(),
-        user.apellidos?.trim()?.firstOrNull()
-    ).joinToString("")
-    return source
-        .uppercase()
-        .ifEmpty { "UG" }
-}
 
 @Composable
 private fun ConfirmDeactivateDialog(
