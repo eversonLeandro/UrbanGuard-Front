@@ -14,7 +14,7 @@ import retrofit2.http.Query
  * La BASE_URL ya apunta al gateway y el `AuthInterceptor` inyecta el JWT; el
  * rol ADMIN y el `complexId` viajan en la ruta, nunca la identidad del usuario.
  *
- * `from` y `to` siempre se envían explícitos. `guardId` y `onlyIncomplete` son
+ * `from` y `to` siempre se envían explícitos. Los demás filtros son
  * opcionales: Retrofit omite los `@Query` nulos, así que el frontend solo los
  * manda cuando tienen valor (para `onlyIncomplete`, solo cuando es `true`).
  */
@@ -26,7 +26,8 @@ interface PatrolShiftApi {
         @Query("from") from: String,
         @Query("to") to: String,
         @Query("guardId") guardId: String? = null,
-        @Query("onlyIncomplete") onlyIncomplete: Boolean? = null
+        @Query("onlyIncomplete") onlyIncomplete: Boolean? = null,
+        @Query("status") status: String? = null
     ): List<PatrolShiftSummaryDto>
 
     @GET(PatrolApiPaths.SHIFT_DETAIL)

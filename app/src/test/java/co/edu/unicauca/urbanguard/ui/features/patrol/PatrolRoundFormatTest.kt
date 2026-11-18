@@ -6,7 +6,9 @@ import co.edu.unicauca.urbanguard.ui.components.StatusTone
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.time.LocalDate
 import java.time.OffsetDateTime
+import co.edu.unicauca.urbanguard.domain.model.PatrolShiftRound
 
 /**
  * Traducción de las rondas del detalle: estado, puntos y motivo con desviación.
@@ -87,5 +89,24 @@ class PatrolRoundFormatTest {
     @Test
     fun `puntos de ronda`() {
         assertEquals("3 de 4 puntos", PatrolRoundFormat.pointsLabel(3, 4))
+    }
+
+    @Test
+    fun `hora local incluye fecha larga cuando la ronda cruza medianoche`() {
+        val round = PatrolShiftRound(
+            routeName = "Ruta",
+            guard = null,
+            scheduledAt = instant("2026-01-14T05:30:00Z"),
+            startedAt = null,
+            status = PatrolRoundStatus.PENDING,
+            reason = null,
+            pointsScanned = 0,
+            pointsExpected = 2
+        )
+
+        assertEquals(
+            "Programada 14 de enero de 2026, 12:30 a. m.",
+            PatrolRoundFormat.scheduledLine(round, LocalDate.of(2026, 1, 13))
+        )
     }
 }

@@ -101,11 +101,23 @@ data class PatrolShiftRound(
     val status: PatrolRoundStatus?,
     val reason: PatrolRoundReason?,
     val pointsScanned: Int,
-    val pointsExpected: Int
+    val pointsExpected: Int,
+    /** Enlaza con el detalle de puntos NFC; null en respuestas sin el campo. */
+    val occurrenceId: String? = null,
+    val incidents: List<PatrolShiftIncident> = emptyList()
 ) {
     /** Ronda realizada sin horario programado (no cuenta para la meta). */
     val isUnscheduled: Boolean get() = scheduledAt == null
 }
+
+/** Novedad de seguridad reportada durante una ocurrencia del turno. */
+data class PatrolShiftIncident(
+    val reportId: String,
+    val category: String,
+    val description: String,
+    val reportedAt: Instant,
+    val guardName: String?
+)
 
 /** Referencia mínima al vigilante de una ronda. */
 data class PatrolGuardRef(

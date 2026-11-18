@@ -176,6 +176,28 @@ class PatrolRoundRepositoryImpl @Inject constructor(
 
     override fun lastFinishedRound(): PatrolRound? = lastFinished
 
+    @Suppress("TooGenericExceptionCaught")
+    override suspend fun getFinishedRound(
+        complexId: String,
+        executionId: String
+    ): Result<PatrolRound> {
+        if (complexId.isBlank() || executionId.isBlank()) {
+            return Result.failure(Exception(PatrolConstants.MSG_NO_ACTIVE_COMPLEX))
+        }
+        return try {
+            val dto = executionApi.getExecutionDetail(complexId, executionId)
+            Result.success(dto.toDomain(complexId))
+        } catch (e: HttpException) {
+            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+        } catch (e: IOException) {
+            Log.w(TAG, "Sin conexión al consultar la ronda $executionId", e)
+            Result.failure(Exception(NetworkErrorMapper.map(e), e))
+        } catch (e: Exception) {
+            Log.w(TAG, "Fallo al consultar la ronda $executionId", e)
+            Result.failure(e)
+        }
+    }
+
     private companion object {
         const val TAG = "PatrolRoundRepo"
     }

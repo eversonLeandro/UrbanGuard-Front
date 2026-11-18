@@ -47,6 +47,15 @@ interface PatrolRoundRepository {
     /** Rondas del conjunto, más recientes primero. */
     suspend fun getRounds(complexId: String): Result<List<PatrolRound>>
 
+    /**
+     * Consulta al backend una ejecución puntual por id (para volver a abrir
+     * el resumen de una ronda ya terminada). Solo lectura.
+     */
+    suspend fun getFinishedRound(
+        complexId: String,
+        executionId: String
+    ): Result<PatrolRound>
+
     /** Última ronda cerrada en esta sesión (para el resumen sin argumentos). */
     fun lastFinishedRound(): PatrolRound?
 }

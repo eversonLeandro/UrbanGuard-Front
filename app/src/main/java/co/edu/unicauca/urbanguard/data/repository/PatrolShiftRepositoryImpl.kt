@@ -8,6 +8,7 @@ import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.PatrolGuardSummary
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftDetail
+import co.edu.unicauca.urbanguard.domain.model.PatrolShiftStatus
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftSummary
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftType
 import co.edu.unicauca.urbanguard.domain.repository.PatrolShiftRepository
@@ -32,7 +33,8 @@ class PatrolShiftRepositoryImpl @Inject constructor(
         from: LocalDate,
         to: LocalDate,
         guardId: String?,
-        onlyIncomplete: Boolean
+        onlyIncomplete: Boolean,
+        status: PatrolShiftStatus?
     ): Result<List<PatrolShiftSummary>> {
         if (complexId.isBlank()) return noComplexFailure()
         return apiCall {
@@ -41,7 +43,8 @@ class PatrolShiftRepositoryImpl @Inject constructor(
                 from = from.toString(),
                 to = to.toString(),
                 guardId = guardId?.takeIf { it.isNotBlank() },
-                onlyIncomplete = if (onlyIncomplete) true else null
+                onlyIncomplete = if (onlyIncomplete) true else null,
+                status = status?.name
             ).map { it.toDomain() }
         }
     }

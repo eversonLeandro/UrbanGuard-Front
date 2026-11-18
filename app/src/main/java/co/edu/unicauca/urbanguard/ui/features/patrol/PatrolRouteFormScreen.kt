@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import co.edu.unicauca.urbanguard.core.common.PatrolConstants.MAX_SCHEDULES
 import co.edu.unicauca.urbanguard.domain.model.PatrolSchedule
 import co.edu.unicauca.urbanguard.domain.model.shortLabel
 import co.edu.unicauca.urbanguard.domain.model.weekDays
@@ -132,8 +133,8 @@ fun PatrolRouteFormScreen(
                 schedules = uiState.schedules,
                 selectedDays = uiState.selectedDays,
                 formError = uiState.formError,
-                onEvent = viewModel::onScheduleEvent,
-                onPreset = viewModel::onAddPreset
+                canAddSchedule = uiState.schedules.size < MAX_SCHEDULES,
+                onEvent = viewModel::onScheduleEvent
             )
 
             Spacer(Modifier.height(12.dp))
@@ -239,8 +240,8 @@ private fun RouteSchedulesSection(
     schedules: List<PatrolSchedule>,
     selectedDays: Set<DayOfWeek>,
     formError: String?,
-    onEvent: (RouteScheduleEvent) -> Unit,
-    onPreset: (Int, Int) -> Unit
+    canAddSchedule: Boolean,
+    onEvent: (RouteScheduleEvent) -> Unit
 ) {
     RouteSectionTitle("Horarios")
 
@@ -254,10 +255,6 @@ private fun RouteSchedulesSection(
     )
 
     Spacer(Modifier.height(8.dp))
-
-    SchedulePresetRow(onPreset = onPreset)
-
-    Spacer(Modifier.height(4.dp))
 
     Text(
         text = "Días de la ronda",
@@ -283,14 +280,25 @@ private fun RouteSchedulesSection(
         Spacer(Modifier.height(10.dp))
     }
 
-    TextButton(onClick = { onEvent(RouteScheduleEvent.Add) }) {
+    TextButton(
+        onClick = { onEvent(RouteScheduleEvent.Add) },
+        enabled = canAddSchedule
+    ) {
         Icon(
             imageVector = Icons.Default.Add,
             contentDescription = null,
             tint = UgEmerald
         )
         Spacer(Modifier.width(4.dp))
-        Text("Agregar horario", color = UgEmerald, fontWeight = FontWeight.Bold)
+        Text(
+            text = if (canAddSchedule) {
+                "Agregar horario"
+            } else {
+                "Límite de $MAX_SCHEDULES horarios alcanzado"
+            },
+            color = UgEmerald,
+            fontWeight = FontWeight.Bold
+        )
     }
 
     formError?.let { error ->

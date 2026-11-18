@@ -41,4 +41,10 @@ abstract class PatrolBindModule {
     abstract fun bindPatrolShiftRepository(
         impl: PatrolShiftRepositoryImpl
     ): PatrolShiftRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPatrolComplianceRepository(
+        impl: co.edu.unicauca.urbanguard.data.repository.PatrolComplianceRepositoryImpl
+    ): co.edu.unicauca.urbanguard.domain.repository.PatrolComplianceRepository
 }

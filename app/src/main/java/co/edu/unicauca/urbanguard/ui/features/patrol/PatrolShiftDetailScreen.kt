@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,14 +25,16 @@ import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 import java.time.LocalDate
 
 /**
- * Detalle de un turno (HU-032): veredicto de meta y desglose de rondas.
+ * Detalle de un turno (HU-032): veredicto de meta y rondas agrupadas por ruta.
  *
- * Tocar el vigilante de una ronda abre su resumen de desempeño.
+ * Cada ronda con `occurrenceId` abre el detalle de puntos NFC (nivel 3).
  */
 @Composable
 fun PatrolShiftDetailScreen(
     onNavigateBack: () -> Unit,
-    onGuardClick: (String) -> Unit,
+    onRoundClick: (String) -> Unit,
+    onGuardClick: (String) -> Unit = {},
+    onIncidentClick: (String) -> Unit = {},
     viewModel: PatrolShiftDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -51,7 +52,9 @@ fun PatrolShiftDetailScreen(
         DetailContent(
             uiState = uiState,
             onRetry = viewModel::onRetry,
-            onGuardClick = onGuardClick
+            onRoundClick = onRoundClick,
+            onGuardClick = onGuardClick,
+            onIncidentClick = onIncidentClick
         )
     }
 }
@@ -60,7 +63,9 @@ fun PatrolShiftDetailScreen(
 private fun DetailContent(
     uiState: PatrolShiftDetailUiState,
     onRetry: () -> Unit,
-    onGuardClick: (String) -> Unit
+    onRoundClick: (String) -> Unit,
+    onGuardClick: (String) -> Unit,
+    onIncidentClick: (String) -> Unit
 ) {
     val error = uiState.errorMessage
     val detail = uiState.detail
@@ -75,7 +80,9 @@ private fun DetailContent(
             detail = detail,
             shiftType = uiState.shiftType,
             date = uiState.date,
-            onGuardClick = onGuardClick
+            onRoundClick = onRoundClick,
+            onGuardClick = onGuardClick,
+            onIncidentClick = onIncidentClick
         )
     }
 }
@@ -85,7 +92,9 @@ private fun DetailBody(
     detail: PatrolShiftDetail,
     shiftType: PatrolShiftType,
     date: LocalDate,
-    onGuardClick: (String) -> Unit
+    onRoundClick: (String) -> Unit,
+    onGuardClick: (String) -> Unit,
+    onIncidentClick: (String) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -113,10 +122,26 @@ private fun DetailBody(
                 )
             }
         } else {
-            items(detail.rounds) { round ->
-                ShiftRoundRow(round = round, onGuardClick = onGuardClick)
+            val groups = groupRoundsByRoute(detail.rounds)
+            items(groups.size, key = { groups[it].routeName }) { index ->
+                RouteGroupSection(
+                    group = groups[index],
+                    shiftDate = date,
+                    onRoundClick = onRoundClick,
+                    onGuardClick = onGuardClick,
+                    onIncidentClick = onIncidentClick
+                )
             }
             item(key = "rounds-bottom") { Spacer(Modifier.height(4.dp)) }
+        }
+        if (detail.rounds.none { it.incidents.isNotEmpty() }) {
+            item(key = "incidents-empty") {
+                Text(
+                    text = "No hay novedades asociadas a las rondas de este turno.",
+                    fontSize = 13.sp,
+                    color = UgTextSecondary
+                )
+            }
         }
     }
 }

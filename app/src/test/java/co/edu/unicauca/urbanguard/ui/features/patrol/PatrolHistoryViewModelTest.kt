@@ -6,6 +6,8 @@ import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoUserAssociation
+import co.edu.unicauca.urbanguard.domain.model.CreatedGuard
+import co.edu.unicauca.urbanguard.domain.model.GuardMembership
 import co.edu.unicauca.urbanguard.domain.model.PatrolGuardSummary
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftDetail
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftStatus
@@ -13,7 +15,9 @@ import co.edu.unicauca.urbanguard.domain.model.PatrolShiftSummary
 import co.edu.unicauca.urbanguard.domain.model.PatrolShiftType
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
+import co.edu.unicauca.urbanguard.domain.repository.GuardRepository
 import co.edu.unicauca.urbanguard.domain.repository.PatrolShiftRepository
+import co.edu.unicauca.urbanguard.domain.usecase.guards.GetGuardMembershipsUseCase
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.GetPatrolHistoryUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -79,6 +83,58 @@ class PatrolHistoryViewModelTest {
 
         assertEquals(true, repo.lastOnlyIncomplete)
         assertEquals(2, repo.calls)
+    }
+
+    @Test
+    fun `al seleccionar estado recarga con ese filtro`() = runTest {
+        val repo = FakePatrolShiftRepository(summaries = listOf(sampleSummary()))
+        val viewModel = createViewModel(repo)
+
+        advanceUntilIdle()
+        viewModel.onStatusSelected(PatrolShiftStatus.PENDING)
+        advanceUntilIdle()
+
+        assertEquals(PatrolShiftStatus.PENDING, viewModel.uiState.value.status)
+        assertEquals(PatrolShiftStatus.PENDING, repo.lastStatus)
+        assertEquals(2, repo.calls)
+    }
+
+    @Test
+    fun `ordena vigilantes y aplica su filtro por userId`() = runTest {
+        val repo = FakePatrolShiftRepository(summaries = listOf(sampleSummary()))
+        val guards = FakeGuardRepository(
+            listOf(
+                GuardMembership("m2", "g2", null, "Zoe", true),
+                GuardMembership("m1", "g1", null, "Ana", true)
+            )
+        )
+        val viewModel = createViewModel(repo, guardRepository = guards)
+
+        advanceUntilIdle()
+        assertEquals(listOf("Ana", "Zoe"), viewModel.uiState.value.guards.map { it.name })
+
+        viewModel.onGuardSelected(viewModel.uiState.value.guards.last())
+        advanceUntilIdle()
+
+        assertEquals("g2", repo.lastGuardId)
+    }
+
+    @Test
+    fun `si no carga vigilantes informa que el filtro no esta disponible`() = runTest {
+        val repo = FakePatrolShiftRepository(summaries = listOf(sampleSummary()))
+        val viewModel = createViewModel(
+            repo,
+            guardRepository = FakeGuardRepository(error = IllegalStateException("offline"))
+        )
+
+        advanceUntilIdle()
+
+        assertEquals(
+            PatrolHistoryConstants.MSG_GUARDS_FILTER_ERROR,
+            viewModel.uiState.value.guardFilterError
+        )
+        assertEquals(1, repo.calls)
+        assertEquals(1, viewModel.uiState.value.shifts.size)
     }
 
     @Test
@@ -166,9 +222,11 @@ class PatrolHistoryViewModelTest {
 
     private fun createViewModel(
         repository: PatrolShiftRepository,
-        sessionManager: SessionManager = sessionWithComplex()
+        sessionManager: SessionManager = sessionWithComplex(),
+        guardRepository: GuardRepository = FakeGuardRepository()
     ) = PatrolHistoryViewModel(
         getPatrolHistoryUseCase = GetPatrolHistoryUseCase(repository),
+        getGuardMembershipsUseCase = GetGuardMembershipsUseCase(guardRepository),
         sessionManager = sessionManager,
         clock = clock
     )
@@ -203,16 +261,23 @@ class PatrolHistoryViewModelTest {
             private set
         var lastOnlyIncomplete: Boolean? = null
             private set
+        var lastGuardId: String? = null
+            private set
+        var lastStatus: co.edu.unicauca.urbanguard.domain.model.PatrolShiftStatus? = null
+            private set
 
         override suspend fun getShiftSummaries(
             complexId: String,
             from: LocalDate,
             to: LocalDate,
             guardId: String?,
-            onlyIncomplete: Boolean
+            onlyIncomplete: Boolean,
+            status: co.edu.unicauca.urbanguard.domain.model.PatrolShiftStatus?
         ): Result<List<PatrolShiftSummary>> {
             calls++
             lastOnlyIncomplete = onlyIncomplete
+            lastGuardId = guardId
+            lastStatus = status
             return if (error != null) Result.failure(error) else Result.success(summaries)
         }
 
@@ -228,6 +293,31 @@ class PatrolHistoryViewModelTest {
             from: LocalDate,
             to: LocalDate
         ): Result<PatrolGuardSummary> = Result.failure(IllegalStateException("not used"))
+    }
+
+    private class FakeGuardRepository(
+        private val memberships: List<GuardMembership> = emptyList(),
+        private val error: Exception? = null
+    ) : GuardRepository {
+        override suspend fun registerGuard(
+            complexId: String,
+            email: String,
+            nombres: String,
+            apellidos: String,
+            telefono: String
+        ): Result<CreatedGuard> = Result.failure(UnsupportedOperationException("not used"))
+
+        override suspend fun getGuards(
+            complexId: String,
+            status: String
+        ): Result<List<GuardMembership>> =
+            if (error == null) Result.success(memberships) else Result.failure(error)
+
+        override suspend fun setGuardActive(
+            complexId: String,
+            membershipId: String,
+            active: Boolean
+        ): Result<Unit> = Result.failure(UnsupportedOperationException("not used"))
     }
 
     private companion object {

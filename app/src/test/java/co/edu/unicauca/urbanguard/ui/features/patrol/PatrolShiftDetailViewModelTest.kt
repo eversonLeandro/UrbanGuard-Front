@@ -183,7 +183,8 @@ class PatrolShiftDetailViewModelTest {
             from: LocalDate,
             to: LocalDate,
             guardId: String?,
-            onlyIncomplete: Boolean
+            onlyIncomplete: Boolean,
+            status: co.edu.unicauca.urbanguard.domain.model.PatrolShiftStatus?
         ): Result<List<PatrolShiftSummary>> = Result.success(emptyList())
 
         override suspend fun getShiftDetail(

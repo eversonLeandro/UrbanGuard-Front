@@ -14,8 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -27,12 +25,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 /**
- * Piezas visuales del formulario de ruta: resumen vivo, presets de horario
+ * Piezas visuales del formulario de ruta: resumen vivo
  * y tira de puntos elegidos en orden.
  *
  * Archivo propio para no superar el máximo de funciones de detekt en la
@@ -65,24 +62,6 @@ fun RouteSummaryHeader(pointCount: Int, scheduleCount: Int) {
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             color = UgNavy
-        )
-    }
-}
-
-@Composable
-fun SchedulePresetRow(onPreset: (Int, Int) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(
-            selected = false,
-            onClick = { onPreset(8, 0) },
-            label = { Text("Mañana 08:00", fontSize = 12.sp) },
-            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = UgEmerald)
-        )
-        FilterChip(
-            selected = false,
-            onClick = { onPreset(22, 0) },
-            label = { Text("Noche 22:00", fontSize = 12.sp) },
-            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = UgEmerald)
         )
     }
 }
