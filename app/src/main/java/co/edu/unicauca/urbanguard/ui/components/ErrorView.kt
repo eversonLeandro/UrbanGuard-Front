@@ -177,6 +177,7 @@ private fun titleFor(error: AppError): String = when (error) {
     is AppError.NotFound -> "No encontrado"
     is AppError.Conflict -> "Acción no disponible"
     is AppError.RouteChangeBlocked -> "Ronda en curso"
+    is AppError.UnexpectedPatrolPoint -> "Punto no esperado"
     is AppError.RateLimited -> "Demasiados intentos"
     is AppError.ServerError -> "Servicio caído"
     is AppError.Validation -> "Datos inválidos"

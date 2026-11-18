@@ -112,7 +112,7 @@ fun GuardSeguridadScreen(
                     CircularProgressIndicator(color = UgEmerald)
                 }
             }
-            errorMessage != null && uiState.todayRoutes.isEmpty() -> {
+            uiState.hasBlockingError() -> {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -121,7 +121,7 @@ fun GuardSeguridadScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = errorMessage,
+                        text = errorMessage.orEmpty(),
                         fontSize = 14.sp,
                         color = UgErrorText
                     )

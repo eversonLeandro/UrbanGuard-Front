@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Nfc
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -74,6 +75,12 @@ import co.edu.unicauca.urbanguard.ui.theme.UgNavy
 import co.edu.unicauca.urbanguard.ui.theme.UgNavyGradient
 import co.edu.unicauca.urbanguard.ui.theme.UgTextPrimary
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+private val deadlineFormat: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("d MMM, HH:mm", Locale.forLanguageTag("es-CO"))
 
 /**
  * Ronda en curso: escucha NFC permanente, valida cada tag contra los puntos
@@ -109,7 +116,7 @@ fun RoundActiveScreen(
         }
     }
     NfcReaderEffect(
-        enabled = uiState.round != null,
+        enabled = uiState.round != null && !uiState.showUnexpectedPointDialog,
         onTagRead = viewModel::onTagScanned
     )
     LaunchedEffect(uiState.lastScanAt) {
@@ -153,6 +160,10 @@ fun RoundActiveScreen(
                 )
             }
         }
+
+        if (uiState.showUnexpectedPointDialog) {
+            UnexpectedPointDialog(onDismiss = viewModel::onDismissUnexpectedPointDialog)
+        }
     }
 }
 
@@ -187,7 +198,7 @@ private fun ActiveContent(
                 done = done,
                 total = total,
                 progress = round.progressOf(total),
-                dueLabel = round.dueAt?.let { timeLabel(it.toEpochMilli()) }
+                dueLabel = round.dueAt?.atZone(ZoneId.systemDefault())?.format(deadlineFormat)
             )
         }
 
@@ -281,13 +292,28 @@ private fun ProgressHeader(done: Int, total: Int, progress: Float, dueLabel: Str
             )
         }
         if (dueLabel != null) {
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.85f),
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(6.dp))
                 Text(
-                    text = "Vence $dueLabel",
+                    text = "Hora límite: $dueLabel",
                     fontSize = 12.5.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White.copy(alpha = 0.85f)
                 )
+            }
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = "Escanea todos los puntos antes de esta hora para completar la ronda.",
+                fontSize = 11.5.sp,
+                color = Color.White.copy(alpha = 0.85f)
+            )
         }
         Spacer(Modifier.height(10.dp))
         LinearProgressIndicator(
@@ -519,6 +545,21 @@ private fun RoundPointRow(
             }
         }
     }
+}
+
+@Composable
+private fun UnexpectedPointDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Default.Nfc, contentDescription = null, tint = UgNavy) },
+        title = { Text("Este no es el siguiente punto", fontWeight = FontWeight.Bold, color = UgNavy) },
+        text = { Text("Escanea el tag del punto marcado como SIGUIENTE en la ruta.") },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Entendido", color = UgNavy, fontWeight = FontWeight.Bold)
+            }
+        }
+    )
 }
 
 @Composable

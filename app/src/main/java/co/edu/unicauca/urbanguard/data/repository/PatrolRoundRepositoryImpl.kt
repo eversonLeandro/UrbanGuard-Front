@@ -78,17 +78,16 @@ class PatrolRoundRepositoryImpl @Inject constructor(
         complexId: String,
         tagId: String
     ): Result<Pair<PatrolRound, PatrolControlPoint?>> {
-        val round = activeRound(complexId)
-            ?: return Result.failure(Exception("No hay una ronda abierta."))
         val normalized = normalizeNfcUid(tagId)
         if (normalized.isEmpty()) {
             return Result.failure(Exception("El tag leído está vacío."))
         }
 
-        // Intentar match local por nfcTagId (puede ser null si no se cargaron los tags)
-        val localMatch = matchScan(normalized, round.points)
-
         return try {
+            val round = activeRound(complexId)
+                ?: return Result.failure(Exception("No hay una ronda abierta."))
+            // Intentar match local por nfcTagId (puede ser null si no se cargaron los tags)
+            val localMatch = matchScan(normalized, round.points)
             val requestDto = CheckpointScanRequestDto(uid = normalized)
             // IDs de puntos ya marcados ANTES del escaneo
             val doneBeforeScan = round.scans
@@ -121,12 +120,11 @@ class PatrolRoundRepositoryImpl @Inject constructor(
 
             Result.success(updatedRemote to resolvedMatch)
         } catch (e: HttpException) {
-            val errorBody = e.response()?.errorBody()?.string()
-            Log.w(TAG, "El backend rechazó el escaneo (${e.code()}): $errorBody")
-            Result.failure(Exception("Error al registrar escaneo (${e.code()}): ${errorBody ?: e.message()}"))
+            Log.w(TAG, "El backend rechazó el escaneo (${e.code()})", e)
+            Result.failure(NetworkErrorMapper.toAppException(e))
         } catch (e: Exception) {
             Log.w(TAG, "Fallo al registrar escaneo", e)
-            Result.failure(e)
+            Result.failure(NetworkErrorMapper.toAppException(e))
         }
     }
 
