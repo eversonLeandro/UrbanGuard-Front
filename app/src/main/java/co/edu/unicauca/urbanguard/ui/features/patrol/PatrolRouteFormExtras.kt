@@ -16,6 +16,8 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import co.edu.unicauca.urbanguard.ui.theme.UgNavy
+import co.edu.unicauca.urbanguard.ui.theme.UgEmerald
 import co.edu.unicauca.urbanguard.ui.theme.UgTextSecondary
 
 /**
@@ -62,6 +65,26 @@ fun RouteSummaryHeader(pointCount: Int, scheduleCount: Int) {
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             color = UgNavy
+        )
+    }
+}
+
+@Composable
+fun SchedulePresetRow(enabled: Boolean, onPreset: (Int, Int) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FilterChip(
+            selected = false,
+            enabled = enabled,
+            onClick = { onPreset(8, 0) },
+            label = { Text("Mañana 08:00", fontSize = 12.sp) },
+            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = UgEmerald)
+        )
+        FilterChip(
+            selected = false,
+            enabled = enabled,
+            onClick = { onPreset(22, 0) },
+            label = { Text("Noche 22:00", fontSize = 12.sp) },
+            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = UgEmerald)
         )
     }
 }

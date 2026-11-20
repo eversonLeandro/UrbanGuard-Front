@@ -79,6 +79,8 @@ class RoundActiveScreenTest {
             Result.failure(AppException(AppError.UnexpectedPatrolPoint()))
         override suspend fun finishRound(complexId: String): Result<PatrolRound> = Result.success(round)
         override suspend fun getRounds(complexId: String): Result<List<PatrolRound>> = Result.success(listOf(round))
+        override suspend fun getFinishedRound(complexId: String, executionId: String): Result<PatrolRound> =
+            Result.success(round)
         override fun lastFinishedRound(): PatrolRound? = null
         override suspend fun startRound(
             complexId: String, routeId: String, routeName: String, points: List<PatrolControlPoint>,

@@ -235,6 +235,7 @@ private fun RouteSchedulesSection(
     Spacer(Modifier.height(8.dp))
 
     SchedulePresetRow(
+        enabled = canAddSchedule,
         onPreset = { hour, minute ->
             onEvent(RouteScheduleEvent.AddPreset(hour, minute))
         }
