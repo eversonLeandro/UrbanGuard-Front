@@ -1,6 +1,5 @@
 package co.edu.unicauca.urbanguard.ui.features.guard
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -10,6 +9,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,12 +30,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Nfc
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -116,8 +113,13 @@ fun RoundActiveScreen(
         }
     }
     NfcReaderEffect(
-        enabled = uiState.round != null && !uiState.showUnexpectedPointDialog,
-        onTagRead = viewModel::onTagScanned
+        enabled = true,
+        onTagRead = { tagId ->
+            val canScan = uiState.round != null && !uiState.showUnexpectedPointDialog
+            if (canScan && !uiState.showCompletionDialog && !uiState.isFinishing) {
+                viewModel.onTagScanned(tagId)
+            }
+        }
     )
     LaunchedEffect(uiState.lastScanAt) {
         if (uiState.lastScanAt > 0 && uiState.lastScanKnown) {
@@ -147,18 +149,8 @@ fun RoundActiveScreen(
             )
         }
 
-        if (uiState.showFinishConfirm) {
-            val confirmRound = uiState.round
-            if (confirmRound != null) {
-                val confirmDone = confirmRound.donePointIds().size
-                val confirmTotal = uiState.points.size
-                FinishRoundDialog(
-                    done = confirmDone,
-                    total = confirmTotal,
-                    onConfirm = viewModel::onConfirmFinish,
-                    onDismiss = viewModel::onDismissFinish
-                )
-            }
+        if (uiState.showCompletionDialog) {
+            RoundCompletionDialog(onBackToRounds = onFinished)
         }
 
         if (uiState.showUnexpectedPointDialog) {
@@ -236,23 +228,7 @@ private fun ActiveContent(
         }
 
         item(key = "finish") {
-            Button(
-                onClick = onFinishRequest,
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = UgNavy),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Flag,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text("Terminar ronda", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
+            CompleteRoundButton(done, total, uiState.isFinishing, onFinishRequest)
         }
 
         item(key = "report") {
@@ -345,15 +321,6 @@ private fun ScanListenCard(
         success -> UgEmerald
         else -> UgErrorText
     }
-    val container by animateColorAsState(
-        targetValue = when {
-            success -> UgEmerald.copy(alpha = 0.14f)
-            lastScanName != null -> Color(0xFFF57C00).copy(alpha = 0.12f)
-            else -> Color.White
-        },
-        animationSpec = tween(400),
-        label = "scanCard"
-    )
     val pulse by rememberInfiniteTransition(label = "scanPulse").animateFloat(
         initialValue = 0.9f,
         targetValue = 1.15f,
@@ -376,8 +343,12 @@ private fun ScanListenCard(
 
     Card(
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = container),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(
+            1.dp,
+            if (success) UgEmerald.copy(alpha = 0.35f) else UgNavy.copy(alpha = 0.08f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -558,42 +529,6 @@ private fun UnexpectedPointDialog(onDismiss: () -> Unit) {
             TextButton(onClick = onDismiss) {
                 Text("Entendido", color = UgNavy, fontWeight = FontWeight.Bold)
             }
-        }
-    )
-}
-
-@Composable
-private fun FinishRoundDialog(
-    done: Int,
-    total: Int,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    val incomplete = total > 0 && done < total
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Terminar ronda", fontWeight = FontWeight.Bold, color = UgNavy) },
-        text = {
-            Text(
-                if (incomplete) {
-                    "Te faltan ${total - done} de $total puntos. " +
-                        "Si terminas ahora, la ronda quedará como incompleta."
-                } else {
-                    "Se cerrará la ronda con las lecturas registradas."
-                }
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    if (incomplete) "Terminar de todos modos" else "Terminar",
-                    color = if (incomplete) UgErrorText else UgNavy,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Seguir", color = UgTextSecondary) }
         }
     )
 }

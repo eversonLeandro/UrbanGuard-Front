@@ -7,6 +7,7 @@ import co.edu.unicauca.urbanguard.domain.model.AppException
 import co.edu.unicauca.urbanguard.domain.model.ConjuntoUserAssociation
 import co.edu.unicauca.urbanguard.domain.model.PatrolControlPoint
 import co.edu.unicauca.urbanguard.domain.model.PatrolRound
+import co.edu.unicauca.urbanguard.domain.model.PatrolScan
 import co.edu.unicauca.urbanguard.domain.model.UserRole
 import co.edu.unicauca.urbanguard.domain.model.UserSession
 import co.edu.unicauca.urbanguard.domain.repository.PatrolRoundRepository
@@ -118,6 +119,74 @@ class RoundActiveViewModelTest {
         assertEquals(1, repository.scanCalls)
     }
 
+    @Test
+    fun `last accepted scan enables completion without another finish request`() = runTest {
+        val repository = FakePatrolRepository(round)
+        val completed = round.copy(
+            finishedAt = Instant.EPOCH.plusSeconds(60),
+            scans = listOf(PatrolScan(point.id, "01020304", Instant.EPOCH.plusSeconds(60), true))
+        )
+        repository.scanResult = Result.success(completed to point)
+        val viewModel = viewModel(repository)
+        viewModel.onRefresh()
+        advanceUntilIdle()
+
+        viewModel.onRequestFinish()
+        assertFalse(viewModel.uiState.value.showCompletionDialog)
+
+        viewModel.onTagScanned("01:02:03:04")
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.showCompletionDialog)
+        viewModel.onRequestFinish()
+
+        assertTrue(viewModel.uiState.value.showCompletionDialog)
+        assertNull(viewModel.uiState.value.errorMessage)
+        assertEquals(0, repository.finishCalls)
+        viewModel.onTagScanned("AA:BB:CC:DD")
+        advanceUntilIdle()
+        assertEquals(1, repository.scanCalls)
+    }
+
+    @Test
+    fun `fully scanned round still open is finalized before showing success`() = runTest {
+        val scanned = round.copy(
+            scans = listOf(PatrolScan(point.id, "01020304", Instant.EPOCH.plusSeconds(30), true))
+        )
+        val repository = FakePatrolRepository(scanned)
+        repository.finishResult = Result.success(scanned.copy(finishedAt = Instant.EPOCH.plusSeconds(60)))
+        val viewModel = viewModel(repository)
+        viewModel.onRefresh()
+        advanceUntilIdle()
+
+        viewModel.onRequestFinish()
+        advanceUntilIdle()
+
+        assertEquals(1, repository.finishCalls)
+        assertTrue(viewModel.uiState.value.showCompletionDialog)
+        assertFalse(viewModel.uiState.value.isFinishing)
+        assertNull(viewModel.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun `finish failure keeps round visible and does not show false success`() = runTest {
+        val scanned = round.copy(
+            scans = listOf(PatrolScan(point.id, "01020304", Instant.EPOCH.plusSeconds(30), true))
+        )
+        val repository = FakePatrolRepository(scanned)
+        repository.finishResult = Result.failure(IllegalStateException("Error de red"))
+        val viewModel = viewModel(repository)
+        viewModel.onRefresh()
+        advanceUntilIdle()
+
+        viewModel.onRequestFinish()
+        advanceUntilIdle()
+
+        assertEquals(1, repository.finishCalls)
+        assertFalse(viewModel.uiState.value.showCompletionDialog)
+        assertFalse(viewModel.uiState.value.isFinishing)
+        assertEquals("Error de red", viewModel.uiState.value.errorMessage)
+    }
+
     private fun viewModel(repository: PatrolRoundRepository): RoundActiveViewModel {
         val session = SessionManager(NoOpRolePersistence)
         session.saveSession(UserSession(
@@ -136,18 +205,26 @@ class RoundActiveViewModelTest {
 
     private class FakePatrolRepository(private val round: PatrolRound) : PatrolRoundRepository {
         var scanCalls = 0
+        var finishCalls = 0
+        var finishResult: Result<PatrolRound> = Result.success(round)
         var scanGate: CompletableDeferred<Unit>? = null
         var scanResult: Result<Pair<PatrolRound, PatrolControlPoint?>> =
             Result.failure(AppException(AppError.UnexpectedPatrolPoint()))
 
         override suspend fun activeRound(complexId: String): PatrolRound = round
         override suspend fun closeOverdueRounds(complexId: String): PatrolRound? = null
-        override suspend fun registerScan(complexId: String, tagId: String): Result<Pair<PatrolRound, PatrolControlPoint?>> {
+        override suspend fun registerScan(
+            complexId: String,
+            tagId: String
+        ): Result<Pair<PatrolRound, PatrolControlPoint?>> {
             scanCalls++
             scanGate?.await()
             return scanResult
         }
-        override suspend fun finishRound(complexId: String): Result<PatrolRound> = Result.success(round)
+        override suspend fun finishRound(complexId: String): Result<PatrolRound> {
+            finishCalls++
+            return finishResult
+        }
         override suspend fun getRounds(complexId: String): Result<List<PatrolRound>> = Result.success(listOf(round))
         override suspend fun getFinishedRound(complexId: String, executionId: String): Result<PatrolRound> =
             Result.success(round)

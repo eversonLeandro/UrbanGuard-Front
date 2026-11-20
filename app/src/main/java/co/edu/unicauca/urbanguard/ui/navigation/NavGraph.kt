@@ -871,11 +871,7 @@ fun AppNavGraph(
         composable(Routes.GUARD_ROUND_ACTIVE) {
             RoundActiveScreen(
                 onFinished = {
-                    navController.navigate(
-                        Routes.GUARD_ROUND_SUMMARY.substringBefore("?")
-                    ) {
-                        popUpTo(Routes.GUARD_ROUND_ACTIVE) { inclusive = true }
-                    }
+                    navController.popBackStack(Routes.GUARD_SEGURIDAD, inclusive = false)
                 },
                 onNavigateBack = {
                     navController.popBackStack()
