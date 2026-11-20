@@ -5,7 +5,11 @@ import androidx.lifecycle.viewModelScope
 import co.edu.unicauca.urbanguard.core.session.SessionManager
 import co.edu.unicauca.urbanguard.domain.model.AppError
 import co.edu.unicauca.urbanguard.domain.model.AppException
+import co.edu.unicauca.urbanguard.domain.model.donePointIds
+import co.edu.unicauca.urbanguard.domain.model.isFinished
 import co.edu.unicauca.urbanguard.domain.model.normalizeNfcUid
+import co.edu.unicauca.urbanguard.domain.model.RoundStatus
+import co.edu.unicauca.urbanguard.domain.model.status
 import co.edu.unicauca.urbanguard.domain.usecase.patrol.RoundActions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -53,6 +57,7 @@ class RoundActiveViewModel @Inject constructor(
 
     fun onTagScanned(tagId: String) {
         if (_uiState.value.showUnexpectedPointDialog) return
+        if (_uiState.value.round?.isFinished() == true) return
         val complexId = sessionManager.getActiveConjunto()?.conjuntoId ?: return
         if (!scanInProgress.compareAndSet(false, true)) return
         val normalized = normalizeNfcUid(tagId)
@@ -93,29 +98,38 @@ class RoundActiveViewModel @Inject constructor(
     }
 
     fun onRequestFinish() {
-        _uiState.value = _uiState.value.copy(showFinishConfirm = true)
-    }
-
-    fun onDismissFinish() {
-        _uiState.value = _uiState.value.copy(showFinishConfirm = false)
-    }
-
-    fun onConfirmFinish() {
+        val round = _uiState.value.round ?: return
+        if (_uiState.value.isFinishing || _uiState.value.showCompletionDialog) return
+        if (round.points.isEmpty() || round.donePointIds().size != round.points.size) return
+        if (round.status() == RoundStatus.COMPLETED) {
+            _uiState.value = _uiState.value.copy(showCompletionDialog = true, errorMessage = null)
+            return
+        }
         val complexId = sessionManager.getActiveConjunto()?.conjuntoId ?: return
-        _uiState.value = _uiState.value.copy(showFinishConfirm = false)
+        _uiState.value = _uiState.value.copy(isFinishing = true, errorMessage = null)
         viewModelScope.launch {
             roundActions.finish(complexId).fold(
-                onSuccess = { eventChannel.send(RoundActiveEvent.RoundFinished) },
+                onSuccess = { finished ->
+                    _uiState.value = _uiState.value.copy(
+                        round = finished,
+                        points = finished.points,
+                        showCompletionDialog = finished.status() == RoundStatus.COMPLETED,
+                        errorMessage = if (finished.status() == RoundStatus.COMPLETED) null
+                            else "La ronda no se completó. Actualiza el estado e inténtalo de nuevo."
+                    )
+                },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
                         errorMessage = error.message ?: "No se pudo cerrar la ronda."
                     )
                 }
             )
+            _uiState.value = _uiState.value.copy(isFinishing = false)
         }
     }
 
     private fun load() {
+        if (_uiState.value.round?.status() == RoundStatus.COMPLETED) return
         val complexId = sessionManager.getActiveConjunto()?.conjuntoId
         if (complexId.isNullOrBlank()) {
             viewModelScope.launch { eventChannel.send(RoundActiveEvent.NoActiveRound) }

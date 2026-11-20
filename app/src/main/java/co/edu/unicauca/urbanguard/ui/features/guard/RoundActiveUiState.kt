@@ -14,7 +14,8 @@ data class RoundActiveUiState(
     val lastScanName: String? = null,
     val lastScanKnown: Boolean = true,
     val lastScanAt: Long = 0L,
-    val showFinishConfirm: Boolean = false,
+    val showCompletionDialog: Boolean = false,
+    val isFinishing: Boolean = false,
     val showUnexpectedPointDialog: Boolean = false,
     val errorMessage: String? = null
 )

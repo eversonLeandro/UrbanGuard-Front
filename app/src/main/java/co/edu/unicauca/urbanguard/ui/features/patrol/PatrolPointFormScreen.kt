@@ -90,10 +90,7 @@ fun PatrolPointFormScreen(
             if (event == PatrolPointFormEvent.Saved) onSaved()
         }
     }
-    NfcReaderEffect(
-        enabled = uiState.nfcState == NfcReadState.WAITING,
-        onTagRead = viewModel::onTagIdChange
-    )
+    NfcReaderEffect(enabled = true, onTagRead = viewModel::onNfcTagRead)
 
     Scaffold(
         topBar = {

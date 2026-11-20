@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -82,6 +83,20 @@ class PatrolPointFormViewModel @Inject constructor(
             tagError = null,
             errorMessage = null
         )
+    }
+
+    /** Acepta solo la primera lectura física mientras se espera un tag. */
+    fun onNfcTagRead(tagId: String) {
+        val normalized = normalizeNfcUid(tagId)
+        _uiState.update { state ->
+            if (state.step != 1 || state.nfcState != NfcReadState.WAITING) state
+            else state.copy(
+                nfcTagId = normalized,
+                nfcState = NfcReadState.READ,
+                tagError = null,
+                errorMessage = null
+            )
+        }
     }
 
     fun onStartNfcRead(nfcSupported: Boolean) {
