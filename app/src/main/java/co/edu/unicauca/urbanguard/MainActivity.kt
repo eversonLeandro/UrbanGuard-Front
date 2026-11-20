@@ -10,26 +10,38 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
+import co.edu.unicauca.urbanguard.core.push.InAppNotificationBus
+import co.edu.unicauca.urbanguard.core.push.InAppNotificationEvent
 import co.edu.unicauca.urbanguard.core.push.UrbanGuardMessagingService
 import co.edu.unicauca.urbanguard.core.session.SessionManager
+import co.edu.unicauca.urbanguard.ui.components.FloatingNotificationBanner
 import co.edu.unicauca.urbanguard.ui.components.MainScaffold
+import co.edu.unicauca.urbanguard.ui.navigation.Routes
 import co.edu.unicauca.urbanguard.ui.navigation.routeForDeepLink
 import co.edu.unicauca.urbanguard.ui.theme.UrbanGuardFrontendTheme
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
+import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var sessionManager: SessionManager
+
+    @Inject
+    lateinit var inAppNotificationBus: InAppNotificationBus
 
     // Deep link pendiente (tap en una notificación o esquema urbanguard://).
     // singleTop reutiliza la actividad: llega por onNewIntent en caliente.
@@ -81,10 +93,35 @@ class MainActivity : ComponentActivity() {
                     pendingDeepLink.value = null
                 }
 
-                MainScaffold(
-                    navController = navController,
-                    role = session?.role
-                )
+                var activeBanner by remember { mutableStateOf<InAppNotificationEvent?>(null) }
+                LaunchedEffect(inAppNotificationBus) {
+                    inAppNotificationBus.events.collect { event ->
+                        activeBanner = event
+                    }
+                }
+                LaunchedEffect(activeBanner) {
+                    if (activeBanner != null) {
+                        delay(BANNER_AUTO_DISMISS_MS)
+                        activeBanner = null
+                    }
+                }
+
+                Box(modifier = Modifier.fillMaxSize()) {
+                    MainScaffold(
+                        navController = navController,
+                        role = session?.role
+                    )
+                    FloatingNotificationBanner(
+                        event = activeBanner,
+                        onOpen = { event ->
+                            activeBanner = null
+                            val target = routeForDeepLink(event.deepLink) ?: Routes.NOTIFICATIONS
+                            navController.navigate(target) { launchSingleTop = true }
+                        },
+                        onDismiss = { activeBanner = null },
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    )
+                }
             }
         }
     }
@@ -109,5 +146,6 @@ class MainActivity : ComponentActivity() {
 
     private companion object {
         const val FCM_DEEP_LINK_EXTRA = "deepLink"
+        const val BANNER_AUTO_DISMISS_MS = 4_500L
     }
 }

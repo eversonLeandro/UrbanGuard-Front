@@ -22,6 +22,10 @@ class NotificationBadgeStore @Inject constructor() {
         _unreadCount.value = count.coerceAtLeast(0)
     }
 
+    fun increment() {
+        set(_unreadCount.value + 1)
+    }
+
     fun decrement() {
         set(_unreadCount.value - 1)
     }

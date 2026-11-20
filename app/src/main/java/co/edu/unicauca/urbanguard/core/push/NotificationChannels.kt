@@ -16,6 +16,28 @@ object NotificationChannels {
     const val ANNOUNCEMENTS = "announcements"
     const val PATROL = "patrol"
     const val PQRS = "pqrs"
+    const val PACKAGES = "packages"
+
+    private val SUPPORTED_CHANNELS = setOf(
+        VISITORS,
+        REQUESTS,
+        ANNOUNCEMENTS,
+        PATROL,
+        PQRS,
+        PACKAGES
+    )
+
+    /**
+     * Resuelve el canal priorizando el `channel` explícito enviado por el
+     * backend y haciendo fallback al prefijo del `deepLink`.
+     */
+    fun resolveChannel(explicitChannel: String?, deepLink: String?): String {
+        val normalized = explicitChannel?.trim()?.lowercase()
+        if (normalized != null && normalized in SUPPORTED_CHANNELS) {
+            return normalized
+        }
+        return fromDeepLink(deepLink)
+    }
 
     /**
      * Deriva el canal desde el deepLink del backend
@@ -25,7 +47,9 @@ object NotificationChannels {
         deepLink == null -> ANNOUNCEMENTS
         deepLink.startsWith("urbanguard://visitors") -> VISITORS
         deepLink.startsWith("urbanguard://requests") -> REQUESTS
+        deepLink.startsWith("urbanguard://patrol-reports") -> PATROL
         deepLink.startsWith("urbanguard://patrol") -> PATROL
+        deepLink.startsWith("urbanguard://packages") -> PACKAGES
         deepLink.startsWith("urbanguard://community") -> ANNOUNCEMENTS
         deepLink.startsWith("urbanguard://news") -> ANNOUNCEMENTS
         deepLink.startsWith("urbanguard://pqrs") -> PQRS
@@ -33,16 +57,8 @@ object NotificationChannels {
     }
 
     /**
-     * Crea los canales. El ID de [PATROL] debe ser exactamente `"patrol"` para
-     * coincidir con el `channel` que envía el backend, así que no se puede
-     * renombrar para forzar la nueva importancia: Android ignora los cambios de
-     * importancia en un canal ya creado. Para ver `IMPORTANCE_HIGH` en un
-     * dispositivo donde el canal ya existía hay que reinstalar la app (o
-     * borrar sus datos); en instalaciones nuevas aplica directo.
-     *
-     * Lo mismo vale para [PQRS]: el canal debe existir **antes** de que el
-     * backend empiece a enviar avisos con `channel: "pqrs"`, o el push se
-     * descarta en silencio en Android 8+.
+     * Crea los canales con importancia alta (`IMPORTANCE_HIGH`) en los eventos
+     * accionables para que Android muestre notificación flotante (heads-up).
      */
     fun createAll(context: Context) {
         val manager = NotificationManagerCompat.from(context)
@@ -50,16 +66,19 @@ object NotificationChannels {
             channel(VISITORS, "Visitantes", NotificationManager.IMPORTANCE_HIGH)
         )
         manager.createNotificationChannel(
-            channel(REQUESTS, "Solicitudes", NotificationManager.IMPORTANCE_DEFAULT)
+            channel(REQUESTS, "Solicitudes", NotificationManager.IMPORTANCE_HIGH)
         )
         manager.createNotificationChannel(
             channel(ANNOUNCEMENTS, "Avisos", NotificationManager.IMPORTANCE_DEFAULT)
         )
         manager.createNotificationChannel(
-            channel(PATROL, "Rondas", NotificationManager.IMPORTANCE_HIGH)
+            channel(PATROL, "Rondas y Seguridad", NotificationManager.IMPORTANCE_HIGH)
         )
         manager.createNotificationChannel(
             channel(PQRS, "PQRS", NotificationManager.IMPORTANCE_HIGH)
+        )
+        manager.createNotificationChannel(
+            channel(PACKAGES, "Paquetería", NotificationManager.IMPORTANCE_HIGH)
         )
     }
 

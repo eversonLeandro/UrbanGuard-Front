@@ -88,4 +88,37 @@ class DeepLinksTest {
     fun `news deep link se mapea al feed de comunicados`() {
         assertEquals(Routes.NEWS, routeForDeepLink("urbanguard://news"))
     }
+
+    @Test
+    fun `solicitudes admin abren solicitudes pendientes`() {
+        assertEquals(Routes.PENDING_REQUESTS, routeForDeepLink("urbanguard://requests/admin"))
+        assertEquals(Routes.PENDING_REQUESTS, routeForDeepLink("urbanguard://requests/admin/$pqrsId"))
+        assertEquals(Routes.PENDING_REQUESTS, routeForDeepLink("urbanguard://requests/admin?tab=pending"))
+    }
+
+    @Test
+    fun `paquetes abren la pantalla de paqueteria`() {
+        assertEquals(Routes.PACKAGES, routeForDeepLink("urbanguard://packages"))
+        assertEquals(Routes.PACKAGES, routeForDeepLink("urbanguard://packages?packageId=$pqrsId"))
+    }
+
+    @Test
+    fun `novedad de vigilancia abre el detalle con uuid o la lista sin uuid`() {
+        assertEquals(
+            "admin_incident_detail/$pqrsId",
+            routeForDeepLink("urbanguard://patrol-reports/$pqrsId")
+        )
+        assertEquals(
+            "admin_incident_detail/$pqrsId",
+            routeForDeepLink("urbanguard://patrol-reports/$pqrsId?source=push")
+        )
+        assertEquals(Routes.ADMIN_INCIDENTS, routeForDeepLink("urbanguard://patrol-reports"))
+        assertEquals(Routes.ADMIN_INCIDENTS, routeForDeepLink("urbanguard://patrol-reports/invalido"))
+    }
+
+    @Test
+    fun `recordatorio de ronda para vigilante abre seguridad del vigilante`() {
+        assertEquals(Routes.GUARD_SEGURIDAD, routeForDeepLink("urbanguard://patrol/guard"))
+        assertEquals(Routes.GUARD_SEGURIDAD, routeForDeepLink("urbanguard://patrol/guard?occurrenceId=$pqrsId"))
+    }
 }
